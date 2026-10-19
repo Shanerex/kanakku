@@ -302,13 +302,13 @@ Each milestone ends only when its exit gate passes. Every milestone after v0.1 i
 
 ## Building it with the rx toolkit
 
-rx works one feature at a time with tight file caps, so this PRD is not handed to rx whole. Instead, each F-nn becomes one `/rx:feature` run, and its intake answers come from the table below. Large features are split so each fits rx's caps: 60 lines for `requirements.md` and 40 for `tasks.md`.
+rx works one feature at a time with tight file caps, so this PRD is not handed to rx whole. Instead, each F-nn becomes one `/rx-feature` run, and its intake answers come from the table below. Large features are split so each fits rx's caps: 60 lines for `requirements.md` and 40 for `tasks.md`.
 
 **One-time setup in the new `kanakku` repo**
 
 1. Create the repo with a `main` branch and an initial commit.
-2. `/rx:init` is still not in `commands/` (only `feature`, `next` and `status` exist). Until it lands, create these by hand: `.rx/config.yml` (below), a `CLAUDE.md` of 60 lines or fewer, `docs/knowledge/architecture.md` (from the next section), and empty `docs/knowledge/decisions/` and `docs/knowledge/learnings/` folders.
-3. Commit the setup on `main`, then start F-01 with `/rx:feature maven-scaffold` and run `/rx:next` until it is done.
+2. `/rx-init` is still not in `commands/` (only `feature`, `next` and `status` exist). Until it lands, create these by hand: `.rx/config.yml` (below), a `CLAUDE.md` of 60 lines or fewer, `docs/knowledge/architecture.md` (from the next section), and empty `docs/knowledge/decisions/` and `docs/knowledge/learnings/` folders.
+3. Commit the setup on `main`, then start F-01 with `/rx-feature maven-scaffold` and run `/rx-next` until it is done.
 
 ```yaml
 # .rx/config.yml
@@ -333,7 +333,7 @@ Four build notes for rx:
 
 **Feature backlog, in build order**
 
-| # | `/rx:feature` name | PRD | Depends on | Intake: why / who / done-when |
+| # | `/rx-feature` name | PRD | Depends on | Intake: why / who / done-when |
 | --- | --- | --- | --- | --- |
 | 1 | maven-scaffold | F-01 | — | Nothing runs yet / every contributor / `docker compose up` serves the app; CI gates PRs; Modulith verification runs |
 | 2 | accounts-password | F-02 (part 1) | 1 | No identity / every user / sign-up, verification, password sign-in and rate limits pass F-02 acceptance |

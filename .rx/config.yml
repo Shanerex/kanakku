@@ -1,0 +1,12 @@
+test_cmd: ./mvnw -B -q test
+lint_cmd: ./mvnw -B -q spotless:check
+test_timeout: 900
+version_file: .mvn/maven.config
+source_globs: app/src/main/**, web/src/**, mobile/*/src/*Main/**
+test_globs: app/src/test/**, web/src/**/*.test.ts, web/src/**/*.test.tsx, mobile/*/src/*Test/**, e2e/**
+enforce_plan_first: true
+security_review: verify
+feature_id: date-slug
+branch_pattern: feature/{id}
+base_branch: main
+version_bump: release
