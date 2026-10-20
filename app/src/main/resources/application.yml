@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: kanakku
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kanakku}
+    username: ${SPRING_DATASOURCE_USERNAME:kanakku}
+    password: ${SPRING_DATASOURCE_PASSWORD:kanakku}
+
+kanakku:
+  cors:
+    allowed-origins: ${KANAKKU_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # kanakku.minio.endpoint (KANAKKU_MINIO_ENDPOINT) and kanakku.smtp.host/port
+  # (KANAKKU_SMTP_HOST/PORT) are set per environment; each enables its health indicator.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      cors:
+        allowed-origins: ${kanakku.cors.allowed-origins}
+        allowed-methods: GET
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db

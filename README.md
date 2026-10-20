@@ -6,9 +6,8 @@ Open-source, self-hostable, AI-native expense splitting for friends, trips and f
 over UPI: AI does the data entry, turning chats, receipts and bank statements into draft expenses
 and settlements, and a member confirms them before anything touches the ledger.
 
-> **Status: pre-alpha.** This repository holds the product spec and the development workflow.
-> No application code exists yet; the first feature (the Maven scaffold) is next. See the
-> [roadmap](#roadmap).
+> **Status: pre-alpha.** The Maven scaffold has landed: an empty API app, a web shell and a
+> compose stack. No product features exist yet. See the [roadmap](#roadmap).
 
 ## What it does (planned)
 
@@ -43,21 +42,61 @@ SaaS or a WhatsApp bot.
 | Backend | Java 25, Spring Boot 4, Spring Modulith (modular monolith), Maven |
 | Data | Postgres 17, Flyway, jOOQ; db-scheduler for jobs; MinIO for files; no Redis |
 | AI | Spring AI 2.0 (Anthropic, OpenAI-compatible, Ollama); Spring AI MCP server |
-| Web | React, Vite and TypeScript single-page app, served by the backend |
+| Web | React, Vite and TypeScript single-page app in `web/`, served on its own port and calling the API cross-origin |
 | Mobile | Kotlin Multiplatform and Compose Multiplatform for Android and iOS |
 | Tests | JUnit 5, Testcontainers, jqwik, Vitest, Playwright, kotlin.test |
 
 Architecture overview: [docs/knowledge/architecture.md](docs/knowledge/architecture.md).
 
-## Getting started
+## Run locally
 
-Not runnable yet. Once the scaffold feature lands, these will work:
+Requires Docker with Compose (Docker Desktop or Docker Engine). Nothing else is needed on a clean
+machine: Maven, Node and Java run inside the image builds.
 
 ```sh
-docker compose up          # app, Postgres, MinIO and Mailpit
-./mvnw -B -q test          # JUnit, Vitest and mobile tests
-./mvnw -B -q spotless:check
+git clone <this repository> && cd kanakku
+docker compose up
 ```
+
+The first build downloads dependencies; a cold build took about 2 minutes on a laptop with a
+fast connection (timed 2026-10-20: `docker compose up -d --wait --build` with an empty build
+cache, 129 s; images for Postgres, MinIO and Mailpit already pulled). The stack is ready when
+every service reports healthy.
+
+| Service | URL | Notes |
+| --- | --- | --- |
+| web | http://localhost:3000 | React shell; shows the API readiness status |
+| app | http://localhost:8080 | Spring Boot API |
+| Mailpit UI | http://localhost:8025 | Captures outgoing mail |
+
+Probe URLs on the app: `/actuator/health/liveness` (process is up),
+`/actuator/health/readiness` (process and Postgres; 503 while Postgres is down) and
+`/actuator/health`.
+
+The web image has no API URL baked in. It serves `/config.json` from the
+`KANAKKU_API_BASE_URL` environment variable (default `http://localhost:8080`), so change it on the
+`web` service, and set `KANAKKU_CORS_ALLOWED_ORIGINS` on the `app` service to the web origin
+(no wildcard). Defaults for credentials are in `.env.example`; copy it to `.env` to override.
+
+MinIO images are no longer published by MinIO; compose uses the `pgsty/minio` fork.
+
+### Develop and test
+
+```sh
+./mvnw -B -q test             # backend JUnit (needs Docker for Testcontainers)
+./mvnw -B -q spotless:check   # Java formatting
+cd web && npm ci && npm test  # Vitest
+cd web && npm run lint        # Biome
+cd web && npm run dev         # Vite dev server on :5173 (API on :8080)
+```
+
+The backend version lives only in `.mvn/maven.config`; the web version only in
+`web/package.json`.
+
+### Required branch checks
+
+CI (`.github/workflows/ci.yml`) has `backend`, `web` and `compose-smoke` jobs. In the repository
+settings, protect `main` and require the `backend` and `web` checks on every pull request.
 
 ## Roadmap
 
