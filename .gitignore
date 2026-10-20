@@ -1,2 +1,5 @@
 .rx/local/
 .claude/settings.local.json
+target/
+.flattened-pom.xml
+.env
