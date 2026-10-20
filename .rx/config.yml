@@ -9,4 +9,4 @@ security_review: verify
 feature_id: date-slug
 branch_pattern: feature/{id}
 base_branch: main
-version_bump: release
+version_bump: feature
