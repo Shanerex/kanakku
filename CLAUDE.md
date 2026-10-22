@@ -26,7 +26,8 @@ or a WhatsApp bot.
 - Structured JSON logs with request IDs. Flyway migrations are forward-only.
 - Domain packages under `dev.kanakku` are Modulith modules; never touch another module's internals.
 - Each feature ships its own web screen in the same change.
-- License Apache-2.0; dependencies must be Apache, MIT, BSD or LGPL.
+- UI design lives in `docs/design/`: read its `screens/` spec before building a screen; tokens only.
+- License Apache-2.0; dependencies must be Apache, MIT, BSD or LGPL (font files may be OFL).
 
 ## Hard invariants
 - Money is `long` minor units plus an ISO 4217 currency. Never `double` or `float`.

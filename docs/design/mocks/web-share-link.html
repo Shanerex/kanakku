@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Guest share link · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .guest { max-width: 480px; margin: 0 auto; padding: 0 16px 48px; }
+  .band { margin: 0 -16px; padding: 20px 16px 56px; background: var(--id-sky-tint); color: var(--id-sky-ink); }
+</style>
+</head>
+<body>
+<main class="guest">
+  <div class="band">
+    <div class="row between"><span class="logo" style="padding:0;font-size:22px">kanakku<span class="dotc">.</span></span><span class="cap">Shared with Karthik</span></div>
+    <div class="row" style="margin-top:20px"><span class="gb lg" style="background:var(--color-surface)">🏖️</span><div><div class="h2">Goa Trip</div><div class="sm">12 – 19 Oct</div></div></div>
+  </div>
+  <section class="card" style="margin-top:-36px" aria-labelledby="g1">
+    <div class="sm w6 muted">Hi Karthik 👋</div>
+    <h1 id="g1" class="w6" style="margin:6px 0 0;font-size:15px">You owe</h1>
+    <div class="amt xl neg" aria-label="You owe 1,860 rupees">₹1,860</div>
+    <p class="sm muted" style="margin:4px 0 0">to Priya <span class="amt sm">₹1,860.00</span></p>
+  </section>
+  <section class="card stack" style="margin-top:16px">
+    <div class="row"><span class="av id-grape">P</span><div class="grow"><div class="w6">Pay Priya</div><div class="sm muted mono">priya@okhdfc</div></div><span class="amt lg">₹1,860.00</span></div>
+    <a class="btn primary lg block pill" href="#"><i class="ph-fill ph-lightning"></i>Pay with UPI</a>
+    <div class="row gap2"><button class="btn secondary sm grow"><i class="ph ph-qr-code"></i>Show QR</button><button class="btn secondary sm grow"><i class="ph ph-copy"></i>Copy UPI ID</button></div>
+    <div class="banner info"><i class="ph ph-info i"></i>After paying, tap “I've paid” so Priya can confirm it.</div>
+    <button class="btn ghost">I've paid</button>
+  </section>
+  <section class="card flush" style="margin-top:16px" aria-labelledby="g2">
+    <div class="section-h"><h2 id="g2" class="h3">Your expenses (7)</h2></div>
+    <ul class="list">
+      <li class="li"><span class="cb id-tangerine"><i class="ph-fill ph-fork-knife i"></i></span><div class="grow"><div class="t1">Dinner at Thalassa</div><div class="t2">14 Oct · Priya paid</div></div><div class="end"><span class="cap">your share</span><span class="amt sm">₹600.00</span></div></li>
+      <li class="li"><span class="cb id-grape"><i class="ph-fill ph-bed i"></i></span><div class="grow"><div class="t1">Villa, 4 nights</div><div class="t2">12 Oct · Priya paid</div></div><div class="end"><span class="cap">your share</span><span class="amt sm">₹3,400.00</span></div></li>
+      <li class="li"><span class="cb id-mango"><i class="ph-fill ph-beer-bottle i"></i></span><div class="grow"><div class="t1">Beach shack drinks</div><div class="t2">18 Oct · you paid ₹1,860.00</div></div><div class="end"><span class="cap">your share</span><span class="amt sm">₹372.00</span></div></li>
+    </ul>
+    <div style="padding:12px 16px 16px"><a class="sm w6" href="#">Show all 7</a></div>
+  </section>
+  <p class="sm muted" style="text-align:center;margin-top:24px">Want to add expenses too? <a href="#">Join Goa Trip</a><br><span class="cap faint">Kanakku · open-source, self-hosted</span></p>
+</main>
+</body>
+</html>

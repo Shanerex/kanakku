@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drafts · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .md { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+  .qi { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); border: 1.5px dashed transparent; cursor: pointer; }
+  .qi + .qi { margin-top: 6px; }
+  .qi.sel { border-color: var(--color-draft); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+  @media (max-width: 1023px) { .md { grid-template-columns: 1fr; } .detail { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side" aria-label="Main">
+    <div class="logo">kanakku<span class="dotc">.</span></div>
+    <a class="nav" href="web-home.html"><i class="ph ph-house i"></i>Home</a>
+    <a class="nav on" href="web-drafts.html"><i class="ph-fill ph-sparkle i"></i>Drafts<span class="n">3</span></a>
+    <a class="nav" href="#"><i class="ph ph-clock-counter-clockwise i"></i>Activity</a>
+    <a class="nav" href="#"><i class="ph ph-magnifying-glass i"></i>Search</a>
+    <div class="label">Groups</div>
+    <a class="nav" href="web-group.html"><span class="gb sm id-sky">🏖️</span>Goa Trip<span class="bal" style="background:var(--color-positive)"></span></a>
+    <a class="nav" href="#"><span class="gb sm id-mango">🏠</span>Flat 4B<span class="bal" style="background:var(--color-negative)"></span></a>
+    <a class="nav" href="#"><span class="gb sm id-pink">🎂</span>Meera's 30th<span class="bal" style="background:var(--color-positive)"></span></a>
+    <div class="grow"></div>
+    <a class="nav" href="#"><span class="av sm id-grape">P</span>Priya Raman</a>
+  </nav>
+  <div class="main">
+    <header class="top"><h1 class="h1">Drafts</h1><span class="grow"></span><button class="btn primary pill"><i class="ph-bold ph-plus"></i>Add</button></header>
+    <div class="content" style="max-width:1120px">
+      <div class="row gap2 wrap" style="margin-bottom:16px"><span class="chip on"><i class="ph-bold ph-check"></i>All groups</span><span class="chip out">Source<i class="ph ph-caret-down"></i></span><span class="chip out"><i class="ph ph-question"></i>Needs info (1)</span><span class="grow"></span><span class="sm muted">Keys: j/k move · Enter confirm · e edit · x discard</span></div>
+      <div class="md">
+        <div>
+          <div class="qi sel"><span class="cb id-tangerine"><i class="ph-fill ph-receipt i"></i></span><div class="grow"><div class="w6">Thalassa bill</div><div class="sm muted">From a receipt · 🏖️ Goa Trip · 2 h</div><div class="cap" style="color:var(--color-draft-text);margin-top:4px">1 item unassigned</div></div><div class="amt">₹3,482.00</div></div>
+          <div class="qi"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="w6">Cab</div><div class="sm muted">From your message · 🏖️ Goa Trip · 5 min</div><div class="cap" style="color:var(--color-draft-text);margin-top:4px">Who is “KK”?</div></div><div class="amt">₹1,200.00</div></div>
+          <div class="qi"><span class="cb id-mint"><i class="ph-fill ph-hand-coins i"></i></span><div class="grow"><div class="w6">Sanjay → You</div><div class="sm muted">From Claude via token <b>Laptop</b> · 🏠 Flat 4B</div></div><div class="col" style="align-items:end"><span class="amt">₹600.00</span><button class="btn positive sm">Confirm</button></div></div>
+        </div>
+        <div class="detail draftcard">
+          <div class="dh"><i class="ph-fill ph-sparkle i"></i>Draft · From a receipt<span class="grow"></span><span class="cap">expires in 14 days</span></div>
+          <div class="db stack">
+            <div class="row gap4" style="align-items:start">
+              <div style="width:120px;height:160px;border-radius:12px;background:repeating-linear-gradient(var(--color-surface-sunken) 0 14px,var(--color-border) 14px 15px);flex:none" role="img" aria-label="Receipt photo"></div>
+              <div class="grow col">
+                <div class="row"><div class="h3 grow">Thalassa, Vagator</div><span class="amt lg">₹3,482.00</span></div>
+                <div class="sm muted">20 Oct · paid by You · 🏖️ Goa Trip</div>
+                <div class="banner draft" style="margin-top:8px"><i class="ph-bold ph-check-circle"></i>Items and charges add up to the receipt total</div>
+              </div>
+            </div>
+            <div class="sunken"><div class="sm w6 muted" style="margin-bottom:6px">Who had what?</div>“Meera and I shared the biryani, Arun had the drinks, rest equally”</div>
+            <ul class="list card flush">
+              <li class="li"><div class="grow"><div class="t1">Chicken biryani × 2</div></div><div class="stack-av"><span class="av xs you id-grape">P</span><span class="av xs id-coral">M</span></div><span class="amt" style="width:96px;text-align:right">₹640.00</span></li>
+              <li class="li"><div class="grow"><div class="t1">Kingfisher × 3</div></div><div class="stack-av"><span class="av xs id-teal">A</span></div><span class="amt" style="width:96px;text-align:right">₹540.00</span></li>
+              <li class="li"><div class="grow"><div class="t1">Prawn curry, rice, paneer tikka (4)</div></div><span class="chip tiny">Everyone</span><span class="amt" style="width:96px;text-align:right">₹1,820.00</span></li>
+              <li class="li" style="background:var(--color-draft-soft)"><div class="grow"><div class="t1">Gulab jamun</div><div class="t2" style="color:var(--color-draft-text)"><i class="ph-bold ph-warning"></i> Unassigned</div></div><button class="btn secondary sm">Assign</button><span class="amt" style="width:96px;text-align:right">₹120.00</span></li>
+              <li class="li"><div class="grow"><div class="t1 muted">CGST + SGST 5%, service 5%</div><div class="t2">Spread by each person's items</div></div><span class="amt muted" style="width:96px;text-align:right">₹362.00</span></li>
+            </ul>
+          </div>
+          <div class="dialog dft" style="border-radius:0;box-shadow:none;max-width:none"><button class="btn ghost">Discard</button><span class="grow"></span><button class="btn secondary">Edit</button><button class="btn positive" disabled><i class="ph-bold ph-check"></i>Confirm and add</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

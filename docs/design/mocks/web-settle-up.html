@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settle up · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 32px; padding: 32px; max-width: 1240px; margin: 0 auto; align-items: start; }
+  .pair .dialog { max-height: none; }
+  .xfer { padding: 16px 20px; }
+  .xfer + .xfer { border-top: 1px solid var(--color-border); }
+  .arrow { color: var(--color-text-faint); }
+  .qrgrid { width: 176px; height: 176px; display: grid; grid-template-columns: repeat(21, 1fr); }
+  .qrgrid i { background: #111; }
+  .qrgrid i.w { background: #fff; }
+</style>
+</head>
+<body>
+<div class="pair">
+  <div>
+    <p class="mock-note"><b>Settle-up plan</b> from the group balances (You +2,340, Meera +640, Ravi +80, Arun −1,200, Karthik −1,860), greedy largest-first. Rows involving you first, with actions.</p>
+    <div class="dialog" role="dialog" aria-labelledby="s1">
+      <div class="dhd"><span class="gb id-sky">🏖️</span><h2 id="s1" class="h2">Settle up</h2><span class="grow"></span><button class="iconbtn" aria-label="Close"><i class="ph ph-x i"></i></button></div>
+      <div class="dbd">
+        <div class="row between" style="margin-bottom:12px"><span class="sm w6">Suggested payments</span><span class="chip tiny on"><i class="ph-bold ph-check"></i>Simplified <i class="ph ph-info"></i></span></div>
+        <div class="card flush">
+          <div class="xfer"><div class="row"><span class="av guest id-lime">K</span><span class="w6">Karthik</span><i class="ph-bold ph-arrow-right arrow"></i><span class="av you id-grape">P</span><span class="w6">You</span><span class="grow"></span><span class="amt lg">₹1,860.00</span></div>
+            <div class="row gap2" style="margin-top:12px;padding-left:48px"><button class="btn secondary sm">Record payment</button><button class="btn ghost sm"><i class="ph ph-bell-ringing"></i>Remind</button></div></div>
+          <div class="xfer"><div class="row"><span class="av id-teal">A</span><span class="w6">Arun</span><i class="ph-bold ph-arrow-right arrow"></i><span class="av you id-grape">P</span><span class="w6">You</span><span class="grow"></span><span class="amt lg">₹480.00</span></div>
+            <div class="row gap2" style="margin-top:12px;padding-left:48px"><button class="btn secondary sm">Record payment</button><button class="btn ghost sm"><i class="ph ph-bell-ringing"></i>Remind</button></div></div>
+          <div class="xfer"><div class="row"><span class="av id-teal">A</span><span class="w6">Arun</span><i class="ph-bold ph-arrow-right arrow"></i><span class="av id-coral">M</span><span class="w6">Meera</span><span class="grow"></span><span class="amt">₹640.00</span></div>
+            <div style="margin-top:8px;padding-left:48px"><a class="sm w6" href="#">Record payment</a></div></div>
+          <div class="xfer"><div class="row"><span class="av id-teal">A</span><span class="w6">Arun</span><i class="ph-bold ph-arrow-right arrow"></i><span class="av id-sky">R</span><span class="w6">Ravi</span><span class="grow"></span><span class="amt">₹80.00</span></div>
+            <div style="margin-top:8px;padding-left:48px"><a class="sm w6" href="#">Record payment</a></div></div>
+        </div>
+        <p class="sm muted">4 payments settle everyone (at most one fewer than the people with a balance). Paying someone else? <a href="#">Record a different payment</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="mock-note"><b>Pay with UPI, as Arun sees it.</b> Open app, QR and copy ID always together; then the explicit “Paid?” confirm because UPI gives no callback.</p>
+    <div class="dialog" role="dialog" aria-labelledby="s2">
+      <div class="dhd"><h2 id="s2" class="h2">Pay Meera <span class="amt">₹640.00</span></h2><span class="grow"></span><button class="iconbtn" aria-label="Close"><i class="ph ph-x i"></i></button></div>
+      <div class="dbd stack">
+        <div class="row"><span class="av lg id-coral">M</span><div><div class="w6">Meera Nair</div><div class="sm muted mono">meera.n@okaxis</div></div></div>
+        <button class="btn primary lg block pill"><i class="ph-fill ph-lightning"></i>Open UPI app</button>
+        <div class="row gap4" style="align-items:center">
+          <div class="qr" aria-label="UPI QR code for 640 rupees to Meera Nair"><div class="qrgrid" id="qr"></div></div>
+          <div class="col"><span class="w6">Scan with any UPI app</span><span class="amt">₹640.00</span><span class="sm muted">Note: Kanakku Goa Trip</span><button class="btn secondary sm"><i class="ph ph-copy"></i>Copy UPI ID</button></div>
+        </div>
+        <hr class="divider">
+        <div class="row wrap" style="background:var(--color-positive-soft);border-radius:var(--radius-md);padding:12px 14px"><span class="w6 grow" style="color:var(--color-positive-text)">Paid?</span><button class="btn positive sm"><i class="ph-bold ph-check"></i>Yes, record ₹640.00</button><button class="btn ghost sm">Not yet</button></div>
+      </div>
+    </div>
+    <div style="margin-top:24px" class="card" aria-label="All settled celebration">
+      <div class="col" style="align-items:center;text-align:center;gap:6px">
+        <svg aria-hidden="true" width="140" height="96" viewBox="0 0 140 96"><circle cx="54" cy="52" r="30" fill="var(--id-mango-tint)" stroke="var(--id-mango-solid)" stroke-width="3"/><circle cx="86" cy="48" r="30" fill="var(--id-mint-tint)" stroke="var(--id-mint-solid)" stroke-width="3"/><path d="M74 48l9 9 16-18" fill="none" stroke="var(--id-mint-ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="20" r="4" fill="var(--id-pink-solid)"/><circle cx="122" cy="16" r="5" fill="var(--id-sky-solid)"/><circle cx="128" cy="78" r="3" fill="var(--id-violet-solid)"/><circle cx="12" cy="74" r="4" fill="var(--id-lime-solid)"/></svg>
+        <div class="h2">All settled up</div><div class="sm muted">Nobody owes anybody. Nice.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Decorative fake QR pattern for the mock (seeded, not a real code).
+  const g = document.getElementById("qr"); let s = 7;
+  for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
+    const finder = (a, b) => a < 7 && b < 7 && !(a > 0 && a < 6 && b > 0 && b < 6 && !(a > 1 && a < 5 && b > 1 && b < 5));
+    const f = finder(x, y) || finder(20 - x, y) || finder(x, 20 - y);
+    const inF = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12);
+    s = (s * 9301 + 49297) % 233280;
+    const on = inF ? f : s / 233280 > 0.5;
+    const c = document.createElement("i"); if (!on) c.className = "w"; g.appendChild(c);
+  }
+</script>
+</body>
+</html>
