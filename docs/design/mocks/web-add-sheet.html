@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add sheet · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 32px; padding: 32px; max-width: 1240px; margin: 0 auto; }
+  .pair .dialog { max-height: none; }
+</style>
+</head>
+<body>
+<div class="pair">
+  <div>
+    <p class="mock-note"><b>1 · Add sheet, empty.</b> One entry point. Text first; manual tiles always one click away. With AI off for the group, the text box and AI tiles are not rendered.</p>
+    <div class="dialog" role="dialog" aria-labelledby="a1">
+      <div class="dhd"><h2 id="a1" class="h2">Add to</h2><span class="chip out"><span class="gb sm id-sky" style="width:22px;height:22px;font-size:13px">🏖️</span>Goa Trip<i class="ph ph-caret-down"></i></span><span class="grow"></span><button class="iconbtn" aria-label="Close"><i class="ph ph-x i"></i></button></div>
+      <div class="dbd stack">
+        <textarea class="input focus" rows="3" aria-label="Describe the expense" placeholder="Say it like you would…">1200 cab yesterday, everyone except Arun, KK paid</textarea>
+        <div class="row between"><span class="cap muted">Try: “Priya paid 3400 for the stay, split 4 ways”</span><button class="btn primary"><i class="ph-fill ph-sparkle"></i>Draft it<span class="chip tiny" style="background:rgba(255,255,255,.2);color:#fff">↵</span></button></div>
+        <div class="row" style="gap:12px;color:var(--color-text-muted)"><hr class="divider grow"><span class="cap">or</span><hr class="divider grow"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="tile"><span class="ti id-sky"><i class="ph-fill ph-camera i"></i></span>Scan receipt</div>
+          <div class="tile"><span class="ti id-mint"><i class="ph-fill ph-chats-circle i"></i></span>Import chat</div>
+          <div class="tile"><span class="ti id-violet"><i class="ph-fill ph-pencil-simple-line i"></i></span>Expense form</div>
+          <div class="tile"><span class="ti id-mango"><i class="ph-fill ph-hand-coins i"></i></span>Record payment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="mock-note"><b>2 · Same sheet, now a draft.</b> Dashed amber border, Sparkle, the source quote, and an inline picker for the ambiguous name. Confirm stays disabled until “KK” is resolved.</p>
+    <div class="dialog draftcard" role="dialog" aria-labelledby="a2" style="border-radius:var(--radius-xl)">
+      <div class="dh"><i class="ph-fill ph-sparkle i"></i>Draft · From your message<span class="grow"></span><span class="cap">expires in 14 days</span><button class="iconbtn" aria-label="Close" style="width:32px;height:32px;color:inherit"><i class="ph ph-x"></i></button></div>
+      <div class="db stack">
+        <div class="quote">“1200 cab yesterday, everyone except Arun, KK paid”</div>
+        <div class="row"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="h3" id="a2">Cab</div><div class="sm muted">Yesterday, 20 Oct · Split equally</div></div><div class="amt lg">₹1,200.00</div></div>
+        <div class="sunken col">
+          <div class="row between"><span class="sm w6">Paid by</span><span class="sm unsure w6">“KK” <i class="ph ph-question"></i></span></div>
+          <div class="row between"><span class="sm w6">Split between 4</span><span class="amt sm">₹300.00 each</span></div>
+          <div class="row gap2"><span class="av sm you id-grape">P</span><span class="av sm id-coral">M</span><span class="av sm guest id-lime">K</span><span class="av sm id-sky">R</span><span class="sm muted">You, Meera, Karthik, Ravi</span></div>
+        </div>
+        <div class="card" style="padding:14px;border-color:var(--color-draft);box-shadow:none">
+          <div class="sm w6" style="margin-bottom:10px">Who is “KK”?</div>
+          <div class="row gap2 wrap"><button class="chip out" style="height:40px"><span class="av xs guest id-lime">K</span>Karthik</button><button class="chip out" style="height:40px"><span class="av xs id-pink">KR</span>Kiran R.</button><button class="chip out" style="height:40px">Someone else…</button></div>
+        </div>
+      </div>
+      <div class="dft"><button class="btn ghost">Discard</button><span class="grow"></span><button class="btn secondary">Edit</button><button class="btn positive" disabled><i class="ph-bold ph-check"></i>Confirm and add</button></div>
+      <p class="cap draft-t" style="text-align:right;padding:0 24px 16px;margin:0;color:var(--color-draft-text)">Pick who “KK” is to continue</p>
+    </div>
+    <div style="margin-top:24px" class="toast">Expense added to Goa Trip <b>Undo</b></div>
+  </div>
+</div>
+</body>
+</html>

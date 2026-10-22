@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanakku mocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .wrapc { max-width: 960px; margin: 0 auto; padding: 40px 24px 64px; }
+  .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
+  .gal a { text-decoration: none; color: inherit; }
+  .gal .card { height: 100%; transition: transform var(--duration-fast) var(--ease-standard); }
+  .gal .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+</style>
+</head>
+<body>
+<div class="wrapc">
+  <div class="logo" style="padding:0;font-size:44px">kanakku<span class="dotc">.</span></div>
+  <p class="mock-note">Static design mocks. They illustrate the specs in <code>docs/design/</code>; where a mock and a spec disagree, the spec wins. Serve with <code>python3 -m http.server 4400 --directory docs/design</code> and open <code>/mocks/</code>. Fonts and icons load from Google Fonts and unpkg here only; the app self-hosts both.</p>
+  <div class="gal">
+    <a href="components.html"><div class="card"><span class="cb id-violet"><i class="ph-fill ph-palette i"></i></span><div class="h3" style="margin-top:10px">Components</div><div class="sm muted">Tokens, type, buttons, chips, identity, categories, rows, feedback</div></div></a>
+    <a href="web-sign-in.html"><div class="card"><span class="cb id-grape"><i class="ph-fill ph-key i"></i></span><div class="h3" style="margin-top:10px">Sign in</div><div class="sm muted">auth.md</div></div></a>
+    <a href="web-home.html"><div class="card"><span class="cb id-mint"><i class="ph-fill ph-house i"></i></span><div class="h3" style="margin-top:10px">Home</div><div class="sm muted">home.md · sidebar shell</div></div></a>
+    <a href="web-group.html"><div class="card"><span class="cb id-sky"><i class="ph-fill ph-users-three i"></i></span><div class="h3" style="margin-top:10px">Group</div><div class="sm muted">group-detail.md · expenses + balances panel</div></div></a>
+    <a href="web-expense-form.html"><div class="card"><span class="cb id-tangerine"><i class="ph-fill ph-pencil-simple-line i"></i></span><div class="h3" style="margin-top:10px">Expense form</div><div class="sm muted">expense.md · split editor · conflict</div></div></a>
+    <a href="web-settle-up.html"><div class="card"><span class="cb id-mango"><i class="ph-fill ph-hand-coins i"></i></span><div class="h3" style="margin-top:10px">Settle up</div><div class="sm muted">settle-up.md · UPI · all settled</div></div></a>
+    <a href="web-add-sheet.html"><div class="card"><span class="cb id-pink"><i class="ph-fill ph-sparkle i"></i></span><div class="h3" style="margin-top:10px">Add sheet and quick add</div><div class="sm muted">add-and-drafts.md</div></div></a>
+    <a href="web-drafts.html"><div class="card"><span class="cb id-mango"><i class="ph-fill ph-tray i"></i></span><div class="h3" style="margin-top:10px">Drafts queue</div><div class="sm muted">add-and-drafts.md · receipt draft</div></div></a>
+    <a href="web-share-link.html"><div class="card"><span class="cb id-teal"><i class="ph-fill ph-link i"></i></span><div class="h3" style="margin-top:10px">Guest share link</div><div class="sm muted">share-link.md · no account</div></div></a>
+    <a href="mobile-core.html"><div class="card"><span class="cb id-lime"><i class="ph-fill ph-device-mobile i"></i></span><div class="h3" style="margin-top:10px">Mobile core</div><div class="sm muted">mobile.md · 7 phone frames</div></div></a>
+  </div>
+</div>
+</body>
+</html>

@@ -5,6 +5,8 @@ paths:
 ---
 # Web client rules
 
+- Build every screen from its spec in `docs/design/screens/` with the components in `docs/design/components.md`. Style with Tailwind + Radix on the CSS variables from `docs/design/tokens.css`; no raw hex, px colours or ad-hoc fonts.
+
 - React + Vite + TypeScript SPA, built into the app's static resources. Call the API only through the client generated from the app's OpenAPI spec; never hand-write fetch calls to `/api/v1`.
 - No model keys, OIDC secrets or tokens in the bundle, `localStorage` or console output. Sessions are HttpOnly SameSite cookies; send the CSRF token on writes.
 - Send an `Idempotency-Key` on every create and the entity version on every edit. Show RFC 9457 problem details to the user in plain words.

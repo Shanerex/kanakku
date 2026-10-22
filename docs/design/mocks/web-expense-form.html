@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expense form · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 32px; padding: 32px; max-width: 1360px; margin: 0 auto; align-items: start; }
+  .pair .dialog { max-height: none; max-width: 640px; }
+  .money { text-align: center; padding: 8px 0 4px; }
+  .money .amt { font-size: 44px; font-family: var(--font-display); }
+  .srow { display: grid; grid-template-columns: 22px 36px 1fr 120px 96px; gap: 12px; align-items: center; padding: 8px 0; }
+  .srow + .srow { border-top: 1px solid var(--color-border); }
+  .mini { height: 36px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-surface-sunken); display: flex; align-items: center; padding: 0 10px; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .mini.focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+  .total { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-md); font-weight: 700; font-size: var(--text-body-sm); }
+</style>
+</head>
+<body>
+<div class="pair">
+  <div>
+    <p class="mock-note"><b>Equal split.</b> Computed share always visible so rounding is never hidden; Karthik is excluded.</p>
+    <div class="dialog" role="dialog" aria-labelledby="f1">
+      <div class="dhd"><h2 id="f1" class="h2">New expense</h2><span class="chip"><span style="font-size:14px">🏖️</span>Goa Trip</span><span class="grow"></span><button class="iconbtn" aria-label="Close"><i class="ph ph-x i"></i></button></div>
+      <div class="dbd stack">
+        <div class="money"><span class="chip out" style="vertical-align:12px">₹ INR<i class="ph ph-caret-down"></i></span> <span class="amt" aria-label="Amount 1,000 rupees">1,000.00</span></div>
+        <div class="field"><label for="d">Description</label><div class="input"><input id="d" value="Dinner at Thalassa"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Category</label><div class="input"><span class="cb id-tangerine" style="width:26px;height:26px;border-radius:8px"><i class="ph-fill ph-fork-knife" style="font-size:15px"></i></span>Food and dining<i class="ph ph-caret-down" style="margin-left:auto"></i></div></div>
+          <div class="field"><label>Date</label><div class="input"><i class="ph ph-calendar-blank i muted"></i>Today, 21 Oct</div></div>
+        </div>
+        <div class="field"><div class="row between"><label>Paid by</label><a class="sm w6" href="#">Multiple payers</a></div><div class="input"><span class="av xs you id-grape">P</span>You<i class="ph ph-caret-down" style="margin-left:auto"></i></div></div>
+        <div class="field">
+          <div class="row between"><label>Split</label><span class="sm"><a href="#">Everyone</a> · <a href="#">Just me and…</a></span></div>
+          <div class="seg" role="radiogroup" aria-label="Split type"><span class="on" role="radio" aria-checked="true">Equal</span><span role="radio">Exact</span><span role="radio">%</span><span role="radio">Shares</span></div>
+          <div>
+            <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm you id-grape">P</span><span class="w6">You</span><span></span><span class="amt right">₹333.34</span></div>
+            <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm id-teal">A</span><span class="w6">Arun</span><span></span><span class="amt right">₹333.33</span></div>
+            <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm id-coral">M</span><span class="w6">Meera</span><span></span><span class="amt right">₹333.33</span></div>
+            <div class="srow"><span class="check"></span><span class="av sm guest id-lime">K</span><span class="muted">Karthik</span><span></span><span class="right faint">—</span></div>
+          </div>
+          <div class="total" style="background:var(--color-positive-soft);color:var(--color-positive-text)"><i class="ph-bold ph-check-circle"></i>₹1,000.00 of ₹1,000.00<span class="grow"></span><a href="#" class="cap" style="color:inherit">Why ₹333.34?</a></div>
+        </div>
+        <button class="btn ghost" style="padding:0"><i class="ph ph-caret-right"></i>More: notes, receipt, repeat, exchange rate</button>
+      </div>
+      <div class="dft"><button class="btn secondary">Cancel</button><button class="btn primary">Add expense</button></div>
+    </div>
+  </div>
+
+  <div>
+    <p class="mock-note"><b>Exact split, not yet valid.</b> The total line says what's left in amber (never red while typing) and the primary button explains why it's disabled.</p>
+    <div class="dialog" role="dialog" aria-labelledby="f2">
+      <div class="dhd"><h2 id="f2" class="h2">Split ₹2,400.00</h2><span class="grow"></span></div>
+      <div class="dbd stack">
+        <div class="seg"><span>Equal</span><span class="on">Exact</span><span>%</span><span>Shares</span></div>
+        <div>
+          <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm you id-grape">P</span><span class="w6">You</span><span class="mini">₹ 800.00</span><span class="amt right">₹800.00</span></div>
+          <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm id-teal">A</span><div><div class="w6">Arun</div><div class="cap" style="color:var(--color-primary-text)">+₹200.00 extra drink</div></div><span class="mini">₹ 600.00</span><span class="amt right">₹600.00</span></div>
+          <div class="srow"><span class="check on"><i class="ph-bold ph-check"></i></span><span class="av sm id-coral">M</span><span class="w6">Meera</span><span class="mini focus">₹ 800|</span><span class="amt right">₹800.00</span></div>
+          <div class="srow"><span class="check"></span><span class="av sm guest id-lime">K</span><span class="muted">Karthik</span><span class="mini" style="opacity:.4">₹ —</span><span class="right faint">—</span></div>
+        </div>
+        <div class="total" style="background:var(--color-draft-soft);color:var(--color-draft-text)" role="status"><i class="ph-bold ph-warning-circle"></i>₹2,200.00 of ₹2,400.00 · ₹200.00 left to assign</div>
+      </div>
+      <div class="dft"><button class="btn secondary">Back</button><button class="btn primary" disabled>Save split</button></div>
+    </div>
+
+    <p class="mock-note" style="margin-top:32px"><b>Edit conflict (409).</b></p>
+    <div class="dialog" role="alertdialog" aria-labelledby="f3">
+      <div class="dhd"><span class="cb id-mango"><i class="ph-fill ph-git-diff i"></i></span><h2 id="f3" class="h2">Someone changed this while you were editing</h2></div>
+      <div class="dbd stack">
+        <p class="sm muted" style="margin:0">Arun edited “Dinner at Thalassa” 2 minutes ago.</p>
+        <div class="sunken" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:14px">
+          <span></span><b>Theirs</b><b>Yours</b>
+          <span class="muted">Amount</span><span class="amt">₹2,400.00</span><span class="amt">₹2,600.00</span>
+          <span class="muted">Split</span><span>Equal, 4</span><span>Equal, 5</span>
+        </div>
+      </div>
+      <div class="dft"><button class="btn secondary">Keep theirs</button><button class="btn primary">Use mine</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
