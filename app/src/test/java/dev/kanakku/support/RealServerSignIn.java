@@ -2,7 +2,7 @@ package dev.kanakku.support;
 
 import static dev.kanakku.jooq.Tables.SIGN_IN_FAILURES;
 
-import dev.kanakku.identity.internal.SignUpService;
+import dev.kanakku.identity.service.SignUpService;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;

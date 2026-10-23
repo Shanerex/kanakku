@@ -18,7 +18,7 @@ status: final
 
 ## Design
 Modules
-- Owner: `dev.kanakku.identity` (new). `identity.web` holds the controllers, `identity.internal` the services and jOOQ repositories. `identity.api` is a named interface `api` that exposes `AuthenticatedUser(UUID id)` and `CurrentUser` for later modules.
+- Owner: `dev.kanakku.identity` (new). `identity.controller` holds the controllers, `identity.service` the services and `identity.repository` the jOOQ repositories. `identity.api` is a named interface `api` that exposes `AuthenticatedUser(UUID id)` and `CurrentUser` for later modules.
 - `dev.kanakku.platform` (new; human-approved Q1): named interface `idempotency` (`IdempotencyService`) and `problem` (RFC 9457 mapping, shared `Clock` bean). Every later create reuses it.
 - identity calls only platform's `idempotency` and `problem` named interfaces. `ModularityTests` (`ApplicationModules.verify()`) covers both modules.
 

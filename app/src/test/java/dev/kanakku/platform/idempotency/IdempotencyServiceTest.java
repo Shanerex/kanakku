@@ -53,7 +53,7 @@ class IdempotencyServiceTest extends PostgresIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    service = new IdempotencyService(dsl, transactions, clock);
+    service = new IdempotencyService(new IdempotencyKeyRepository(dsl), transactions, clock);
     key = UUID.randomUUID().toString();
   }
 

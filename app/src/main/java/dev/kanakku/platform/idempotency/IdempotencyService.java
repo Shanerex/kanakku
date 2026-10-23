@@ -1,7 +1,5 @@
 package dev.kanakku.platform.idempotency;
 
-import static dev.kanakku.jooq.Tables.IDEMPOTENCY_KEYS;
-
 import dev.kanakku.platform.problem.ProblemException;
 import dev.kanakku.platform.problem.Problems;
 import java.nio.charset.StandardCharsets;
@@ -13,8 +11,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.function.Supplier;
-import org.jooq.DSLContext;
-import org.jooq.JSONB;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -37,12 +33,13 @@ public class IdempotencyService {
   /** The response, and whether it came from an earlier request with the same key. */
   public record Outcome(StoredResponse response, boolean replayed) {}
 
-  private final DSLContext dsl;
+  private final IdempotencyKeyRepository keys;
   private final TransactionTemplate transaction;
   private final Clock clock;
 
-  IdempotencyService(DSLContext dsl, PlatformTransactionManager transactions, Clock clock) {
-    this.dsl = dsl;
+  IdempotencyService(
+      IdempotencyKeyRepository keys, PlatformTransactionManager transactions, Clock clock) {
+    this.keys = keys;
     this.transaction = new TransactionTemplate(transactions);
     this.clock = clock;
   }
@@ -79,31 +76,13 @@ public class IdempotencyService {
   private Outcome executeInTransaction(
       String scope, String key, byte[] requestHash, Supplier<StoredResponse> action) {
     OffsetDateTime now = OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
-    dsl.deleteFrom(IDEMPOTENCY_KEYS)
-        .where(IDEMPOTENCY_KEYS.CREATED_AT.lt(now.minus(TTL)))
-        .execute();
+    keys.deleteCreatedBefore(now.minus(TTL));
 
-    int inserted =
-        dsl.insertInto(IDEMPOTENCY_KEYS)
-            .set(IDEMPOTENCY_KEYS.SCOPE, scope)
-            .set(IDEMPOTENCY_KEYS.KEY, key)
-            .set(IDEMPOTENCY_KEYS.REQUEST_HASH, requestHash)
-            .set(IDEMPOTENCY_KEYS.STATUS, 0)
-            .set(IDEMPOTENCY_KEYS.CREATED_AT, now)
-            .onConflictDoNothing()
-            .execute();
-
-    if (inserted == 0) {
+    if (!keys.claim(scope, key, requestHash, now)) {
       var stored =
-          dsl.select(
-                  IDEMPOTENCY_KEYS.REQUEST_HASH, IDEMPOTENCY_KEYS.STATUS, IDEMPOTENCY_KEYS.RESPONSE)
-              .from(IDEMPOTENCY_KEYS)
-              .where(IDEMPOTENCY_KEYS.SCOPE.eq(scope).and(IDEMPOTENCY_KEYS.KEY.eq(key)))
-              .fetchOne();
-      if (stored == null) {
-        throw new IllegalStateException("idempotency key vanished");
-      }
-      if (!Arrays.equals(stored.value1(), requestHash)) {
+          keys.find(scope, key)
+              .orElseThrow(() -> new IllegalStateException("idempotency key vanished"));
+      if (!Arrays.equals(stored.requestHash(), requestHash)) {
         throw new ProblemException(
             Problems.of(
                 HttpStatus.UNPROCESSABLE_ENTITY,
@@ -111,19 +90,11 @@ public class IdempotencyService {
                 "Idempotency key already used",
                 "This Idempotency-Key was already used with a different request."));
       }
-      JSONB body = stored.value3();
-      return new Outcome(
-          new StoredResponse(stored.value2(), body == null ? null : body.data()), true);
+      return new Outcome(new StoredResponse(stored.status(), stored.body()), true);
     }
 
     StoredResponse response = action.get();
-    dsl.update(IDEMPOTENCY_KEYS)
-        .set(IDEMPOTENCY_KEYS.STATUS, response.status())
-        .set(
-            IDEMPOTENCY_KEYS.RESPONSE,
-            response.body() == null ? null : JSONB.valueOf(response.body()))
-        .where(IDEMPOTENCY_KEYS.SCOPE.eq(scope).and(IDEMPOTENCY_KEYS.KEY.eq(key)))
-        .execute();
+    keys.storeResponse(scope, key, response.status(), response.body());
     return new Outcome(response, false);
   }
 }
