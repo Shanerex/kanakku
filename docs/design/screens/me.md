@@ -5,11 +5,19 @@
 
 Header: Avatar xl (identity colour), display name, email, "Edit profile".
 
+> v1 (accounts-password): the list shows only the **Profile** row, then **Sign out**. The other
+> rows below arrive with their own features.
+
 ## Profile — `/me/profile`
 
 Display name, Email (change requires re-verification: "We'll send a link to the new
 address"), Default currency, UPI ID (with "Test link" that opens a ₹1 `upi://` preview on
 phones; never sends), Locale (English for now; listed so the setting exists).
+
+> v1: Email is **read-only** ("Your email can't be changed yet."); the **Test link** and
+> **Locale** rows are left out. Saving sends the version the form started from, and a 409 shows
+> "Your profile was changed somewhere else. Reload it and try again." with a "Load the latest
+> version" button.
 
 ## Appearance — `/me/appearance`
 

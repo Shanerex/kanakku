@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootTest(
     properties = {
       "kanakku.cors.allowed-origins=http://localhost:3000",
-      "spring.datasource.url=jdbc:postgresql://127.0.0.1:1/none"
+      "spring.datasource.url=jdbc:postgresql://127.0.0.1:1/none",
+      "spring.flyway.enabled=false"
     })
 @AutoConfigureMockMvc
 @Import(CorsTest.PingConfig.class)

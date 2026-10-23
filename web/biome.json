@@ -5,10 +5,19 @@
       "**",
       "!dist",
       "!coverage",
-      "!node_modules",
-      "!package-lock.json"
+      "!**/node_modules",
+      "!package-lock.json",
+      "!src/api/schema.d.ts",
+      "!src/app/tokens.css",
+      "!src/app/theme.css"
     ]
   },
-  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2 },
-  "linter": { "enabled": true }
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true
+  }
 }
