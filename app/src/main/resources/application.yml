@@ -5,6 +5,23 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kanakku}
     username: ${SPRING_DATASOURCE_USERNAME:kanakku}
     password: ${SPRING_DATASOURCE_PASSWORD:kanakku}
+  jooq:
+    sql-dialect: postgres
+  session:
+    timeout: 14d
+    jdbc:
+      initialize-schema: never
+  flyway:
+    enabled: true
+
+server:
+  # Forwarded headers (X-Forwarded-For/-Proto) are honoured only when the TCP peer matches
+  # KANAKKU_TRUSTED_PROXIES, a regex of proxy IPs (for example 10\.0\.0\.5). Empty, the default,
+  # trusts nobody: the client IP is the socket peer and a forged header changes nothing.
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: ${KANAKKU_TRUSTED_PROXIES:}
 
 kanakku:
   cors:

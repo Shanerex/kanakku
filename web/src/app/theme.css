@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./fonts.css";
+
+/*
+ * Tailwind utilities on top of the design tokens. Values are the tokens' CSS variables, never raw
+ * colours, so light and dark follow tokens.css. `inline` makes a utility read the token directly.
+ */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-overlay: var(--color-overlay);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-faint: var(--color-text-faint);
+  --color-text-on-primary: var(--color-text-on-primary);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-pressed: var(--color-primary-pressed);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-primary-text: var(--color-primary-text);
+  --color-focus-ring: var(--color-focus-ring);
+  --color-positive: var(--color-positive);
+  --color-positive-soft: var(--color-positive-soft);
+  --color-positive-text: var(--color-positive-text);
+  --color-negative: var(--color-negative);
+  --color-negative-soft: var(--color-negative-soft);
+  --color-negative-text: var(--color-negative-text);
+  --color-draft: var(--color-draft);
+  --color-draft-soft: var(--color-draft-soft);
+  --color-draft-text: var(--color-draft-text);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-danger-text: var(--color-danger-text);
+  --color-info: var(--color-info);
+  --color-info-soft: var(--color-info-soft);
+  --color-info-text: var(--color-info-text);
+  --color-skeleton: var(--color-skeleton);
+
+  --radius-*: initial;
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill);
+  --shadow-*: initial;
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-fab: var(--shadow-fab);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  --text-*: initial;
+  --text-display: var(--text-display);
+  --text-display--line-height: var(--leading-display);
+  --text-h1: var(--text-h1);
+  --text-h1--line-height: var(--leading-h1);
+  --text-h2: var(--text-h2);
+  --text-h2--line-height: var(--leading-h2);
+  --text-h3: var(--text-h3);
+  --text-h3--line-height: var(--leading-h3);
+  --text-body: var(--text-body);
+  --text-body--line-height: var(--leading-body);
+  --text-body-sm: var(--text-body-sm);
+  --text-body-sm--line-height: var(--leading-body-sm);
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: var(--leading-caption);
+}
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

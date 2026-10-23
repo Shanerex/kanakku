@@ -12,7 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(
     properties = {
       "spring.datasource.url=jdbc:postgresql://127.0.0.1:1/none",
-      "spring.datasource.hikari.connection-timeout=1000"
+      "spring.datasource.hikari.connection-timeout=1000",
+      "spring.flyway.enabled=false"
     })
 @AutoConfigureMockMvc
 class ProbesDbDownTest {

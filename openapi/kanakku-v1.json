@@ -1,0 +1,422 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Kanakku API",
+    "description" : "Expense splitting for friends, trips and flatmates.",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "paths" : {
+    "/api/v1/me" : {
+      "get" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Read my profile",
+        "operationId" : "getMe",
+        "responses" : {
+          "200" : {
+            "description" : "My profile",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not signed in",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Edit my profile",
+        "operationId" : "updateMe",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The saved profile, with its new version",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid fields",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not signed in",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-up" : {
+      "post" : {
+        "tags" : [ "auth-controller" ],
+        "summary" : "Create a password account",
+        "operationId" : "signUp",
+        "parameters" : [ {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignUpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Account created. No session is started; call sign-in next.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid fields or missing Idempotency-Key",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Email already registered",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Idempotency-Key reused with a different body",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-out" : {
+      "post" : {
+        "tags" : [ "auth-controller" ],
+        "summary" : "Sign out and revoke the session",
+        "operationId" : "signOut",
+        "responses" : {
+          "204" : {
+            "description" : "Session revoked"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-in" : {
+      "post" : {
+        "tags" : [ "auth-controller" ],
+        "summary" : "Sign in with email and password",
+        "operationId" : "signIn",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Signed in; the SESSION cookie is set",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid fields",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Email and password do not match (one generic answer)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too many failed tries; see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503" : {
+            "description" : "Sign-in is busy (too many unknown-email checks at once); see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/csrf" : {
+      "get" : {
+        "tags" : [ "csrf-controller" ],
+        "summary" : "Get the CSRF token",
+        "operationId" : "csrf",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsrfTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "UpdateProfileRequest" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "defaultCurrency" : {
+            "type" : "string"
+          },
+          "upiId" : {
+            "type" : "string",
+            "maxLength" : 400,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "defaultCurrency", "displayName", "version" ]
+      },
+      "Profile" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "defaultCurrency" : {
+            "type" : "string",
+            "example" : "INR"
+          },
+          "upiId" : {
+            "type" : [ "string", "null" ],
+            "example" : "name@okbank"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back on every edit"
+          }
+        },
+        "required" : [ "defaultCurrency", "displayName", "email", "emailVerified", "id", "version" ]
+      },
+      "FieldError" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Problem" : {
+        "type" : "object",
+        "description" : "RFC 9457 problem details",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "example" : "urn:kanakku:problem:email-taken"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string"
+          },
+          "errors" : {
+            "type" : "array",
+            "description" : "Field errors on a 400; never contains the rejected value",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldError"
+            }
+          },
+          "retryAfterSeconds" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Seconds until a throttled sign-in may be retried (429 only)"
+          }
+        },
+        "required" : [ "status", "title", "type" ]
+      },
+      "SignUpRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "displayName" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "displayName", "email", "password" ]
+      },
+      "SignInRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 1024,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "email", "password" ]
+      },
+      "CsrfTokenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "headerName" : {
+            "type" : "string"
+          },
+          "token" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "headerName", "token" ]
+      }
+    }
+  }
+}
