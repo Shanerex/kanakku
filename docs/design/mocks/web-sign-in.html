@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .auth { min-height: calc(100vh - 37px); display: grid; place-items: center; padding: 32px 16px; position: relative; overflow: hidden; }
+  .auth svg.bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .auth .card { width: 100%; max-width: 400px; position: relative; padding: 32px 28px; box-shadow: var(--shadow-lg); }
+  .prov { justify-content: flex-start; gap: 12px; }
+  .prov .logo-i { width: 20px; text-align: center; font-size: 18px; }
+</style>
+</head>
+<body>
+<main class="auth">
+  <svg class="bg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 800">
+    <circle cx="160" cy="140" r="180" fill="var(--id-violet-tint)"/>
+    <circle cx="1060" cy="160" r="120" fill="var(--id-mango-tint)"/>
+    <circle cx="980" cy="680" r="220" fill="var(--id-mint-tint)"/>
+    <circle cx="240" cy="700" r="90" fill="var(--id-pink-tint)"/>
+    <circle cx="1120" cy="420" r="18" fill="var(--id-sky-solid)" opacity=".5"/>
+    <circle cx="90" cy="420" r="12" fill="var(--id-tangerine-solid)" opacity=".5"/>
+  </svg>
+  <div class="card stack">
+    <div><div class="logo" style="padding:0;font-size:34px">kanakku<span class="dotc">.</span></div><p class="sm muted" style="margin:0">Split trips, flats and dinners. Settle over UPI.</p></div>
+    <h1 class="h1">Welcome back</h1>
+    <div class="col">
+      <button class="btn secondary block prov"><span class="logo-i" style="font-weight:800;color:#4285F4">G</span>Continue with Google</button>
+      <button class="btn secondary block prov"><span class="logo-i"><i class="ph-fill ph-windows-logo" style="color:#00A4EF"></i></span>Continue with Microsoft</button>
+      <button class="btn block prov" style="background:var(--color-text);color:var(--color-bg)"><span class="logo-i"><i class="ph-fill ph-apple-logo"></i></span>Continue with Apple</button>
+    </div>
+    <div class="row" style="color:var(--color-text-muted)"><hr class="divider grow"><span class="cap">or</span><hr class="divider grow"></div>
+    <div class="field"><label for="e">Email</label><div class="input"><input id="e" type="email" value="priya@example.com"></div></div>
+    <div class="field"><div class="row between"><label for="p">Password</label><a class="sm w6" href="#">Forgot password?</a></div><div class="input"><input id="p" type="password" value="hunter2hunter2"><button class="iconbtn" aria-label="Show password" aria-pressed="false" style="width:32px;height:32px"><i class="ph ph-eye"></i></button></div></div>
+    <div class="banner" role="alert" style="background:var(--color-danger-soft);color:var(--color-danger-text)"><i class="ph-bold ph-warning-circle i"></i>That email and password don't match.</div>
+    <button class="btn primary lg block">Sign in</button>
+    <p class="sm" style="text-align:center;margin:0">New here? <a href="#" class="w6">Create an account</a></p>
+  </div>
+</main>
+</body>
+</html>

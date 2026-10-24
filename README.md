@@ -78,6 +78,12 @@ The web image has no API URL baked in. It serves `/config.json` from the
 `web` service, and set `KANAKKU_CORS_ALLOWED_ORIGINS` on the `app` service to the web origin
 (no wildcard). Defaults for credentials are in `.env.example`; copy it to `.env` to override.
 
+Session and CSRF cookies are Secure by default (`KANAKKU_AUTH_SECURE_COOKIES=true`), so a
+deployment should sit behind TLS (set `KANAKKU_TRUSTED_PROXIES` for the proxy). Chrome and Firefox
+still accept them from `http://localhost`. For plain HTTP on another host, in Safari, or for the
+Playwright e2e run (`cd e2e && npm test`), start the stack with the development override:
+`make up-dev` (`docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait`).
+
 MinIO images are no longer published by MinIO; compose uses the `pgsty/minio` fork.
 
 ### Develop and test

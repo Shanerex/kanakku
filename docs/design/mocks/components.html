@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Components · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .wrapc { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+  .sec { margin-top: 40px; }
+  .sec > .h2 { margin-bottom: 14px; }
+  .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .sw div { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-border); font-size: 12px; }
+  .sw b { display: block; height: 52px; }
+  .sw span { display: block; padding: 6px 10px; background: var(--color-surface); font-family: var(--font-mono); }
+  .idsw { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .idsw > div { border-radius: var(--radius-lg); padding: 12px; display: flex; align-items: center; gap: 10px; font-weight: 800; }
+  .demo { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .cats > div { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+  .typo > div { display: flex; align-items: baseline; gap: 20px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
+  .typo code { width: 90px; flex: none; color: var(--color-text-muted); font-size: 12px; }
+  @media (max-width: 700px) { .idsw { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrapc">
+  <h1 class="h1">Kanakku components</h1>
+  <p class="mock-note">Visual reference for <a href="../components.md">components.md</a> and <a href="../design-system.md">design-system.md</a>. Every colour is a token from <a href="../tokens.json">tokens.json</a>; toggle the theme above.</p>
+
+  <section class="sec"><h2 class="h2">Semantic colours</h2>
+    <div class="sw" id="sem"></div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Identity palette (ink on tint)</h2>
+    <div class="idsw">
+      <div class="id-violet"><span class="av id-violet" style="background:var(--color-surface)">V</span>violet</div>
+      <div class="id-grape"><span class="av" style="background:var(--color-surface)">G</span>grape</div>
+      <div class="id-pink"><span class="av" style="background:var(--color-surface)">P</span>pink</div>
+      <div class="id-coral"><span class="av" style="background:var(--color-surface)">C</span>coral</div>
+      <div class="id-tangerine"><span class="av" style="background:var(--color-surface)">T</span>tangerine</div>
+      <div class="id-mango"><span class="av" style="background:var(--color-surface)">M</span>mango</div>
+      <div class="id-lime"><span class="av" style="background:var(--color-surface)">L</span>lime</div>
+      <div class="id-mint"><span class="av" style="background:var(--color-surface)">M</span>mint</div>
+      <div class="id-teal"><span class="av" style="background:var(--color-surface)">T</span>teal</div>
+      <div class="id-sky"><span class="av" style="background:var(--color-surface)">S</span>sky</div>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Type</h2>
+    <div class="typo">
+      <div><code>display</code><span class="display">₹2,340</span></div>
+      <div><code>h1</code><span class="h1">Goa Trip</span></div>
+      <div><code>h2</code><span class="h2">Settle up</span></div>
+      <div><code>h3</code><span class="h3">Balances</span></div>
+      <div><code>body</code><span>Priya paid for dinner at Thalassa.</span></div>
+      <div><code>body-sm</code><span class="sm muted">You paid ₹2,400.00 · 14 Oct</span></div>
+      <div><code>caption</code><span class="cap">YOU LENT · 2 H AGO</span></div>
+      <div><code>amounts</code><span class="amt lg">₹1,23,456.50</span><span class="amt pos">+₹1,240.00</span><span class="amt neg">−₹1,200.00</span><span class="amt">€42.00</span><span class="amt">¥12,346</span><span class="amt">1,250.000 KWD</span></div>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Buttons</h2>
+    <div class="demo">
+      <button class="btn primary">Add expense</button>
+      <button class="btn primary pill"><i class="ph-bold ph-plus"></i>Add</button>
+      <button class="btn secondary">Cancel</button>
+      <button class="btn ghost"><i class="ph ph-sparkle"></i>Explain</button>
+      <button class="btn positive"><i class="ph-bold ph-check"></i>Confirm</button>
+      <button class="btn danger">Remove Arun</button>
+      <button class="btn primary" disabled>Disabled</button>
+      <button class="btn secondary sm">Small</button>
+      <button class="btn primary lg">Large</button>
+      <button class="iconbtn" aria-label="More"><i class="ph-bold ph-dots-three i"></i></button>
+      <span class="fab" style="margin:0"><i class="ph-bold ph-plus"></i></span>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Chips and controls</h2>
+    <div class="demo">
+      <span class="chip on"><i class="ph-bold ph-check"></i>All</span><span class="chip out">Category<i class="ph ph-caret-down"></i></span>
+      <span class="chip draft"><i class="ph-fill ph-sparkle"></i>Draft</span><span class="chip pos">You're owed ₹2,340</span><span class="chip neg">You owe ₹600</span>
+      <span class="chip info"><i class="ph ph-cloud-arrow-up"></i>Waiting to sync</span><span class="chip tiny">guest</span><span class="chip tiny">UPI</span>
+      <span class="seg"><span class="on">Equal</span><span>Exact</span><span>%</span><span>Shares</span></span>
+      <span class="check on"><i class="ph-bold ph-check"></i></span><span class="check"></span><span class="switch on"></span><span class="switch"></span>
+    </div>
+    <div class="row gap4 wrap" style="margin-top:16px;max-width:720px">
+      <div class="field grow"><label>Description</label><div class="input"><input value="Dinner at Thalassa"></div><span class="help">Shown in everyone's list</span></div>
+      <div class="field grow"><label>Amount</label><div class="input focus"><span class="w6 muted">₹</span><input value="2,400.00" style="font-variant-numeric:tabular-nums;font-weight:700"></div><span class="help" style="color:var(--color-danger-text)"><i class="ph-bold ph-warning-circle"></i> Add an amount</span></div>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Identity</h2>
+    <div class="demo">
+      <span class="av xs id-grape">P</span><span class="av sm id-teal">A</span><span class="av id-coral">M</span><span class="av lg guest id-lime">K</span><span class="av xl you id-grape">PR</span>
+      <span class="stack-av"><span class="av sm id-grape">P</span><span class="av sm id-teal">A</span><span class="av sm id-coral">M</span><span class="av sm id-violet">+3</span></span>
+      <span class="gb sm id-sky">🏖️</span><span class="gb id-mango">🏠</span><span class="gb lg id-pink">💞</span><span class="gb xl id-lime">🎉</span>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Categories</h2>
+    <div class="cats">
+      <div><span class="cb id-tangerine"><i class="ph-fill ph-fork-knife i"></i></span>Food and dining</div>
+      <div><span class="cb id-lime"><i class="ph-fill ph-basket i"></i></span>Groceries</div>
+      <div><span class="cb id-mango"><i class="ph-fill ph-beer-bottle i"></i></span>Drinks</div>
+      <div><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span>Cab and auto</div>
+      <div><span class="cb id-sky"><i class="ph-fill ph-airplane-tilt i"></i></span>Travel</div>
+      <div><span class="cb id-coral"><i class="ph-fill ph-gas-pump i"></i></span>Fuel</div>
+      <div><span class="cb id-grape"><i class="ph-fill ph-bed i"></i></span>Stay</div>
+      <div><span class="cb id-violet"><i class="ph-fill ph-house-line i"></i></span>Rent</div>
+      <div><span class="cb id-teal"><i class="ph-fill ph-lightning i"></i></span>Utilities</div>
+      <div><span class="cb id-pink"><i class="ph-fill ph-film-slate i"></i></span>Entertainment</div>
+      <div><span class="cb id-pink"><i class="ph-fill ph-shopping-bag i"></i></span>Shopping</div>
+      <div><span class="cb id-mint"><i class="ph-fill ph-first-aid-kit i"></i></span>Health</div>
+      <div><span class="cb id-grape"><i class="ph-fill ph-gift i"></i></span>Gifts</div>
+      <div><span class="cb id-mint"><i class="ph-fill ph-hand-coins i"></i></span>Settlement</div>
+      <div><span class="cb id-violet"><i class="ph-fill ph-receipt i"></i></span>Other</div>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Rows</h2>
+    <div class="card flush" style="max-width:560px">
+      <ul class="list">
+        <li class="li"><span class="cb id-tangerine"><i class="ph-fill ph-fork-knife i"></i></span><div class="grow"><div class="t1">Dinner at Thalassa</div><div class="t2">You paid ₹2,400.00</div></div><div class="end"><span class="cap">you lent</span><span class="amt sm pos">₹1,800.00</span></div></li>
+        <li class="li"><span class="av id-teal">A</span><div class="grow"><div class="t1">Arun</div><div class="t2">owes you</div></div><div class="end amt pos">+₹480.00</div></li>
+        <li class="li"><span class="gb lg id-sky">🏖️</span><div class="grow"><div class="t1">Goa Trip</div><div class="t2">5 people</div></div><div class="end"><span class="cap">you're owed</span><span class="amt sm pos">₹2,340.00</span></div></li>
+        <li class="li"><span style="position:relative"><span class="av id-coral">M</span><span style="position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:50%;background:var(--color-draft);color:#000;display:grid;place-items:center;font-size:11px"><i class="ph-fill ph-sparkle"></i></span></span><div class="grow"><div class="t1">Meera confirmed a draft from a receipt</div><div class="t2">Goa Trip · 2 h</div></div><div class="end"><span class="amt sm neg">you owe ₹812.40</span></div></li>
+        <li class="li draftrow"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="t1">Cab <span class="chip draft tiny"><i class="ph-fill ph-sparkle"></i>Draft</span></div><div class="t2">From your message</div></div><div class="end"><span class="slot">Add amount</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Feedback</h2>
+    <div class="col" style="max-width:560px">
+      <div class="banner draft"><i class="ph-fill ph-sparkle i"></i>3 drafts to review</div>
+      <div class="banner info"><i class="ph ph-wifi-slash i"></i>You're offline. Changes can't be saved right now.</div>
+      <div class="banner" style="background:var(--color-danger-soft);color:var(--color-danger-text)"><i class="ph-bold ph-warning-circle i"></i>Arun still owes ₹1,240.00. Settle up or write off first.</div>
+      <div class="quote">“1200 cab yesterday, everyone except Arun, I paid”</div>
+      <div><span class="toast">Expense deleted <b>Undo</b></span></div>
+    </div>
+  </section>
+
+  <section class="sec"><h2 class="h2">Empty-state illustrations</h2>
+    <div class="row gap6 wrap">
+      <div class="col" style="align-items:center;width:180px;text-align:center"><svg aria-hidden="true" width="140" height="100" viewBox="0 0 140 100"><circle cx="50" cy="56" r="36" fill="var(--id-violet-tint)"/><circle cx="92" cy="50" r="30" fill="var(--id-mango-tint)"/><circle cx="76" cy="74" r="22" fill="var(--id-mint-tint)"/><rect x="52" y="36" width="40" height="34" rx="8" fill="var(--id-violet-solid)"/><rect x="64" y="28" width="16" height="10" rx="4" fill="none" stroke="var(--id-violet-solid)" stroke-width="4"/><rect x="52" y="50" width="40" height="4" fill="var(--id-violet-ink)" opacity=".4"/></svg><b>Start your first group</b></div>
+      <div class="col" style="align-items:center;width:180px;text-align:center"><svg aria-hidden="true" width="140" height="100" viewBox="0 0 140 100"><circle cx="70" cy="54" r="40" fill="var(--id-sky-tint)"/><path d="M50 18h40v66l-6-5-7 5-7-5-7 5-7-5-6 5z" fill="var(--color-surface)" stroke="var(--color-border-strong)" stroke-width="2" stroke-dasharray="5 4"/><rect x="58" y="32" width="24" height="4" rx="2" fill="var(--id-sky-solid)"/><rect x="58" y="44" width="18" height="4" rx="2" fill="var(--color-border-strong)"/><rect x="58" y="54" width="22" height="4" rx="2" fill="var(--color-border-strong)"/></svg><b>Nothing here yet</b></div>
+      <div class="col" style="align-items:center;width:180px;text-align:center"><svg aria-hidden="true" width="140" height="100" viewBox="0 0 140 100"><circle cx="70" cy="56" r="38" fill="var(--id-mango-tint)"/><path d="M70 22l6 16 16 6-16 6-6 16-6-16-16-6 16-6z" fill="var(--color-draft)"/><rect x="40" y="70" width="60" height="14" rx="7" fill="var(--color-surface)" stroke="var(--color-border-strong)" stroke-width="2"/></svg><b>No drafts to review</b></div>
+    </div>
+  </section>
+</div>
+<script>
+  const names = ["bg","surface","surface-sunken","border","text","text-muted","primary","primary-soft","primary-text","positive","positive-soft","positive-text","negative","negative-soft","negative-text","draft","draft-soft","draft-text","danger","danger-soft","info","info-soft"];
+  document.getElementById("sem").innerHTML = names.map(n => `<div><b style="background:var(--color-${n})"></b><span>${n}</span></div>`).join("");
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+</head>
+<body>
+<div class="app">
+  <nav class="side" aria-label="Main">
+    <div class="logo">kanakku<span class="dotc">.</span></div>
+    <a class="nav on" href="web-home.html"><i class="ph-fill ph-house i"></i>Home</a>
+    <a class="nav" href="web-drafts.html"><i class="ph ph-sparkle i"></i>Drafts<span class="n">3</span></a>
+    <a class="nav" href="#"><i class="ph ph-clock-counter-clockwise i"></i>Activity</a>
+    <a class="nav" href="#"><i class="ph ph-magnifying-glass i"></i>Search</a>
+    <div class="label">Groups</div>
+    <a class="nav" href="web-group.html"><span class="gb sm id-sky">🏖️</span>Goa Trip<span class="bal" style="background:var(--color-positive)"></span></a>
+    <a class="nav" href="#"><span class="gb sm id-mango">🏠</span>Flat 4B<span class="bal" style="background:var(--color-negative)"></span></a>
+    <a class="nav" href="#"><span class="gb sm id-pink">🎂</span>Meera's 30th<span class="bal" style="background:var(--color-positive)"></span></a>
+    <a class="nav" href="#"><span class="gb sm id-lime">🏸</span>Badminton</a>
+    <a class="nav" href="#"><i class="ph ph-plus i"></i>New group</a>
+    <div class="grow"></div>
+    <a class="nav" href="#"><span class="av sm id-grape">P</span>Priya Raman<i class="ph ph-bell i" style="margin-left:auto"></i></a>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <h1 class="h1">Hi, Priya 👋</h1>
+      <div class="input search hide-sm"><i class="ph ph-magnifying-glass i muted"></i><input placeholder="Search expenses" aria-label="Search expenses"><span class="chip tiny out">/</span></div>
+      <button class="iconbtn hide-sm" aria-label="Notifications, 2 unread"><i class="ph ph-bell i"></i><span class="dot-badge">2</span></button>
+      <button class="btn primary pill"><i class="ph-bold ph-plus"></i>Add</button>
+    </header>
+
+    <div class="content stack">
+      <div class="grid2" style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px">
+        <section class="card" aria-labelledby="bal-h" style="position:relative;overflow:hidden">
+          <svg aria-hidden="true" width="220" height="220" style="position:absolute;right:-60px;top:-70px;opacity:.55"><circle cx="110" cy="110" r="90" fill="var(--id-mint-tint)"/><circle cx="60" cy="160" r="40" fill="var(--id-mango-tint)"/></svg>
+          <div style="position:relative">
+            <h2 id="bal-h" class="w6 muted" style="margin:0;font-size:15px">You are owed</h2>
+            <div class="amt xl pos" aria-label="You are owed 2,940 rupees overall">+₹2,940</div>
+            <p class="sm muted" style="margin:6px 0 18px">you owe <span class="amt sm neg">₹600.00</span> · you are owed <span class="amt sm pos">₹3,540.00</span> <span class="chip tiny">+1 currency</span></p>
+            <div class="row"><a class="btn primary pill" href="web-settle-up.html"><i class="ph ph-hand-coins i"></i>Settle up</a><button class="btn ghost"><i class="ph ph-sparkle i"></i>Explain</button></div>
+          </div>
+        </section>
+
+        <section class="card flush" aria-labelledby="ppl-h">
+          <div class="section-h"><h2 id="ppl-h" class="h3">People</h2><a class="sm w6" href="#">See all</a></div>
+          <ul class="list">
+            <li class="li"><span class="av guest id-lime">K</span><div class="grow"><div class="t1">Karthik</div><div class="t2">owes you · Goa Trip</div></div><div class="end amt pos">+₹1,860.00</div></li>
+            <li class="li"><span class="av id-coral">M</span><div class="grow"><div class="t1">Meera</div><div class="t2">owes you · Meera's 30th</div></div><div class="end amt pos">+₹1,200.00</div></li>
+            <li class="li"><span class="av id-sky">S</span><div class="grow"><div class="t1">Sanjay</div><div class="t2">you owe · Flat 4B</div></div><div class="end amt neg">−₹600.00</div></li>
+          </ul>
+        </section>
+      </div>
+
+      <a class="banner draft" href="web-drafts.html" style="text-decoration:none"><i class="ph-fill ph-sparkle i"></i>3 drafts to review<span class="grow"></span><i class="ph ph-caret-right i"></i></a>
+
+      <div class="row between"><h2 class="h2">Groups</h2><button class="btn secondary sm"><i class="ph ph-plus"></i>New group</button></div>
+      <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <a class="card flush" href="web-group.html" style="text-decoration:none;color:inherit">
+          <div class="id-sky" style="height:6px;background:var(--id-sky-solid)"></div>
+          <div class="row" style="padding:16px 20px;background:var(--id-sky-tint)"><span class="gb lg" style="background:var(--color-surface)">🏖️</span><div class="grow"><div class="h3" style="color:var(--id-sky-ink)">Goa Trip</div><div class="sm" style="color:var(--id-sky-ink)">12 – 19 Oct · 5 people</div></div></div>
+          <div class="row between" style="padding:14px 20px"><div class="stack-av"><span class="av sm id-grape">P</span><span class="av sm id-teal">A</span><span class="av sm id-coral">M</span><span class="av sm guest id-lime">K</span></div><div class="right"><div class="cap muted">you are owed</div><div class="amt pos">₹2,340.00</div></div></div>
+          <div class="sm muted" style="padding:0 20px 16px">You added <b class="w6" style="color:var(--color-text)">Dinner at Thalassa</b> · 2 h</div>
+        </a>
+        <a class="card flush" href="#" style="text-decoration:none;color:inherit">
+          <div style="height:6px;background:var(--id-mango-solid)"></div>
+          <div class="row" style="padding:16px 20px;background:var(--id-mango-tint)"><span class="gb lg" style="background:var(--color-surface)">🏠</span><div class="grow"><div class="h3" style="color:var(--id-mango-ink)">Flat 4B</div><div class="sm" style="color:var(--id-mango-ink)">Home · 3 people</div></div></div>
+          <div class="row between" style="padding:14px 20px"><div class="stack-av"><span class="av sm id-grape">P</span><span class="av sm id-sky">S</span><span class="av sm id-pink">D</span></div><div class="right"><div class="cap muted">you owe</div><div class="amt neg">₹600.00</div></div></div>
+          <div class="sm muted" style="padding:0 20px 16px"><i class="ph ph-repeat"></i> Rent, Nov posts on 1 Nov</div>
+        </a>
+        <a class="card flush" href="#" style="text-decoration:none;color:inherit">
+          <div style="height:6px;background:var(--id-pink-solid)"></div>
+          <div class="row" style="padding:16px 20px;background:var(--id-pink-tint)"><span class="gb lg" style="background:var(--color-surface)">🎂</span><div class="grow"><div class="h3" style="color:var(--id-pink-ink)">Meera's 30th</div><div class="sm" style="color:var(--id-pink-ink)">Event · 8 people</div></div></div>
+          <div class="row between" style="padding:14px 20px"><div class="stack-av"><span class="av sm id-coral">M</span><span class="av sm id-grape">P</span><span class="av sm id-teal">A</span><span class="av sm id-violet">+5</span></div><div class="right"><div class="cap muted">you are owed</div><div class="amt pos">₹1,200.00</div></div></div>
+          <div class="sm muted" style="padding:0 20px 16px">Arun paid you <b class="w6" style="color:var(--color-text)">₹800.00</b> · yesterday</div>
+        </a>
+        <a class="card flush" href="#" style="text-decoration:none;color:inherit">
+          <div style="height:6px;background:var(--id-lime-solid)"></div>
+          <div class="row" style="padding:16px 20px;background:var(--id-lime-tint)"><span class="gb lg" style="background:var(--color-surface)">🏸</span><div class="grow"><div class="h3" style="color:var(--id-lime-ink)">Badminton</div><div class="sm" style="color:var(--id-lime-ink)">Other · 6 people</div></div></div>
+          <div class="row between" style="padding:14px 20px"><div class="stack-av"><span class="av sm id-teal">A</span><span class="av sm id-grape">P</span><span class="av sm id-sky">R</span></div><div class="right"><div class="cap muted">&nbsp;</div><div class="muted w6"><i class="ph ph-check-circle"></i> settled up</div></div></div>
+          <div class="sm muted" style="padding:0 20px 16px">No activity this week</div>
+        </a>
+      </div>
+      <p class="sm"><a href="#">Show archived (2)</a></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

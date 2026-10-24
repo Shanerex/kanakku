@@ -1,0 +1,10 @@
+# Development and e2e override: serves the stack over plain HTTP, so the SESSION and XSRF-TOKEN
+# cookies lose their Secure flag. Never use it for a deployment.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
+#
+# (or `make up-dev`). The Playwright run in e2e/ expects this stack.
+services:
+  app:
+    environment:
+      KANAKKU_AUTH_SECURE_COOKIES: "false"

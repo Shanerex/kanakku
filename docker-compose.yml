@@ -53,6 +53,17 @@ services:
       KANAKKU_SMTP_HOST: mailpit
       KANAKKU_SMTP_PORT: "1025"
       KANAKKU_CORS_ALLOWED_ORIGINS: ${KANAKKU_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # Regex of reverse-proxy IPs whose X-Forwarded-For / X-Forwarded-Proto the app believes
+      # (for example 172\.18\.0\.5 for a TLS proxy on the compose network). Empty trusts nobody, so
+      # a forged header changes nothing. Behind a TLS proxy set it, or every client shares the
+      # proxy's IP in the sign-in throttle and the session cookie is not marked Secure. The proxy
+      # must overwrite, not append to, any X-Forwarded-For sent by the client.
+      KANAKKU_TRUSTED_PROXIES: ${KANAKKU_TRUSTED_PROXIES:-}
+      # SESSION and XSRF-TOKEN cookies are Secure, which is what a deployment behind TLS needs.
+      # Browsers still accept them from http://localhost (Chrome, Firefox). For plain HTTP on
+      # another host or in Safari, and for the Playwright e2e run, add docker-compose.dev.yml,
+      # the only place the opt-out is set.
+      KANAKKU_AUTH_SECURE_COOKIES: "true"
     depends_on:
       postgres:
         condition: service_healthy

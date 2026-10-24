@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile core · Kanakku mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="stylesheet" href="assets/mock.css">
+<script defer src="assets/mock.js"></script>
+<style>
+  .phone .pad { padding: 0 16px; }
+  .ptop { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px 0 16px; }
+  .cam { position: absolute; inset: 0; background: #0d0c12; color: #fff; }
+  .frame { position: absolute; left: 44px; right: 44px; top: 90px; bottom: 210px; border: 3px solid rgba(255,255,255,.9); border-radius: 18px; }
+  .paper { position: absolute; left: 62px; right: 62px; top: 110px; bottom: 230px; background: repeating-linear-gradient(#f4f1ea 0 18px, #e2ddd0 18px 19px); border-radius: 6px; transform: rotate(-2deg); opacity: .9; }
+  .shutter { width: 76px; height: 76px; border-radius: 50%; border: 5px solid #fff; display: grid; place-items: center; }
+  .shutter i { width: 58px; height: 58px; border-radius: 50%; background: #fff; display: block; }
+</style>
+</head>
+<body>
+<p class="mock-note" style="padding:24px 32px 0;margin:0">Compose Multiplatform, one look on Android and iOS. Same tokens as web. Use the theme buttons above to see dark mode. Frames: Home · Group · Add sheet with draft · Settle up / UPI · Receipt camera · Item assignment · Offline sync.</p>
+<div class="phones">
+
+  <!-- Home -->
+  <div><div class="phone">
+    <div class="status"><span>9:41</span><span><i class="ph-fill ph-cell-signal-full"></i> <i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr">
+      <div class="ptop"><span class="h2 grow">Hi, Priya 👋</span><button class="iconbtn" aria-label="Search"><i class="ph ph-magnifying-glass i"></i></button><button class="iconbtn" aria-label="Notifications"><i class="ph ph-bell i"></i><span class="dot-badge">2</span></button></div>
+      <div class="pad stack">
+        <div class="card" style="position:relative;overflow:hidden">
+          <svg aria-hidden="true" width="160" height="160" style="position:absolute;right:-50px;top:-50px;opacity:.6"><circle cx="80" cy="80" r="70" fill="var(--id-mint-tint)"/></svg>
+          <div style="position:relative"><div class="sm w6 muted">You are owed</div><div class="amt xl pos">+₹2,940</div><div class="cap muted" style="margin:4px 0 14px">you owe ₹600.00 · owed ₹3,540.00</div><div class="row"><button class="btn primary pill sm"><i class="ph ph-hand-coins"></i>Settle up</button><button class="btn ghost sm"><i class="ph ph-sparkle"></i>Explain</button></div></div>
+        </div>
+        <div class="banner draft"><i class="ph-fill ph-sparkle i"></i>3 drafts to review<span class="grow"></span><i class="ph ph-caret-right"></i></div>
+        <div class="card flush">
+          <div class="section-h"><span class="h3">Groups</span><a class="sm w6" href="#">＋ New</a></div>
+          <ul class="list">
+            <li class="li"><span class="gb lg id-sky">🏖️</span><div class="grow"><div class="t1">Goa Trip</div><div class="t2">5 people</div></div><div class="end"><span class="cap">you're owed</span><span class="amt sm pos">₹2,340.00</span></div></li>
+            <li class="li"><span class="gb lg id-mango">🏠</span><div class="grow"><div class="t1">Flat 4B</div><div class="t2">3 people</div></div><div class="end"><span class="cap">you owe</span><span class="amt sm neg">₹600.00</span></div></li>
+            <li class="li"><span class="gb lg id-pink">🎂</span><div class="grow"><div class="t1">Meera's 30th</div><div class="t2">8 people</div></div><div class="end"><span class="cap">you're owed</span><span class="amt sm pos">₹1,200.00</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <nav class="bbar"><a class="on" href="#"><i class="ph-fill ph-house i"></i>Home</a><a href="#"><i class="ph ph-squares-four i"></i>Groups</a><a href="#" aria-label="Add"><span class="fab"><i class="ph-bold ph-plus"></i></span></a><a href="#"><i class="ph ph-clock-counter-clockwise i"></i>Activity</a><a href="#"><i class="ph ph-user-circle i"></i>Me</a></nav>
+  </div><div class="phone-label">Home</div></div>
+
+  <!-- Group -->
+  <div><div class="phone">
+    <div class="status" style="background:var(--id-sky-tint);color:var(--id-sky-ink)"><span>9:41</span><span><i class="ph-fill ph-cell-signal-full"></i> <i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr">
+      <div style="background:var(--id-sky-tint);color:var(--id-sky-ink);padding:0 16px 16px">
+        <div class="row" style="height:48px"><i class="ph-bold ph-arrow-left i"></i><span class="grow"></span><i class="ph ph-magnifying-glass i"></i><i class="ph-bold ph-dots-three i" style="margin-left:16px"></i></div>
+        <div class="row"><span class="gb xl" style="background:var(--color-surface);width:60px;height:60px;font-size:32px">🏖️</span><div class="grow"><div class="h1">Goa Trip</div><div class="stack-av" style="margin-top:4px"><span class="av xs id-grape">P</span><span class="av xs id-teal">A</span><span class="av xs id-coral">M</span><span class="av xs guest id-lime">K</span><span class="av xs id-sky">R</span></div></div></div>
+        <div class="row" style="margin-top:14px"><span class="chip pos">You're owed ₹2,340</span><span class="grow"></span><button class="btn primary pill sm">Settle up</button></div>
+      </div>
+      <div class="tabs" style="padding:0 8px;background:var(--color-surface)"><span class="on">Expenses</span><span>Balances</span><span>Activity</span><span>Insights</span></div>
+      <div class="day-h">Today</div>
+      <ul class="list" style="background:var(--color-surface)">
+        <li class="li"><span class="cb id-tangerine"><i class="ph-fill ph-fork-knife i"></i></span><div class="grow"><div class="t1">Dinner at Thalassa</div><div class="t2">You paid ₹2,400.00</div></div><div class="end"><span class="cap">you lent</span><span class="amt sm pos">₹1,800.00</span></div></li>
+        <li class="li"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="t1">Cab to Baga</div><div class="t2">Arun paid ₹1,200.00</div></div><div class="end"><span class="cap">you borrowed</span><span class="amt sm neg">₹300.00</span></div></li>
+      </ul>
+      <div class="day-h">Yesterday</div>
+      <ul class="list" style="background:var(--color-surface)">
+        <li class="li"><span class="cb id-mint"><i class="ph-fill ph-hand-coins i"></i></span><div class="grow"><div class="t1">Arun paid you</div><div class="t2">UPI</div></div><div class="end"><span class="amt sm">₹1,000.00</span></div></li>
+        <li class="li"><span class="cb id-sky"><i class="ph-fill ph-airplane-tilt i"></i></span><div class="grow"><div class="t1">Scuba diving</div><div class="t2">Meera paid €160.00</div></div><div class="end"><span class="cap">you borrowed</span><span class="amt sm neg">₹3,631.20</span></div></li>
+        <li class="li"><span class="cb id-grape"><i class="ph-fill ph-bed i"></i></span><div class="grow"><div class="t1">Villa, 4 nights</div><div class="t2">You paid ₹17,000.00</div></div><div class="end"><span class="cap">you lent</span><span class="amt sm pos">₹13,600.00</span></div></li>
+      </ul>
+    </div>
+    <nav class="bbar"><a href="#"><i class="ph ph-house i"></i>Home</a><a class="on" href="#"><i class="ph-fill ph-squares-four i"></i>Groups</a><a href="#" aria-label="Add"><span class="fab"><i class="ph-bold ph-plus"></i></span></a><a href="#"><i class="ph ph-clock-counter-clockwise i"></i>Activity</a><a href="#"><i class="ph ph-user-circle i"></i>Me</a></nav>
+  </div><div class="phone-label">Group</div></div>
+
+  <!-- Add sheet with draft -->
+  <div><div class="phone">
+    <div class="status"><span>9:41</span><span><i class="ph-fill ph-cell-signal-full"></i> <i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr" style="overflow:hidden">
+      <div class="pad" style="opacity:.5"><div class="h1" style="margin-top:12px">Goa Trip</div></div>
+      <div class="pscrim"></div>
+      <div class="psheet" style="top:70px;padding-bottom:16px">
+        <div class="handle"></div>
+        <div class="draftcard">
+          <div class="dh"><i class="ph-fill ph-sparkle i"></i>Draft · From your message</div>
+          <div class="db stack">
+            <div class="quote">“1200 cab yesterday, everyone except Arun, KK paid”</div>
+            <div class="row"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="h3">Cab</div><div class="sm muted">Yesterday · equal, 4 people</div></div><span class="amt lg">₹1,200.00</span></div>
+            <div class="sunken"><div class="row between"><span class="sm w6">Paid by</span><span class="sm w6 unsure">“KK” <i class="ph ph-question"></i></span></div></div>
+            <div class="sm w6">Who is “KK”?</div>
+            <div class="col">
+              <button class="tile"><span class="av sm guest id-lime">K</span>Karthik<span class="grow"></span><span class="chip tiny">guest</span></button>
+              <button class="tile"><span class="av sm id-pink">KR</span>Kiran R.</button>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px"><button class="btn ghost">Discard</button><span class="grow"></span><button class="btn secondary">Edit</button><button class="btn positive" disabled><i class="ph-bold ph-check"></i>Confirm</button></div>
+      </div>
+    </div>
+  </div><div class="phone-label">Add sheet → draft</div></div>
+
+  <!-- Settle / UPI -->
+  <div><div class="phone">
+    <div class="status"><span>9:41</span><span><i class="ph-fill ph-cell-signal-full"></i> <i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr" style="overflow:hidden">
+      <div class="pad"><div class="h1" style="margin-top:12px;opacity:.5">Settle up</div></div>
+      <div class="pscrim"></div>
+      <div class="psheet stack">
+        <div class="handle"></div>
+        <div class="h2">Pay Meera <span class="amt">₹640.00</span></div>
+        <div class="row"><span class="av lg id-coral">M</span><div><div class="w6">Meera Nair</div><div class="mono muted">meera.n@okaxis</div></div></div>
+        <div class="sm w6 muted">Pay with</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center" class="cap">
+          <div class="col" style="align-items:center"><span class="gb lg id-sky"><i class="ph-fill ph-google-logo"></i></span>GPay</div>
+          <div class="col" style="align-items:center"><span class="gb lg id-grape"><i class="ph-fill ph-device-mobile"></i></span>PhonePe</div>
+          <div class="col" style="align-items:center"><span class="gb lg id-teal"><i class="ph-fill ph-wallet"></i></span>Paytm</div>
+          <div class="col" style="align-items:center"><span class="gb lg id-tangerine"><i class="ph-fill ph-bank"></i></span>BHIM</div>
+        </div>
+        <div class="row"><button class="btn secondary sm grow"><i class="ph ph-qr-code"></i>Show QR</button><button class="btn secondary sm grow"><i class="ph ph-copy"></i>Copy UPI ID</button></div>
+        <div style="background:var(--color-positive-soft);border-radius:var(--radius-md);padding:12px" class="col"><span class="w6" style="color:var(--color-positive-text)">Back from your UPI app. Paid?</span><div class="row"><button class="btn positive sm grow"><i class="ph-bold ph-check"></i>Yes, record ₹640.00</button><button class="btn ghost sm">Not yet</button></div></div>
+      </div>
+    </div>
+  </div><div class="phone-label">UPI pay (iOS picker; Android uses the system chooser)</div></div>
+
+  <!-- Camera -->
+  <div><div class="phone" style="background:#0d0c12">
+    <div class="status" style="color:#fff"><span>9:41</span><span><i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr" style="overflow:hidden">
+      <div class="cam">
+        <div class="row" style="padding:8px 16px"><i class="ph-bold ph-x i"></i><span class="grow" style="text-align:center;font-weight:700">Scan receipt</span><i class="ph-fill ph-lightning-slash i"></i></div>
+        <div class="paper"></div><div class="frame"></div>
+        <p class="cap" style="position:absolute;left:0;right:0;bottom:178px;text-align:center;color:#ddd">Location data is removed before we store the photo.</p>
+        <div class="row" style="position:absolute;left:0;right:0;bottom:70px;justify-content:space-around;padding:0 24px">
+          <span class="col cap" style="align-items:center;color:#ddd"><i class="ph ph-image i"></i>Gallery</span>
+          <span class="shutter"><i></i></span>
+          <span class="col cap" style="align-items:center;color:#ddd"><i class="ph ph-file-pdf i"></i>PDF</span>
+        </div>
+      </div>
+    </div>
+  </div><div class="phone-label">Receipt camera</div></div>
+
+  <!-- Assign items -->
+  <div><div class="phone">
+    <div class="status"><span>9:41</span><span><i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr">
+      <div class="ptop"><i class="ph-bold ph-arrow-left i"></i><span class="h2 grow" style="margin-left:8px">Who had what?</span><span class="chip draft"><i class="ph-fill ph-sparkle"></i>Draft</span></div>
+      <div class="pad stack">
+        <div class="input" style="height:auto;padding:10px 12px;align-items:flex-start"><span class="sm grow">Meera and I shared the biryani, Arun had the drinks, rest equally</span><i class="ph-fill ph-sparkle i" style="color:var(--color-primary-text)"></i></div>
+        <div class="card flush">
+          <ul class="list">
+            <li class="li" style="background:var(--color-draft-soft)"><div class="grow"><div class="t1">Gulab jamun</div><div class="t2" style="color:var(--color-draft-text)">Unassigned · tap to pick</div></div><span class="amt sm">₹120.00</span></li>
+            <li class="li"><div class="grow"><div class="t1">Chicken biryani × 2</div><div class="stack-av" style="margin-top:4px"><span class="av xs you id-grape">P</span><span class="av xs id-coral">M</span></div></div><span class="amt sm">₹640.00</span></li>
+            <li class="li"><div class="grow"><div class="t1">Kingfisher × 3</div><div class="stack-av" style="margin-top:4px"><span class="av xs id-teal">A</span></div></div><span class="amt sm">₹540.00</span></li>
+            <li class="li"><div class="grow"><div class="t1">Prawn curry, rice, paneer (4)</div><span class="chip tiny" style="margin-top:4px">Everyone</span></div><span class="amt sm">₹1,820.00</span></li>
+            <li class="li"><div class="grow"><div class="t1 muted">Taxes and service</div><div class="t2">Spread by items</div></div><span class="amt sm muted">₹362.00</span></li>
+          </ul>
+        </div>
+        <div class="banner draft"><i class="ph-bold ph-warning"></i>1 item unassigned</div>
+        <button class="btn positive lg block" disabled>Confirm and add ₹3,482.00</button>
+      </div>
+    </div>
+  </div><div class="phone-label">Item assignment</div></div>
+
+  <!-- Offline -->
+  <div><div class="phone">
+    <div class="status"><span>9:41</span><span><i class="ph ph-cell-signal-x"></i> <i class="ph-fill ph-battery-high"></i></span></div>
+    <div class="scr">
+      <div class="ptop"><i class="ph-bold ph-arrow-left i"></i><span class="gb sm id-sky" style="margin-left:8px">🏖️</span><span class="h3 grow">Goa Trip</span></div>
+      <div class="pad"><div class="banner info"><i class="ph ph-wifi-slash i"></i>Offline · showing data from 10:42</div></div>
+      <div class="day-h">Today</div>
+      <ul class="list" style="background:var(--color-surface)">
+        <li class="li" style="box-shadow:inset 3px 0 0 var(--color-info)"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="t1">Auto to Anjuna</div><div class="t2" style="color:var(--color-info-text)"><i class="ph ph-cloud-arrow-up"></i> Waiting to sync</div></div><div class="end"><span class="cap">you lent</span><span class="amt sm pos">₹240.00</span></div></li>
+        <li class="li" style="box-shadow:inset 3px 0 0 var(--color-danger)"><span class="cb id-tangerine"><i class="ph-fill ph-fork-knife i"></i></span><div class="grow"><div class="t1">Dinner at Thalassa</div><div class="t2" style="color:var(--color-danger-text)"><i class="ph-bold ph-warning-circle"></i> Needs attention: edited by Arun</div></div><div class="end"><span class="amt sm">₹2,600.00</span></div></li>
+        <li class="li"><span class="cb id-mango"><i class="ph-fill ph-taxi i"></i></span><div class="grow"><div class="t1">Cab to Baga</div><div class="t2">Arun paid ₹1,200.00</div></div><div class="end"><span class="cap">you borrowed</span><span class="amt sm neg">₹300.00</span></div></li>
+      </ul>
+      <div class="pad"><p class="cap muted">Balances don't count 1 unsynced expense.</p></div>
+      <div style="position:absolute;left:16px;right:16px;bottom:16px" class="toast">Saved on this phone. It'll sync when you're back online.</div>
+    </div>
+    <nav class="bbar"><a href="#"><i class="ph ph-house i"></i>Home</a><a class="on" href="#"><i class="ph-fill ph-squares-four i"></i>Groups</a><a href="#" aria-label="Add"><span class="fab"><i class="ph-bold ph-plus"></i></span></a><a href="#"><i class="ph ph-clock-counter-clockwise i"></i>Activity</a><a href="#"><i class="ph ph-user-circle i"></i>Me</a></nav>
+  </div><div class="phone-label">Offline outbox and conflict</div></div>
+
+</div>
+</body>
+</html>

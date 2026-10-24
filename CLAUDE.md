@@ -25,8 +25,11 @@ or a WhatsApp bot.
 - REST under `/api/v1`, Bean Validation, RFC 9457 problem details.
 - Structured JSON logs with request IDs. Flyway migrations are forward-only.
 - Domain packages under `dev.kanakku` are Modulith modules; never touch another module's internals.
+- Layers inside a module: controller holds routes and request validation only; service holds business rules and transactions; repository holds all SQL (jOOQ) and external sources, so a service never touches `DSLContext`; domain holds the records and types they share. Each role is its own subpackage directly under the module (`controller`, `request`, `validation`, `advice`, `service`, `repository`, `domain`, `exception`, `config`, `util`); Modulith hides all of them from other modules, and only `api/` (the named interface) is visible.
+- Helpers used by one module live in its `util` package; helpers shared across modules live in `platform` behind a named interface, never in a global `utils`.
 - Each feature ships its own web screen in the same change.
-- License Apache-2.0; dependencies must be Apache, MIT, BSD or LGPL.
+- UI design lives in `docs/design/`: read its `screens/` spec before building a screen; tokens only.
+- License Apache-2.0; dependencies must be Apache, MIT, BSD or LGPL (font files may be OFL).
 
 ## Hard invariants
 - Money is `long` minor units plus an ISO 4217 currency. Never `double` or `float`.

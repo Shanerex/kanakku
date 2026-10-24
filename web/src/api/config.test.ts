@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getReadiness, loadConfig } from "./api";
+import { getReadiness, loadConfig } from "./config";
 
 function stubFetch(
   impl: (url: string, init?: RequestInit) => Promise<Response>,
