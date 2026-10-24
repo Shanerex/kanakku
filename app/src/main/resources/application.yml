@@ -5,8 +5,32 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kanakku}
     username: ${SPRING_DATASOURCE_USERNAME:kanakku}
     password: ${SPRING_DATASOURCE_PASSWORD:kanakku}
+  jooq:
+    sql-dialect: postgres
+  session:
+    timeout: 14d
+    jdbc:
+      initialize-schema: never
+  flyway:
+    enabled: true
+
+db-scheduler:
+  # Background jobs (expired idempotency keys, old sign-in failures); the table is in Flyway V6.
+  threads: 2
+
+server:
+  # Forwarded headers (X-Forwarded-For/-Proto) are honoured only when the TCP peer matches
+  # KANAKKU_TRUSTED_PROXIES, a regex of proxy IPs (for example 10\.0\.0\.5). Empty, the default,
+  # trusts nobody: the client IP is the socket peer and a forged header changes nothing.
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: ${KANAKKU_TRUSTED_PROXIES:}
 
 kanakku:
+  auth:
+    # SESSION and XSRF-TOKEN are Secure unless this is false (plain-HTTP local development only).
+    secure-cookies: ${KANAKKU_AUTH_SECURE_COOKIES:true}
   cors:
     allowed-origins: ${KANAKKU_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   # kanakku.minio.endpoint (KANAKKU_MINIO_ENDPOINT) and kanakku.smtp.host/port

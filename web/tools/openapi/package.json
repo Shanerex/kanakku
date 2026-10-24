@@ -1,0 +1,10 @@
+{
+  "name": "kanakku-openapi-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generates web/src/api/schema.d.ts. Kept apart because openapi-typescript needs TypeScript 5, while the web app uses 7.",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

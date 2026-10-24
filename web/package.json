@@ -9,16 +9,24 @@
     "test": "vitest run",
     "lint": "biome ci .",
     "format": "biome format --write .",
-    "check:version": "node scripts/check-version.mjs"
+    "check:version": "node scripts/check-version.mjs",
+    "generate:api": "npm --prefix tools/openapi ci --silent && node tools/openapi/node_modules/openapi-typescript/bin/cli.js ../openapi/kanakku-v1.json -o src/api/schema.d.ts"
   },
   "dependencies": {
+    "@phosphor-icons/react": "2.1.10",
+    "@radix-ui/react-label": "2.1.17",
+    "@tailwindcss/vite": "4.3.3",
+    "openapi-fetch": "0.17.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "react-router": "8.5.0",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
