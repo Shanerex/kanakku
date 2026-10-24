@@ -6,6 +6,7 @@ package dev.kanakku.jooq;
 
 import dev.kanakku.jooq.tables.IdempotencyKeys;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
 import dev.kanakku.jooq.tables.SpringSessionAttributes;
@@ -27,6 +28,11 @@ public class Tables {
      * The table <code>public.password_credentials</code>.
      */
     public static final PasswordCredentials PASSWORD_CREDENTIALS = PasswordCredentials.PASSWORD_CREDENTIALS;
+
+    /**
+     * The table <code>public.scheduled_tasks</code>.
+     */
+    public static final ScheduledTasks SCHEDULED_TASKS = ScheduledTasks.SCHEDULED_TASKS;
 
     /**
      * The table <code>public.sign_in_failures</code>.

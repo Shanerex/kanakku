@@ -1,5 +1,6 @@
 package dev.kanakku.identity.controller;
 
+import dev.kanakku.identity.domain.HashedPassword;
 import dev.kanakku.identity.domain.Profile;
 import dev.kanakku.identity.request.SignInRequest;
 import dev.kanakku.identity.request.SignUpRequest;
@@ -74,12 +75,8 @@ public class AuthController {
           @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
   @ApiResponse(
       responseCode = "429",
-      description = "Too many failed tries; see Retry-After",
-      content =
-          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
-  @ApiResponse(
-      responseCode = "503",
-      description = "Sign-in is busy (too many unknown-email checks at once); see Retry-After",
+      description =
+          "Too many failed tries, or this IP has too many sign-ins in flight; see Retry-After",
       content =
           @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
   @PostMapping(value = "/sign-in", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -123,13 +120,23 @@ public class AuthController {
       description = "Idempotency-Key reused with a different body",
       content =
           @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
+  @ApiResponse(
+      responseCode = "429",
+      description =
+          "Too busy: this IP has too many sign-ins or sign-ups in flight, or no hash slot was free in time; see Retry-After",
+      content =
+          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
   @PostMapping(value = "/sign-up", produces = MediaType.APPLICATION_JSON_VALUE)
   ResponseEntity<String> signUp(
       @Parameter(required = true, description = "A fresh value per submit attempt")
           @RequestHeader(name = "Idempotency-Key", required = false)
           String key,
-      @Valid @RequestBody SignUpRequest request) {
+      @Valid @RequestBody SignUpRequest request,
+      HttpServletRequest httpRequest) {
     String idempotencyKey = requireKey(key);
+    // Hash before the idempotency transaction opens, so no pooled connection waits on Argon2.
+    HashedPassword hash =
+        signUpService.hashPassword(request.password(), httpRequest.getRemoteAddr());
     byte[] requestHash =
         IdempotencyService.hash(
             request.email().strip().toLowerCase(Locale.ROOT), request.displayName().strip());
@@ -140,11 +147,15 @@ public class AuthController {
             idempotencyKey,
             requestHash,
             () -> {
-              Profile profile =
-                  signUpService.signUp(request.email(), request.password(), request.displayName());
+              Profile profile = signUpService.signUp(request.email(), hash, request.displayName());
               return new IdempotencyService.StoredResponse(
                   HttpStatus.CREATED.value(), json.writeValueAsString(profile));
             });
+
+    if (outcome.replayed()) {
+      signUpService.verifyReplayedPassword(
+          request.email(), request.password(), httpRequest.getRemoteAddr());
+    }
 
     ResponseEntity.BodyBuilder response =
         ResponseEntity.status(outcome.response().status()).contentType(MediaType.APPLICATION_JSON);

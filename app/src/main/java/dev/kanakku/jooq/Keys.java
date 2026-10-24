@@ -6,12 +6,14 @@ package dev.kanakku.jooq;
 
 import dev.kanakku.jooq.tables.IdempotencyKeys;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
 import dev.kanakku.jooq.tables.SpringSessionAttributes;
 import dev.kanakku.jooq.tables.Users;
 import dev.kanakku.jooq.tables.records.IdempotencyKeysRecord;
 import dev.kanakku.jooq.tables.records.PasswordCredentialsRecord;
+import dev.kanakku.jooq.tables.records.ScheduledTasksRecord;
 import dev.kanakku.jooq.tables.records.SignInFailuresRecord;
 import dev.kanakku.jooq.tables.records.SpringSessionAttributesRecord;
 import dev.kanakku.jooq.tables.records.SpringSessionRecord;
@@ -38,6 +40,7 @@ public class Keys {
 
     public static final UniqueKey<IdempotencyKeysRecord> IDEMPOTENCY_KEYS_PKEY = Internal.createUniqueKey(IdempotencyKeys.IDEMPOTENCY_KEYS, DSL.name("idempotency_keys_pkey"), new TableField[] { IdempotencyKeys.IDEMPOTENCY_KEYS.SCOPE, IdempotencyKeys.IDEMPOTENCY_KEYS.KEY }, true);
     public static final UniqueKey<PasswordCredentialsRecord> PASSWORD_CREDENTIALS_PKEY = Internal.createUniqueKey(PasswordCredentials.PASSWORD_CREDENTIALS, DSL.name("password_credentials_pkey"), new TableField[] { PasswordCredentials.PASSWORD_CREDENTIALS.USER_ID }, true);
+    public static final UniqueKey<ScheduledTasksRecord> SCHEDULED_TASKS_PKEY = Internal.createUniqueKey(ScheduledTasks.SCHEDULED_TASKS, DSL.name("scheduled_tasks_pkey"), new TableField[] { ScheduledTasks.SCHEDULED_TASKS.TASK_NAME, ScheduledTasks.SCHEDULED_TASKS.TASK_INSTANCE }, true);
     public static final UniqueKey<SignInFailuresRecord> SIGN_IN_FAILURES_PKEY = Internal.createUniqueKey(SignInFailures.SIGN_IN_FAILURES, DSL.name("sign_in_failures_pkey"), new TableField[] { SignInFailures.SIGN_IN_FAILURES.ID }, true);
     public static final UniqueKey<SpringSessionRecord> SPRING_SESSION_PK = Internal.createUniqueKey(SpringSession.SPRING_SESSION, DSL.name("spring_session_pk"), new TableField[] { SpringSession.SPRING_SESSION.PRIMARY_ID }, true);
     public static final UniqueKey<SpringSessionAttributesRecord> SPRING_SESSION_ATTRIBUTES_PK = Internal.createUniqueKey(SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES, DSL.name("spring_session_attributes_pk"), new TableField[] { SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES.SESSION_PRIMARY_ID, SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES.ATTRIBUTE_NAME }, true);

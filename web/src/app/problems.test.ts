@@ -39,6 +39,12 @@ describe("describeProblem", () => {
     expect(words.body).toBe("Try again in 8 minutes.");
   });
 
+  it("asks for a short wait when the server is busy", () => {
+    const words = describeProblem(p("busy", { retryAfterSeconds: 1 }));
+    expect(words.title).toBe("Busy right now");
+    expect(words.body).toMatch(/moment/);
+  });
+
   it("explains a taken email", () => {
     expect(describeProblem(p("email-taken")).title).toMatch(
       /already has an account/,
@@ -63,6 +69,7 @@ describe("describeProblem", () => {
     for (const slug of [
       "invalid-credentials",
       "too-many-attempts",
+      "busy",
       "email-taken",
       "version-conflict",
       "validation",

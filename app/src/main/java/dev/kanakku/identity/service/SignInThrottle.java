@@ -1,18 +1,18 @@
 package dev.kanakku.identity.service;
 
 import dev.kanakku.identity.repository.SignInFailureRepository;
+import dev.kanakku.identity.util.ThrottleIp;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.OptionalLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * Limits sign-in guesses per (email, IP) pair: after {@value #MAX_FAILURES} failures in the last 10
+ * Limits sign-in guesses per (email, client) pair, where the client is the full IPv4 address or the
+ * IPv6 /64 prefix (see {@link ThrottleIp}): after {@value #MAX_FAILURES} failures in the last 10
  * minutes every try is refused until the oldest failure leaves the window. A refused try records
  * nothing and a success does not reset the count. Time comes from the injected clock.
  */
@@ -22,8 +22,6 @@ public class SignInThrottle {
   static final int MAX_FAILURES = 5;
   static final Duration WINDOW = Duration.ofMinutes(10);
   static final Duration RETENTION = Duration.ofHours(1);
-
-  private static final Logger log = LoggerFactory.getLogger(SignInThrottle.class);
 
   private final SignInFailureRepository failures;
   private final Clock clock;
@@ -39,13 +37,14 @@ public class SignInThrottle {
    * a parallel try. Must be called inside the sign-in transaction, before the first count.
    */
   public void lock(String email, String ip) {
-    failures.lockPair(email, ip);
+    failures.lockPair(email, ThrottleIp.of(ip));
   }
 
   /** Seconds until the next try is allowed, or empty when the pair is not limited. */
   public OptionalLong retryAfterSeconds(String email, String ip) {
     OffsetDateTime now = now();
-    List<OffsetDateTime> recent = failures.failureTimesAfter(email, ip, now.minus(WINDOW));
+    List<OffsetDateTime> recent =
+        failures.failureTimesAfter(email, ThrottleIp.of(ip), now.minus(WINDOW));
     if (recent.size() < MAX_FAILURES) {
       return OptionalLong.empty();
     }
@@ -60,7 +59,7 @@ public class SignInThrottle {
    * the row again when the password turns out right.
    */
   public long reserveFailure(String email, String ip) {
-    return failures.insert(email, ip, now());
+    return failures.insert(email, ThrottleIp.of(ip), now());
   }
 
   /** Drops a reserved try that turned out to be a correct password. */
@@ -69,15 +68,11 @@ public class SignInThrottle {
   }
 
   /**
-   * Deletes failures past retention. Best effort and run outside the sign-in transaction, so an
-   * error here is logged and can never lose a count or fail a sign-in.
+   * Deletes failures past retention and returns how many went. Housekeeping for the scheduled
+   * cleanup job: sign-in never runs it, and the count only reads rows inside the window.
    */
-  public void prune() {
-    try {
-      failures.deleteBefore(now().minus(RETENTION));
-    } catch (RuntimeException e) {
-      log.warn("Pruning old sign-in failures failed; will retry on a later sign-in", e);
-    }
+  public int purgeExpired() {
+    return failures.deleteBefore(now().minus(RETENTION));
   }
 
   private OffsetDateTime now() {

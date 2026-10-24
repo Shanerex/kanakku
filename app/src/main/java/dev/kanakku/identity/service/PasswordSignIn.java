@@ -1,8 +1,8 @@
 package dev.kanakku.identity.service;
 
 import dev.kanakku.identity.domain.Profile;
+import dev.kanakku.identity.exception.BusyException;
 import dev.kanakku.identity.exception.InvalidCredentialsException;
-import dev.kanakku.identity.exception.SignInBusyException;
 import dev.kanakku.identity.exception.TooManyAttemptsException;
 import dev.kanakku.identity.repository.UserRepository;
 import java.util.Optional;
@@ -28,6 +28,7 @@ public class PasswordSignIn {
   private final UserRepository users;
   private final SignInThrottle throttle;
   private final UnknownEmailHashLimiter unknownEmailLimiter;
+  private final IpHashGuard ipGuard;
   private final TransactionTemplate transactions;
   private final String dummyHash;
 
@@ -36,40 +37,55 @@ public class PasswordSignIn {
       UserRepository users,
       SignInThrottle throttle,
       UnknownEmailHashLimiter unknownEmailLimiter,
+      IpHashGuard ipGuard,
       TransactionTemplate transactions) {
     this.throttle = throttle;
     this.passwordEncoder = passwordEncoder;
     this.users = users;
     this.unknownEmailLimiter = unknownEmailLimiter;
+    this.ipGuard = ipGuard;
     this.transactions = transactions;
     this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
   }
 
   /** What step one decided: who to check against, and the try that was counted. */
-  private record Reserved(UUID userId, String hash, long failureId, boolean holdsSlot) {}
+  private record Reserved(UUID userId, String hash, long failureId) {}
 
   /**
    * @return the signed-in user's profile
    * @throws TooManyAttemptsException when the (email, IP) pair is throttled, even for a right
    *     password
-   * @throws SignInBusyException when too many unknown-email hashes are already running
-   * @throws InvalidCredentialsException for an unknown email or a wrong password
+   * @throws BusyException when this IP already has its share of sign-ins and sign-ups in flight,
+   *     whatever the email is
+   * @throws InvalidCredentialsException for an unknown email or a wrong password, also when an
+   *     unknown email found no hash slot within the timeout
    */
   public Profile signIn(String email, String password, String ip) {
-    Reserved reserved = transactions.execute(status -> reserve(email, ip));
-    // The try is committed; clean up old rows outside the lock, where an error costs nothing.
-    throttle.prune();
+    // Checked first and without looking at the email, so a refusal reveals nothing about it, and
+    // one IP can never park more than its cap of request threads here.
+    try (IpHashGuard.Permit permit = ipGuard.tryEnter(ip).orElseThrow(BusyException::new)) {
+      return checkCredentials(email, password, ip);
+    }
+  }
 
+  private Profile checkCredentials(String email, String password, String ip) {
+    Reserved reserved = transactions.execute(status -> reserve(email, ip));
+    boolean unknown = reserved.userId() == null;
+    // The slot is taken only after the commit, so a failed commit can never leak one. An unknown
+    // email that finds none in time gets the generic 401 without hashing; its try stays counted.
+    if (unknown && !unknownEmailLimiter.acquire()) {
+      throw new InvalidCredentialsException();
+    }
     boolean matches;
     try {
       // An unknown email gets the same hashing cost as a wrong password, so timing is equal.
       matches = passwordEncoder.matches(password, reserved.hash());
     } finally {
-      if (reserved.holdsSlot()) {
+      if (unknown) {
         unknownEmailLimiter.release();
       }
     }
-    if (reserved.userId() == null || !matches) {
+    if (unknown || !matches) {
       throw new InvalidCredentialsException();
     }
     throttle.forgive(reserved.failureId());
@@ -86,21 +102,9 @@ public class PasswordSignIn {
               throw new TooManyAttemptsException(seconds);
             });
     Optional<UserRepository.Credentials> credentials = users.findCredentials(email);
-    boolean unknown = credentials.isEmpty();
-    if (unknown && !unknownEmailLimiter.tryAcquire()) {
-      throw new SignInBusyException();
-    }
-    try {
-      long failureId = throttle.reserveFailure(email, ip);
-      return unknown
-          ? new Reserved(null, dummyHash, failureId, true)
-          : new Reserved(
-              credentials.get().userId(), credentials.get().passwordHash(), failureId, false);
-    } catch (RuntimeException e) {
-      if (unknown) {
-        unknownEmailLimiter.release();
-      }
-      throw e;
-    }
+    long failureId = throttle.reserveFailure(email, ip);
+    return credentials.isEmpty()
+        ? new Reserved(null, dummyHash, failureId)
+        : new Reserved(credentials.get().userId(), credentials.get().passwordHash(), failureId);
   }
 }

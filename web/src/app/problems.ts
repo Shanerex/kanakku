@@ -38,6 +38,11 @@ export function describeProblem(problem?: Partial<Problem>): PlainProblem {
             body: "Wait a few minutes and try again.",
           };
     }
+    case "busy":
+      return {
+        title: "Busy right now",
+        body: "Wait a moment and try again.",
+      };
     case "email-taken":
       return {
         title: "That email already has an account",

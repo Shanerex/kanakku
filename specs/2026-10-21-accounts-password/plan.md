@@ -39,7 +39,7 @@ REST (under /api/v1, Bean Validation, RFC 9457 application/problem+json)
 - OpenAPI: add springdoc-openapi (Apache-2.0). The snapshot `openapi/kanakku-v1.json` is checked by `OpenApiSnapshotTest`; web (and later mobile) clients are generated from it.
 
 Idempotency and versions
-- Sign-up: one row per (scope "sign-up", key), 24 h TTL. request_hash = SHA-256 of the normalised email plus displayName, never the password. The same key with the same hash replays the stored 201. Key insert and account insert share one transaction; concurrent repeats serialise on the pk (AC-14).
+- Sign-up: one row per (scope "sign-up", key), 24 h TTL. request_hash = SHA-256 of the normalised email plus displayName, never the password. The same key with the same hash replays the stored 201. A replay also checks the submitted password against the created account's Argon2 hash and answers 422 on a mismatch, so nothing password-derived is stored. The Argon2 hash (and the replay check) runs before or after the key transaction, never inside it, bounded by `kanakku.auth.max-concurrent-sign-up-hashes`; a wait past `kanakku.auth.sign-up-hash-wait` (default 300 ms, about one hash) is a 429 `busy` with Retry-After, never a 503. One client address (IPv6 by /64, `ThrottleIp`) may have at most `kanakku.auth.max-hashes-per-ip` (default 3) sign-in or sign-up hashes in flight; the rest get the same 429 at once, so a flood cannot park every request thread. Key insert and account insert share one transaction; concurrent repeats serialise on the pk (AC-14).
 - `PUT /me`: `update users set ..., version = version + 1 where id = :callerId and version = :v`; 0 rows -> 409 (AC-13).
 
 Scoping
@@ -74,6 +74,7 @@ Web (web/src; only tokens.css variables, Tailwind + Radix, Phosphor icons)
 
 ## Risks
 - Sign-up's 409 reveals that an account exists (AC-2 requires the refusal); sign-in stays generic and uses a dummy hash.
+- Unknown-email sign-ins hash through a bounded pool (`kanakku.auth.max-concurrent-unknown-hashes`). A caller past the cap waits for a slot up to `kanakku.auth.unknown-hash-wait` (default 300 ms, about one hash) and then gets the same generic 401 as a wrong password; there is no 503 for that. Separately, every sign-in and sign-up first takes a per-IP spot (`kanakku.auth.max-hashes-per-ip`, default 3, IPv6 by /64); an IP at its cap gets a 429 `busy` (Retry-After 1) at once, before the email is looked at, so the refusal is the same for known and unknown emails and no thread parks beyond the cap. Known-email sign-ins from other IPs are never slowed by an attacker's flood. Under a flood the extra latency of an unknown email is the only remaining signal; accepted.
 - Argon2 cost can tie up request threads under attack; the throttle runs before hashing, and the parameters are config.
 - X-Forwarded-For can be spoofed; forwarded headers are honoured only from a trusted proxy, documented in compose.
 - An attacker could lock one victim's email, but only from the attacker's own IP, because the throttle keys on the pair (R-7).

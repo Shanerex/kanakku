@@ -54,6 +54,11 @@
       <version>${springdoc.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.github.kagkarlsson</groupId>
+      <artifactId>db-scheduler-spring-boot-4-starter</artifactId>
+      <version>${db-scheduler.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
       <version>${bouncycastle.version}</version>

@@ -293,6 +293,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Too busy: this IP has too many sign-ins or sign-ups in flight, or no hash slot was free in time; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     signOut: {
@@ -353,17 +362,8 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Too many failed tries; see Retry-After */
+            /** @description Too many failed tries, or this IP has too many sign-ins in flight; see Retry-After */
             429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Sign-in is busy (too many unknown-email checks at once); see Retry-After */
-            503: {
                 headers: {
                     [name: string]: unknown;
                 };

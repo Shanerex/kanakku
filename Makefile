@@ -1,6 +1,7 @@
 COMPOSE ?= docker compose
+COMPOSE_DEV ?= $(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml
 
-.PHONY: help up up-d build down clean logs ps infra
+.PHONY: help up up-d up-dev build down clean logs ps infra
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
@@ -10,6 +11,9 @@ up: ## Start all services in the foreground (app, Postgres, MinIO, Mailpit, web)
 
 up-d: ## Start all services in the background
 	$(COMPOSE) up -d
+
+up-dev: ## Build and start all services over plain HTTP (cookies not Secure); the e2e stack
+	$(COMPOSE_DEV) up -d --build --wait
 
 build: ## Rebuild images, then start all services in the background
 	$(COMPOSE) up -d --build

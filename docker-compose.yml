@@ -59,6 +59,11 @@ services:
       # proxy's IP in the sign-in throttle and the session cookie is not marked Secure. The proxy
       # must overwrite, not append to, any X-Forwarded-For sent by the client.
       KANAKKU_TRUSTED_PROXIES: ${KANAKKU_TRUSTED_PROXIES:-}
+      # SESSION and XSRF-TOKEN cookies are Secure, which is what a deployment behind TLS needs.
+      # Browsers still accept them from http://localhost (Chrome, Firefox). For plain HTTP on
+      # another host or in Safari, and for the Playwright e2e run, add docker-compose.dev.yml,
+      # the only place the opt-out is set.
+      KANAKKU_AUTH_SECURE_COOKIES: "true"
     depends_on:
       postgres:
         condition: service_healthy

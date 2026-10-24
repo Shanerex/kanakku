@@ -1,5 +1,7 @@
 package dev.kanakku.identity.controller;
 
+import static dev.kanakku.jooq.Tables.IDEMPOTENCY_KEYS;
+import static dev.kanakku.jooq.Tables.PASSWORD_CREDENTIALS;
 import static dev.kanakku.jooq.Tables.USERS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -10,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.kanakku.platform.idempotency.IdempotencyService;
 import dev.kanakku.support.Csrf;
 import dev.kanakku.support.PostgresIntegrationTest;
 import dev.kanakku.support.TestData;
@@ -145,7 +148,7 @@ class SignUpEndpointTest extends PostgresIntegrationTest {
             .getContentAsString();
 
     String second =
-        signUp(key, email, "a different password", "Asha")
+        signUp(key, email, PASSWORD, "Asha")
             .andExpect(status().isCreated())
             .andExpect(header().string("Idempotent-Replayed", "true"))
             .andReturn()
@@ -154,6 +157,51 @@ class SignUpEndpointTest extends PostgresIntegrationTest {
 
     assertThat(json.readTree(second)).isEqualTo(json.readTree(first));
     assertThat(users(email)).isEqualTo(1);
+  }
+
+  @Test
+  void repeatingTheKeyWithAnotherPasswordIs422AndChangesNothing() throws Exception {
+    String email = TestData.email();
+    String key = key();
+    signUp(key, email, PASSWORD, "Asha").andExpect(status().isCreated());
+    String hashBefore =
+        dsl.select(PASSWORD_CREDENTIALS.PASSWORD_HASH)
+            .from(PASSWORD_CREDENTIALS)
+            .join(USERS)
+            .on(USERS.ID.eq(PASSWORD_CREDENTIALS.USER_ID))
+            .where(USERS.EMAIL.eq(email))
+            .fetchSingle(PASSWORD_CREDENTIALS.PASSWORD_HASH);
+
+    signUp(key, email, "a different password", "Asha")
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.type").value("urn:kanakku:problem:idempotency-key-reuse"))
+        .andExpect(content().string(not(containsString("a different password"))));
+
+    assertThat(users(email)).isEqualTo(1);
+    String hashAfter =
+        dsl.select(PASSWORD_CREDENTIALS.PASSWORD_HASH)
+            .from(PASSWORD_CREDENTIALS)
+            .join(USERS)
+            .on(USERS.ID.eq(PASSWORD_CREDENTIALS.USER_ID))
+            .where(USERS.EMAIL.eq(email))
+            .fetchSingle(PASSWORD_CREDENTIALS.PASSWORD_HASH);
+    assertThat(hashAfter).isEqualTo(hashBefore);
+  }
+
+  @Test
+  void theStoredIdempotencyRowHoldsNothingDerivedFromThePassword() throws Exception {
+    String email = TestData.email();
+    String key = key();
+
+    signUp(key, email, PASSWORD, "Asha").andExpect(status().isCreated());
+
+    byte[] stored =
+        dsl.select(IDEMPOTENCY_KEYS.REQUEST_HASH)
+            .from(IDEMPOTENCY_KEYS)
+            .where(IDEMPOTENCY_KEYS.KEY.eq(key))
+            .fetchSingle(IDEMPOTENCY_KEYS.REQUEST_HASH);
+    assertThat(stored).isEqualTo(IdempotencyService.hash(email.toLowerCase(), "Asha"));
   }
 
   @Test

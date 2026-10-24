@@ -13,7 +13,10 @@ import java.util.Currency;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** An upper-case ISO 4217 currency code. */
+/**
+ * An upper-case ISO 4217 code of a currency that has a minor unit. Codes such as XXX, XTS, XAU or
+ * XDR have none (default fraction digits -1), so no amount in them can be held as minor units.
+ */
 @Documented
 @Constraint(validatedBy = ValidCurrency.Validator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
@@ -28,6 +31,7 @@ public @interface ValidCurrency {
   class Validator implements ConstraintValidator<ValidCurrency, String> {
     private static final Set<String> CODES =
         Currency.getAvailableCurrencies().stream()
+            .filter(c -> c.getDefaultFractionDigits() >= 0)
             .map(Currency::getCurrencyCode)
             .collect(Collectors.toUnmodifiableSet());
 

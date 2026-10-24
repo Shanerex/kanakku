@@ -159,6 +159,16 @@
                 }
               }
             }
+          },
+          "429" : {
+            "description" : "Too busy: this IP has too many sign-ins or sign-ups in flight, or no hash slot was free in time; see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -222,17 +232,7 @@
             }
           },
           "429" : {
-            "description" : "Too many failed tries; see Retry-After",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "503" : {
-            "description" : "Sign-in is busy (too many unknown-email checks at once); see Retry-After",
+            "description" : "Too many failed tries, or this IP has too many sign-ins in flight; see Retry-After",
             "content" : {
               "application/problem+json" : {
                 "schema" : {

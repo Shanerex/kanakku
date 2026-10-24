@@ -21,19 +21,35 @@ class IdempotencyKeyRepository {
     this.dsl = dsl;
   }
 
-  void deleteCreatedBefore(OffsetDateTime cutoff) {
-    dsl.deleteFrom(IDEMPOTENCY_KEYS).where(IDEMPOTENCY_KEYS.CREATED_AT.lt(cutoff)).execute();
+  /** Deletes keys created before the cutoff and returns how many went. */
+  int deleteCreatedBefore(OffsetDateTime cutoff) {
+    return dsl.deleteFrom(IDEMPOTENCY_KEYS).where(IDEMPOTENCY_KEYS.CREATED_AT.lt(cutoff)).execute();
   }
 
-  /** Claims the key; false when a row already exists (waits on the pk if another tx holds it). */
-  boolean claim(String scope, String key, byte[] requestHash, OffsetDateTime createdAt) {
+  /**
+   * Claims the key; false when a live row already exists (waits on the pk if another tx holds it).
+   * A row created before {@code expiredBefore} is dead whether or not the cleanup job has removed
+   * it yet, so it is replaced in the same statement.
+   */
+  boolean claim(
+      String scope,
+      String key,
+      byte[] requestHash,
+      OffsetDateTime createdAt,
+      OffsetDateTime expiredBefore) {
     return dsl.insertInto(IDEMPOTENCY_KEYS)
             .set(IDEMPOTENCY_KEYS.SCOPE, scope)
             .set(IDEMPOTENCY_KEYS.KEY, key)
             .set(IDEMPOTENCY_KEYS.REQUEST_HASH, requestHash)
             .set(IDEMPOTENCY_KEYS.STATUS, 0)
             .set(IDEMPOTENCY_KEYS.CREATED_AT, createdAt)
-            .onConflictDoNothing()
+            .onConflict(IDEMPOTENCY_KEYS.SCOPE, IDEMPOTENCY_KEYS.KEY)
+            .doUpdate()
+            .set(IDEMPOTENCY_KEYS.REQUEST_HASH, requestHash)
+            .set(IDEMPOTENCY_KEYS.STATUS, 0)
+            .setNull(IDEMPOTENCY_KEYS.RESPONSE)
+            .set(IDEMPOTENCY_KEYS.CREATED_AT, createdAt)
+            .where(IDEMPOTENCY_KEYS.CREATED_AT.lt(expiredBefore))
             .execute()
         > 0;
   }

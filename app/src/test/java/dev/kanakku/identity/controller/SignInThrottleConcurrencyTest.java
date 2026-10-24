@@ -21,8 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/** R-7 / AC-7: parallel sign-ins from one IP must not each get a full guess. */
-@SpringBootTest
+/**
+ * R-7 / AC-7: parallel sign-ins from one IP must not each get a full guess. The per-IP hash cap is
+ * raised so this test exercises the per-pair throttle alone.
+ */
+@SpringBootTest(properties = "kanakku.auth.max-hashes-per-ip=100")
 class SignInThrottleConcurrencyTest extends PostgresIntegrationTest {
 
   static final int PARALLEL = 20;

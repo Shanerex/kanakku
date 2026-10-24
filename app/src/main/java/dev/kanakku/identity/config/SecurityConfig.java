@@ -5,6 +5,7 @@ import dev.kanakku.identity.api.CurrentUser;
 import dev.kanakku.platform.problem.ProblemWriter;
 import dev.kanakku.platform.problem.Problems;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -36,9 +37,16 @@ public class SecurityConfig {
   }
 
   @Bean
-  CsrfTokenRepository csrfTokenRepository() {
+  CsrfTokenRepository csrfTokenRepository(
+      @Value("${kanakku.auth.secure-cookies:true}") boolean secureCookies) {
     CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-    csrfRepository.setCookieCustomizer(cookie -> cookie.sameSite("Lax"));
+    csrfRepository.setCookieCustomizer(
+        cookie -> {
+          cookie.sameSite("Lax");
+          if (secureCookies) {
+            cookie.secure(true);
+          }
+        });
     return csrfRepository;
   }
 

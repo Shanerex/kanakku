@@ -10,7 +10,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 public abstract class PostgresIntegrationTest {
 
-  private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17");
+  private static final PostgreSQLContainer POSTGRES =
+      new PostgreSQLContainer("postgres:17")
+          // Every distinct Spring test context keeps its own connection pool alive.
+          .withCommand("postgres", "-c", "max_connections=500");
 
   static {
     POSTGRES.start();

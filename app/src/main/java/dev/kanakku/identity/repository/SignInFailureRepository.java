@@ -63,8 +63,8 @@ public class SignInFailureRepository {
     dsl.deleteFrom(SIGN_IN_FAILURES).where(SIGN_IN_FAILURES.ID.eq(failureId)).execute();
   }
 
-  public void deleteBefore(OffsetDateTime cutoff) {
-    dsl.deleteFrom(SIGN_IN_FAILURES).where(SIGN_IN_FAILURES.FAILED_AT.lt(cutoff)).execute();
+  public int deleteBefore(OffsetDateTime cutoff) {
+    return dsl.deleteFrom(SIGN_IN_FAILURES).where(SIGN_IN_FAILURES.FAILED_AT.lt(cutoff)).execute();
   }
 
   private static Inet inet(String ip) {

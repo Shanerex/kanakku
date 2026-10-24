@@ -9,8 +9,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/** With no trusted proxy configured (the default) forwarded headers are ignored. */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+/**
+ * With no trusted proxy configured (the default) forwarded headers are ignored. The Secure-cookie
+ * default is switched off here so the cookie flag shows only what the request headers did.
+ */
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "kanakku.auth.secure-cookies=false")
 class UntrustedProxyDefaultTest extends RealServerSignIn {
 
   @Test

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,7 +23,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 /**
  * Turns every error into an RFC 9457 problem detail. Field errors never echo the rejected value.
+ * The catch-all handler here must come last, so a module's own advice, which has a higher
+ * precedence, is asked first.
  */
+@Order(Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 class ProblemAdvice extends ResponseEntityExceptionHandler {
 

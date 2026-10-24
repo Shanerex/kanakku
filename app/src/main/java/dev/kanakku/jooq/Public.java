@@ -6,6 +6,7 @@ package dev.kanakku.jooq;
 
 import dev.kanakku.jooq.tables.IdempotencyKeys;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
 import dev.kanakku.jooq.tables.SpringSessionAttributes;
@@ -42,6 +43,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.password_credentials</code>.
      */
     public final PasswordCredentials PASSWORD_CREDENTIALS = PasswordCredentials.PASSWORD_CREDENTIALS;
+
+    /**
+     * The table <code>public.scheduled_tasks</code>.
+     */
+    public final ScheduledTasks SCHEDULED_TASKS = ScheduledTasks.SCHEDULED_TASKS;
 
     /**
      * The table <code>public.sign_in_failures</code>.
@@ -81,6 +87,7 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             IdempotencyKeys.IDEMPOTENCY_KEYS,
             PasswordCredentials.PASSWORD_CREDENTIALS,
+            ScheduledTasks.SCHEDULED_TASKS,
             SignInFailures.SIGN_IN_FAILURES,
             SpringSession.SPRING_SESSION,
             SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES,

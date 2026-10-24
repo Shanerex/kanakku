@@ -1,11 +1,13 @@
 package dev.kanakku.identity.advice;
 
+import dev.kanakku.identity.exception.BusyException;
 import dev.kanakku.identity.exception.EmailTakenException;
 import dev.kanakku.identity.exception.InvalidCredentialsException;
-import dev.kanakku.identity.exception.SignInBusyException;
 import dev.kanakku.identity.exception.TooManyAttemptsException;
 import dev.kanakku.identity.exception.VersionConflictException;
 import dev.kanakku.platform.problem.Problems;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Maps identity's own failures to problem details. */
+@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 @RestControllerAdvice(basePackages = "dev.kanakku.identity.controller")
 public class IdentityProblemAdvice {
 
@@ -42,16 +45,18 @@ public class IdentityProblemAdvice {
         .body(problem);
   }
 
-  @ExceptionHandler(SignInBusyException.class)
-  ResponseEntity<ProblemDetail> signInBusy() {
-    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+  @ExceptionHandler(BusyException.class)
+  ResponseEntity<ProblemDetail> busy() {
+    ProblemDetail problem =
+        Problems.of(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "busy",
+            "Busy right now",
+            "Too many requests are being processed. Try again in a moment.");
+    problem.setProperty("retryAfterSeconds", 1);
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header(HttpHeaders.RETRY_AFTER, "1")
-        .body(
-            Problems.of(
-                HttpStatus.SERVICE_UNAVAILABLE,
-                "sign-in-busy",
-                "Sign-in is busy",
-                "Sign-in is busy right now. Try again in a moment."));
+        .body(problem);
   }
 
   @ExceptionHandler(VersionConflictException.class)

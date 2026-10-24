@@ -64,6 +64,15 @@ public class IdempotencyService {
   }
 
   /**
+   * Deletes keys past their TTL and returns how many went. Housekeeping for the scheduled cleanup
+   * job: requests never run it, and an expired key that is still stored is replaced on claim.
+   */
+  public int purgeExpired() {
+    OffsetDateTime now = OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+    return keys.deleteCreatedBefore(now.minus(TTL));
+  }
+
+  /**
    * Runs {@code action} once for this key, or replays its stored response.
    *
    * @throws ProblemException 422 when the key was used before with a different request hash
@@ -76,9 +85,8 @@ public class IdempotencyService {
   private Outcome executeInTransaction(
       String scope, String key, byte[] requestHash, Supplier<StoredResponse> action) {
     OffsetDateTime now = OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
-    keys.deleteCreatedBefore(now.minus(TTL));
 
-    if (!keys.claim(scope, key, requestHash, now)) {
+    if (!keys.claim(scope, key, requestHash, now, now.minus(TTL))) {
       var stored =
           keys.find(scope, key)
               .orElseThrow(() -> new IllegalStateException("idempotency key vanished"));

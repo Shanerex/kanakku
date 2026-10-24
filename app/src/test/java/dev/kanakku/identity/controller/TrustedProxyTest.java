@@ -12,7 +12,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** A client behind a trusted proxy is told apart by X-Forwarded-For, and the cookie is Secure. */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "KANAKKU_TRUSTED_PROXIES=127\\.0\\.0\\.1|0:0:0:0:0:0:0:1|::1")
+    properties = {
+      "KANAKKU_TRUSTED_PROXIES=127\\.0\\.0\\.1|0:0:0:0:0:0:0:1|::1",
+      "kanakku.auth.secure-cookies=false"
+    })
 class TrustedProxyTest extends RealServerSignIn {
 
   @Test

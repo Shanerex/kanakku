@@ -77,23 +77,40 @@ public class UserRepository {
   }
 
   /**
-   * Updates the caller's own row if its version still matches.
+   * Updates the caller's own row if its version still matches, and returns the row it wrote. One
+   * statement ({@code update ... returning}), so a concurrent edit can never be read back instead.
    *
    * @return the new profile, or empty when the version is stale
    */
   public Optional<Profile> updateProfile(
       UUID callerId, String displayName, String currency, String upiId, int version) {
-    int changed =
-        dsl.update(USERS)
-            .set(USERS.DISPLAY_NAME, displayName)
-            .set(USERS.DEFAULT_CURRENCY, currency)
-            .set(USERS.UPI_ID, upiId)
-            .set(USERS.VERSION, USERS.VERSION.plus(1))
-            .set(USERS.UPDATED_AT, DSL.currentOffsetDateTime())
-            .where(USERS.ID.eq(callerId))
-            .and(USERS.VERSION.eq(version))
-            .execute();
-    return changed == 0 ? Optional.empty() : findProfile(callerId);
+    return dsl.update(USERS)
+        .set(USERS.DISPLAY_NAME, displayName)
+        .set(USERS.DEFAULT_CURRENCY, currency)
+        .set(USERS.UPI_ID, upiId)
+        .set(USERS.VERSION, USERS.VERSION.plus(1))
+        .set(USERS.UPDATED_AT, DSL.currentOffsetDateTime())
+        .where(USERS.ID.eq(callerId))
+        .and(USERS.VERSION.eq(version))
+        .returning(
+            USERS.ID,
+            USERS.EMAIL,
+            USERS.EMAIL_VERIFIED,
+            USERS.DISPLAY_NAME,
+            USERS.DEFAULT_CURRENCY,
+            USERS.UPI_ID,
+            USERS.VERSION)
+        .fetchOptional()
+        .map(
+            r ->
+                new Profile(
+                    r.get(USERS.ID),
+                    r.get(USERS.EMAIL),
+                    r.get(USERS.EMAIL_VERIFIED),
+                    r.get(USERS.DISPLAY_NAME),
+                    r.get(USERS.DEFAULT_CURRENCY),
+                    r.get(USERS.UPI_ID),
+                    r.get(USERS.VERSION)));
   }
 
   /** What sign-in needs to check a password. */

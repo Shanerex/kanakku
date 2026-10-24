@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.kanakku.identity.service.SignInThrottle;
 import dev.kanakku.identity.service.SignUpService;
 import dev.kanakku.support.Csrf;
 import dev.kanakku.support.MutableClock;
@@ -16,8 +17,6 @@ import dev.kanakku.support.TestData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
@@ -51,6 +50,7 @@ class SignInThrottleTest extends PostgresIntegrationTest {
   }
 
   @Autowired MockMvc mvc;
+  @Autowired SignInThrottle throttle;
   @Autowired SignUpService signUp;
   @Autowired DSLContext dsl;
   @Autowired JsonMapper json;
@@ -114,6 +114,28 @@ class SignInThrottleTest extends PostgresIntegrationTest {
   }
 
   @Test
+  void twoAddressesInOneIpv6Slash64ShareABucket() throws Exception {
+    String email = TestData.email();
+    signUp.signUp(email, PASSWORD, "Asha");
+    for (int i = 0; i < 5; i++) {
+      signIn(email, "wrong password", "2001:db8:1:2::" + (i + 1))
+          .andExpect(status().isUnauthorized());
+    }
+
+    signIn(email, PASSWORD, "2001:db8:1:2:abcd:ef01:2345:6789")
+        .andExpect(status().isTooManyRequests());
+  }
+
+  @Test
+  void anotherIpv6Slash64IsNotLimited() throws Exception {
+    String email = TestData.email();
+    signUp.signUp(email, PASSWORD, "Asha");
+    failFiveTimes(email, "2001:db8:3:4::1");
+
+    signIn(email, PASSWORD, "2001:db8:3:5::1").andExpect(status().isOk());
+  }
+
+  @Test
   void anotherEmailFromTheSameIpIsNotLimited() throws Exception {
     String email = TestData.email();
     String other = TestData.email();
@@ -145,7 +167,7 @@ class SignInThrottleTest extends PostgresIntegrationTest {
   }
 
   @Test
-  void failuresOlderThanAnHourArePurged() throws Exception {
+  void aSignInNoLongerDeletesOldFailuresButThePurgeJobDoes() throws Exception {
     String email = TestData.email();
     signUp.signUp(email, PASSWORD, "Asha");
     signIn(email, "wrong password", "10.1.7.1").andExpect(status().isUnauthorized());
@@ -153,6 +175,9 @@ class SignInThrottleTest extends PostgresIntegrationTest {
 
     CLOCK.advance(Duration.ofMinutes(61));
     signIn(TestData.email(), "wrong password", "10.1.7.2").andExpect(status().isUnauthorized());
+    assertThat(dsl.fetchCount(SIGN_IN_FAILURES, SIGN_IN_FAILURES.EMAIL_KEY.eq(email))).isEqualTo(1);
+
+    assertThat(throttle.purgeExpired()).isPositive();
 
     assertThat(dsl.fetchCount(SIGN_IN_FAILURES, SIGN_IN_FAILURES.EMAIL_KEY.eq(email))).isZero();
   }
@@ -177,35 +202,5 @@ class SignInThrottleTest extends PostgresIntegrationTest {
                     + " and indexdef like '%(failed_at)%'")
             .get(0, Integer.class);
     assertThat(indexes).isEqualTo(1);
-  }
-
-  @Test
-  void aPruneErrorCannotLoseTheFailureCount() throws Exception {
-    String email = TestData.email();
-    signUp.signUp(email, PASSWORD, "Asha");
-    String poison = "prune-boom-" + TestData.email();
-    dsl.execute(
-        "create or replace function boom() returns trigger as $$ begin"
-            + " raise exception 'prune failed'; end $$ language plpgsql");
-    try {
-      dsl.execute(
-          "insert into sign_in_failures (email_key, ip, failed_at) values (?, '10.1.9.9'::inet, ?::timestamptz)",
-          poison,
-          OffsetDateTime.ofInstant(CLOCK.instant().minus(Duration.ofHours(2)), ZoneOffset.UTC)
-              .toString());
-      dsl.execute(
-          "create trigger boom before delete on sign_in_failures for each row"
-              + " when (old.email_key = '"
-              + poison
-              + "') execute function boom()");
-
-      signIn(email, "wrong password", "10.1.9.1").andExpect(status().isUnauthorized());
-
-      assertThat(dsl.fetchCount(SIGN_IN_FAILURES, SIGN_IN_FAILURES.EMAIL_KEY.eq(email)))
-          .isEqualTo(1);
-    } finally {
-      dsl.execute("drop trigger if exists boom on sign_in_failures");
-      dsl.execute("delete from sign_in_failures where email_key = ?", poison);
-    }
   }
 }

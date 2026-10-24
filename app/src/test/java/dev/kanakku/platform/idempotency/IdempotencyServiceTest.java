@@ -152,6 +152,59 @@ class IdempotencyServiceTest extends PostgresIntegrationTest {
   }
 
   @Test
+  void aRequestNeverDeletesOtherExpiredKeys() {
+    AtomicInteger runs = new AtomicInteger();
+    String oldKey = UUID.randomUUID().toString();
+    service.execute("test", oldKey, IdempotencyService.hash("a"), () -> run(runs, 201, "{}"));
+    now = now.plus(Duration.ofHours(25));
+
+    service.execute("test", key, IdempotencyService.hash("b"), () -> run(runs, 201, "{}"));
+
+    assertThat(keyRows(oldKey)).isOne();
+  }
+
+  @Test
+  void purgeExpiredDeletesKeysPastTheTtlAndKeepsTheRest() {
+    AtomicInteger runs = new AtomicInteger();
+    String oldKey = UUID.randomUUID().toString();
+    service.execute("test", oldKey, IdempotencyService.hash("a"), () -> run(runs, 201, "{}"));
+    now = now.plus(Duration.ofHours(25));
+    service.execute("test", key, IdempotencyService.hash("b"), () -> run(runs, 201, "{}"));
+
+    int deleted = service.purgeExpired();
+
+    assertThat(deleted).isPositive();
+    assertThat(keyRows(oldKey)).isZero();
+    assertThat(keyRows(key)).isOne();
+  }
+
+  @Test
+  void anExpiredKeyThatWasNotPurgedYetIsReplacedNotReplayed() {
+    AtomicInteger runs = new AtomicInteger();
+    service.execute("test", key, IdempotencyService.hash("a"), () -> run(runs, 201, "{\"n\":1}"));
+    now = now.plus(Duration.ofHours(25));
+
+    IdempotencyService.Outcome again =
+        service.execute(
+            "test", key, IdempotencyService.hash("b"), () -> run(runs, 201, "{\"n\":2}"));
+
+    assertThat(again.replayed()).isFalse();
+    assertThat(again.response().body()).contains("2");
+    assertThat(keyRows(key)).isOne();
+    assertThat(
+            service
+                .execute("test", key, IdempotencyService.hash("b"), () -> run(runs, 201, "{}"))
+                .replayed())
+        .isTrue();
+  }
+
+  private int keyRows(String k) {
+    return dsl.fetchCount(
+        dev.kanakku.jooq.Tables.IDEMPOTENCY_KEYS,
+        dev.kanakku.jooq.Tables.IDEMPOTENCY_KEYS.KEY.eq(k));
+  }
+
+  @Test
   void concurrentRepeatsRunTheActionOnceAndAllGetTheSameResponse() throws Exception {
     AtomicInteger runs = new AtomicInteger();
     int callers = 5;
