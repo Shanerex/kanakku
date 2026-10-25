@@ -1,5 +1,6 @@
 package dev.kanakku.identity.service;
 
+import dev.kanakku.identity.domain.DirectAdd;
 import dev.kanakku.identity.domain.HashedPassword;
 import dev.kanakku.identity.domain.Profile;
 import dev.kanakku.identity.exception.BusyException;
@@ -125,7 +126,8 @@ public class SignUpService {
       throw new EmailTakenException();
     }
     users.insertCredentials(id, hash.value());
-    return new Profile(id, trimmedEmail, false, displayName.strip(), "INR", null, 0);
+    return new Profile(
+        id, trimmedEmail, false, displayName.strip(), "INR", null, DirectAdd.ALLOW, 0);
   }
 
   private void acquireSlot() {

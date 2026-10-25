@@ -6,13 +6,19 @@ package dev.kanakku.jooq.tables;
 
 import dev.kanakku.jooq.Keys;
 import dev.kanakku.jooq.Public;
+import dev.kanakku.jooq.tables.GroupInvites.GroupInvitesPath;
+import dev.kanakku.jooq.tables.GroupMembers.GroupMembersPath;
+import dev.kanakku.jooq.tables.JournalEntries.JournalEntriesPath;
 import dev.kanakku.jooq.tables.PasswordCredentials.PasswordCredentialsPath;
 import dev.kanakku.jooq.tables.records.UsersRecord;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
+import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
@@ -102,6 +108,11 @@ public class Users extends TableImpl<UsersRecord> {
      */
     public final TableField<UsersRecord, OffsetDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "");
 
+    /**
+     * The column <code>public.users.direct_add</code>.
+     */
+    public final TableField<UsersRecord, String> DIRECT_ADD = createField(DSL.name("direct_add"), SQLDataType.CLOB.nullable(false).defaultValue(DSL.field(DSL.raw("'ALLOW'::text"), SQLDataType.CLOB)), this, "");
+
     private Users(Name alias, Table<UsersRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -174,6 +185,60 @@ public class Users extends TableImpl<UsersRecord> {
         return Keys.USERS_PKEY;
     }
 
+    private transient GroupInvitesPath _groupInvitesCreatedByFkey;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.group_invites</code> table, via the
+     * <code>group_invites_created_by_fkey</code> key
+     */
+    public GroupInvitesPath groupInvitesCreatedByFkey() {
+        if (_groupInvitesCreatedByFkey == null)
+            _groupInvitesCreatedByFkey = new GroupInvitesPath(this, null, Keys.GROUP_INVITES__GROUP_INVITES_CREATED_BY_FKEY.getInverseKey());
+
+        return _groupInvitesCreatedByFkey;
+    }
+
+    private transient GroupInvitesPath _groupInvitesUsedByFkey;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.group_invites</code> table, via the
+     * <code>group_invites_used_by_fkey</code> key
+     */
+    public GroupInvitesPath groupInvitesUsedByFkey() {
+        if (_groupInvitesUsedByFkey == null)
+            _groupInvitesUsedByFkey = new GroupInvitesPath(this, null, Keys.GROUP_INVITES__GROUP_INVITES_USED_BY_FKEY.getInverseKey());
+
+        return _groupInvitesUsedByFkey;
+    }
+
+    private transient GroupMembersPath _groupMembers;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.group_members</code> table
+     */
+    public GroupMembersPath groupMembers() {
+        if (_groupMembers == null)
+            _groupMembers = new GroupMembersPath(this, null, Keys.GROUP_MEMBERS__GROUP_MEMBERS_USER_ID_FKEY.getInverseKey());
+
+        return _groupMembers;
+    }
+
+    private transient JournalEntriesPath _journalEntries;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.journal_entries</code> table
+     */
+    public JournalEntriesPath journalEntries() {
+        if (_journalEntries == null)
+            _journalEntries = new JournalEntriesPath(this, null, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_ACTOR_USER_ID_FKEY.getInverseKey());
+
+        return _journalEntries;
+    }
+
     private transient PasswordCredentialsPath _passwordCredentials;
 
     /**
@@ -185,6 +250,13 @@ public class Users extends TableImpl<UsersRecord> {
             _passwordCredentials = new PasswordCredentialsPath(this, null, Keys.PASSWORD_CREDENTIALS__PASSWORD_CREDENTIALS_USER_ID_FKEY.getInverseKey());
 
         return _passwordCredentials;
+    }
+
+    @Override
+    public List<Check<UsersRecord>> getChecks() {
+        return Arrays.asList(
+            Internal.createCheck(this, DSL.name("users_direct_add_check"), "((direct_add = ANY (ARRAY['ALLOW'::text, 'INVITE_ONLY'::text])))", true)
+        );
     }
 
     @Override

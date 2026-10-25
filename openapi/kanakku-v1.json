@@ -95,6 +95,655 @@
         }
       }
     },
+    "/api/v1/invites/preview" : {
+      "post" : {
+        "tags" : [ "invite-claim-controller" ],
+        "summary" : "See which group and guest an invite is for",
+        "operationId" : "previewInvite",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteTokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The group name and the guest name",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvitePreview"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Expired, revoked, used or unknown",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invites/claim" : {
+      "post" : {
+        "tags" : [ "invite-claim-controller" ],
+        "summary" : "Take over a guest's place with an invite",
+        "operationId" : "claimInvite",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteTokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The group the caller has joined",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The caller is already in the group, or the group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Expired, revoked, used or unknown",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups" : {
+      "get" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "List the groups I belong to",
+        "operationId" : "listGroups",
+        "responses" : {
+          "200" : {
+            "description" : "My groups, newest first",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Group"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "Create a group; the caller becomes its Owner",
+        "operationId" : "createGroup",
+        "parameters" : [ {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateGroupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The new group",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid fields or missing Idempotency-Key",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Idempotency-Key reused with a different body",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/unarchive" : {
+      "post" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "Unarchive a group (Owner only)",
+        "operationId" : "unarchiveGroup",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The reopened group",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version, or the group is not archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/members" : {
+      "get" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "List a group's members with their balances",
+        "operationId" : "listMembers",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Current members, oldest first",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Member"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such group, or I am not in it",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Add a registered user directly (Owner only)",
+        "operationId" : "addMember",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddMemberRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The new member",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Already a member, invite-only, or the group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/members/{memberId}/write-offs" : {
+      "post" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Write off a member's balance onto chosen members (Owner only)",
+        "operationId" : "writeOffBalance",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "memberId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WriteOffRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "What was written off, per currency",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WriteOffResult"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The absorbers are empty, repeat, include the member, or are not members",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/leave" : {
+      "post" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Leave the group (not the Owner)",
+        "operationId" : "leaveGroup",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Left"
+          },
+          "409" : {
+            "description" : "member-has-balance (lists the amounts), last-owner or group-archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/invites" : {
+      "get" : {
+        "tags" : [ "invite-controller" ],
+        "summary" : "List a group's invites",
+        "operationId" : "listInvites",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Newest first; never includes a token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Invite"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "invite-controller" ],
+        "summary" : "Create a single-use invite for a guest (Owner only)",
+        "operationId" : "createInvite",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateInviteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The invite and its token (shown once)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatedInvite"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Expiry is not 1, 7 or 30 days, or Idempotency-Key is missing",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/invites/{inviteId}/revoke" : {
+      "post" : {
+        "tags" : [ "invite-controller" ],
+        "summary" : "Revoke an invite (Owner only)",
+        "operationId" : "revokeInvite",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "inviteId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The revoked invite",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Invite"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version, or the invite was already used or revoked",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/guests" : {
+      "post" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Add a guest (a name, optionally an email)",
+        "operationId" : "addGuest",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddGuestRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The new guest member",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/archive" : {
+      "post" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "Archive a group (Owner only)",
+        "operationId" : "archiveGroup",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The archived group",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/sign-up" : {
       "post" : {
         "tags" : [ "auth-controller" ],
@@ -244,6 +893,149 @@
         }
       }
     },
+    "/api/v1/groups/{groupId}" : {
+      "get" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "Read one group I belong to",
+        "operationId" : "getGroup",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The group",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such group, or I am not in it",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [ "group-controller" ],
+        "summary" : "Edit a group (Owner only)",
+        "operationId" : "updateGroup",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateGroupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The saved group, with its new version",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Only the Owner can edit",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version, or the group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/user-search" : {
+      "get" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Search users to add directly (Owner only)",
+        "operationId" : "searchUsers",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "At most 10 matches with masked emails",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserMatch"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The query is under 3 characters",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/csrf" : {
       "get" : {
         "tags" : [ "csrf-controller" ],
@@ -256,6 +1048,54 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CsrfTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/members/{memberId}" : {
+      "delete" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Remove a member with no balance (Owner only)",
+        "operationId" : "removeMember",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "memberId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "version",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Removed"
+          },
+          "409" : {
+            "description" : "member-has-balance (lists the amounts), last-owner, stale-version or group-archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
                 }
               }
             }
@@ -281,6 +1121,11 @@
             "type" : "string",
             "maxLength" : 400,
             "minLength" : 0
+          },
+          "directAdd" : {
+            "type" : "string",
+            "description" : "Omit to keep the stored choice",
+            "enum" : [ "ALLOW", "INVITE_ONLY" ]
           },
           "version" : {
             "type" : "integer",
@@ -314,13 +1159,18 @@
             "type" : [ "string", "null" ],
             "example" : "name@okbank"
           },
+          "directAdd" : {
+            "type" : "string",
+            "description" : "Whether a group Owner may add me directly or I join by invite only",
+            "enum" : [ "ALLOW", "INVITE_ONLY" ]
+          },
           "version" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Send back on every edit"
           }
         },
-        "required" : [ "defaultCurrency", "displayName", "email", "emailVerified", "id", "version" ]
+        "required" : [ "defaultCurrency", "directAdd", "displayName", "email", "emailVerified", "id", "version" ]
       },
       "FieldError" : {
         "type" : "object",
@@ -369,6 +1219,285 @@
         },
         "required" : [ "status", "title", "type" ]
       },
+      "InviteTokenRequest" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "token" ]
+      },
+      "InvitePreview" : {
+        "type" : "object",
+        "properties" : {
+          "groupName" : {
+            "type" : "string"
+          },
+          "guestName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "groupName", "guestName" ]
+      },
+      "Group" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "TRIP", "HOME", "COUPLE", "OTHER" ]
+          },
+          "currency" : {
+            "type" : "string",
+            "example" : "INR"
+          },
+          "cover" : {
+            "type" : [ "string", "null" ],
+            "description" : "A colour or emoji preset",
+            "example" : "color:mango"
+          },
+          "archivedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "Set while the group is archived (read-only except settlements)"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back on every edit"
+          },
+          "myRole" : {
+            "type" : "string",
+            "description" : "The caller's role in this group",
+            "enum" : [ "OWNER", "MEMBER" ]
+          }
+        },
+        "required" : [ "currency", "id", "myRole", "name", "type", "version" ]
+      },
+      "CreateGroupRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "TRIP", "HOME", "COUPLE", "OTHER" ]
+          },
+          "currency" : {
+            "type" : "string",
+            "example" : "INR"
+          },
+          "cover" : {
+            "type" : [ "string", "null" ],
+            "example" : "color:mango"
+          }
+        },
+        "required" : [ "currency", "name", "type" ]
+      },
+      "VersionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "AddMemberRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "userId" ]
+      },
+      "Member" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The member row; ledger lines name it"
+          },
+          "userId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The account behind this member; absent for a guest"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "OWNER", "MEMBER" ]
+          },
+          "guest" : {
+            "type" : "boolean",
+            "description" : "True until an account claims it"
+          },
+          "guestEmail" : {
+            "type" : [ "string", "null" ],
+            "description" : "A guest's email, shown to the Owner only"
+          },
+          "joinedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "balances" : {
+            "type" : "array",
+            "description" : "Non-zero balances per currency; empty when settled",
+            "items" : {
+              "$ref" : "#/components/schemas/MoneyBalance"
+            }
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back when removing"
+          }
+        },
+        "required" : [ "balances", "displayName", "guest", "id", "joinedAt", "role", "version" ]
+      },
+      "MoneyBalance" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string",
+            "example" : "INR"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Minor units; positive means owed to the member, negative means owed by"
+          }
+        },
+        "required" : [ "amountMinor", "currency" ]
+      },
+      "WriteOffRequest" : {
+        "type" : "object",
+        "properties" : {
+          "absorberMemberIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "absorberMemberIds" ]
+      },
+      "WriteOffResult" : {
+        "type" : "object",
+        "properties" : {
+          "writtenOff" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MoneyBalance"
+            }
+          }
+        },
+        "required" : [ "writtenOff" ]
+      },
+      "CreateInviteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "memberId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "A guest member of this group"
+          },
+          "expiryDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "1, 7 or 30; 7 when left out",
+            "example" : 7
+          }
+        },
+        "required" : [ "memberId" ]
+      },
+      "CreatedInvite" : {
+        "type" : "object",
+        "properties" : {
+          "invite" : {
+            "$ref" : "#/components/schemas/Invite"
+          },
+          "token" : {
+            "type" : "string",
+            "description" : "Put it in the link fragment: /invite#<token>"
+          }
+        },
+        "required" : [ "invite", "token" ]
+      },
+      "Invite" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "memberId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The guest this invite is for"
+          },
+          "guestName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "EXPIRED", "REVOKED", "USED" ]
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back when revoking"
+          }
+        },
+        "required" : [ "createdAt", "expiresAt", "guestName", "id", "memberId", "status", "version" ]
+      },
+      "AddGuestRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "SignUpRequest" : {
         "type" : "object",
         "properties" : {
@@ -404,6 +1533,48 @@
           }
         },
         "required" : [ "email", "password" ]
+      },
+      "UpdateGroupRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0,
+            "pattern" : ".*\\S.*"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "TRIP", "HOME", "COUPLE", "OTHER" ]
+          },
+          "cover" : {
+            "type" : [ "string", "null" ],
+            "example" : "color:mango"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "UserMatch" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "maskedEmail" : {
+            "type" : "string",
+            "example" : "a***@example.com"
+          }
+        },
+        "required" : [ "displayName", "id", "maskedEmail" ]
       },
       "CsrfTokenResponse" : {
         "type" : "object",

@@ -1,7 +1,9 @@
 package dev.kanakku.identity.request;
 
+import dev.kanakku.identity.domain.DirectAdd;
 import dev.kanakku.identity.validation.ValidCurrency;
 import dev.kanakku.identity.validation.ValidUpiId;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -12,4 +14,5 @@ public record UpdateProfileRequest(
     @NotBlank @Size(max = 80) String displayName,
     @NotNull @ValidCurrency String defaultCurrency,
     @ValidUpiId @Size(max = 400) String upiId,
+    @Schema(description = "Omit to keep the stored choice") DirectAdd directAdd,
     @NotNull @PositiveOrZero Integer version) {}

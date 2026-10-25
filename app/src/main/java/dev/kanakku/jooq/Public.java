@@ -4,7 +4,13 @@
 package dev.kanakku.jooq;
 
 
+import dev.kanakku.jooq.tables.GroupInvites;
+import dev.kanakku.jooq.tables.GroupMembers;
+import dev.kanakku.jooq.tables.Groups;
 import dev.kanakku.jooq.tables.IdempotencyKeys;
+import dev.kanakku.jooq.tables.JournalEntries;
+import dev.kanakku.jooq.tables.JournalLines;
+import dev.kanakku.jooq.tables.MemberBalances;
 import dev.kanakku.jooq.tables.PasswordCredentials;
 import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
@@ -35,9 +41,39 @@ public class Public extends SchemaImpl {
     public static final Public PUBLIC = new Public();
 
     /**
+     * The table <code>public.group_invites</code>.
+     */
+    public final GroupInvites GROUP_INVITES = GroupInvites.GROUP_INVITES;
+
+    /**
+     * The table <code>public.group_members</code>.
+     */
+    public final GroupMembers GROUP_MEMBERS = GroupMembers.GROUP_MEMBERS;
+
+    /**
+     * The table <code>public.groups</code>.
+     */
+    public final Groups GROUPS = Groups.GROUPS;
+
+    /**
      * The table <code>public.idempotency_keys</code>.
      */
     public final IdempotencyKeys IDEMPOTENCY_KEYS = IdempotencyKeys.IDEMPOTENCY_KEYS;
+
+    /**
+     * The table <code>public.journal_entries</code>.
+     */
+    public final JournalEntries JOURNAL_ENTRIES = JournalEntries.JOURNAL_ENTRIES;
+
+    /**
+     * The table <code>public.journal_lines</code>.
+     */
+    public final JournalLines JOURNAL_LINES = JournalLines.JOURNAL_LINES;
+
+    /**
+     * The table <code>public.member_balances</code>.
+     */
+    public final MemberBalances MEMBER_BALANCES = MemberBalances.MEMBER_BALANCES;
 
     /**
      * The table <code>public.password_credentials</code>.
@@ -85,7 +121,13 @@ public class Public extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
+            GroupInvites.GROUP_INVITES,
+            GroupMembers.GROUP_MEMBERS,
+            Groups.GROUPS,
             IdempotencyKeys.IDEMPOTENCY_KEYS,
+            JournalEntries.JOURNAL_ENTRIES,
+            JournalLines.JOURNAL_LINES,
+            MemberBalances.MEMBER_BALANCES,
             PasswordCredentials.PASSWORD_CREDENTIALS,
             ScheduledTasks.SCHEDULED_TASKS,
             SignInFailures.SIGN_IN_FAILURES,

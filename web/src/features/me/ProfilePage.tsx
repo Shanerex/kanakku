@@ -32,6 +32,7 @@ export default function ProfilePage() {
         key={state.profile.version}
         profile={state.profile}
         showEmail
+        showDirectAdd
         submitLabel="Save"
         onSaved={() => setSaved(true)}
       />

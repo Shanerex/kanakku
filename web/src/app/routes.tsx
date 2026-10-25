@@ -9,6 +9,9 @@ import {
 import type { ApiClient } from "../api/client";
 import SignInPage from "../features/auth/SignInPage";
 import SignUpPage from "../features/auth/SignUpPage";
+import ClaimInvitePage from "../features/groups/ClaimInvitePage";
+import GroupPage from "../features/groups/GroupPage";
+import GroupsPage from "../features/groups/GroupsPage";
 import MePage from "../features/me/MePage";
 import ProfilePage from "../features/me/ProfilePage";
 import WelcomePage from "../features/me/WelcomePage";
@@ -60,7 +63,11 @@ export function RequireSession() {
     const returnTo = `${location.pathname}${location.search}`;
     return (
       <Navigate
-        to={destination ?? `/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
+        to={
+          destination ??
+          // The fragment (an invite token) stays out of the query string and out of server logs.
+          `/sign-in?returnTo=${encodeURIComponent(returnTo)}${location.hash}`
+        }
         replace
       />
     );
@@ -123,7 +130,22 @@ export const profileRoutes: RouteObject[] = [
   },
 ];
 
-export const screenRoutes: RouteObject[] = [...authRoutes, ...profileRoutes];
+export const groupRoutes: RouteObject[] = [
+  {
+    element: <RequireSession />,
+    children: [
+      { path: "/groups", element: <GroupsPage /> },
+      { path: "/groups/:groupId", element: <GroupPage /> },
+      { path: "/invite", element: <ClaimInvitePage /> },
+    ],
+  },
+];
+
+export const screenRoutes: RouteObject[] = [
+  ...authRoutes,
+  ...profileRoutes,
+  ...groupRoutes,
+];
 
 export function buildRoutes(
   client: ApiClient,

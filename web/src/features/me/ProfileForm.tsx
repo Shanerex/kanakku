@@ -47,6 +47,8 @@ type Props = {
   showEmail?: boolean;
   /** Called with each name edit, for a live avatar preview. */
   onNameChange?: (name: string) => void;
+  /** Show "who can add me directly"; when hidden the stored choice is left as it is. */
+  showDirectAdd?: boolean;
 };
 
 /** Display name, default currency and optional UPI ID, saved with the version it started from. */
@@ -57,6 +59,7 @@ export function ProfileForm({
   secondary,
   showEmail,
   onNameChange,
+  showDirectAdd,
 }: Props) {
   const api = useApi();
   const session = useSession();
@@ -65,6 +68,9 @@ export function ProfileForm({
     profile.defaultCurrency,
   );
   const [upiId, setUpiId] = useState(profile.upiId ?? "");
+  const [allowDirect, setAllowDirect] = useState(
+    (profile.directAdd ?? "ALLOW") === "ALLOW",
+  );
   const [errors, setErrors] = useState<Errors>({});
   const [problem, setProblem] = useState<PlainProblem>();
   const [conflict, setConflict] = useState(false);
@@ -79,6 +85,7 @@ export function ProfileForm({
       setDisplayName(data.displayName);
       setDefaultCurrency(data.defaultCurrency);
       setUpiId(data.upiId ?? "");
+      setAllowDirect((data.directAdd ?? "ALLOW") === "ALLOW");
       onNameChange?.(data.displayName);
       setConflict(false);
       setProblem(undefined);
@@ -102,6 +109,9 @@ export function ProfileForm({
           displayName: displayName.trim(),
           defaultCurrency,
           upiId: upiId.trim() || undefined,
+          ...(showDirectAdd
+            ? { directAdd: allowDirect ? "ALLOW" : "INVITE_ONLY" }
+            : {}),
           version: profile.version,
         },
       });
@@ -167,6 +177,26 @@ export function ProfileForm({
         onChange={(e) => setUpiId(e.target.value)}
         inputRef={upiRef}
       />
+      {showDirectAdd && (
+        <div className="flex items-start gap-3">
+          <input
+            id="direct-add"
+            type="checkbox"
+            checked={allowDirect}
+            aria-describedby="direct-add-help"
+            onChange={(e) => setAllowDirect(e.target.checked)}
+            className="mt-3 size-5"
+          />
+          <div className="flex min-h-11 flex-col justify-center">
+            <label htmlFor="direct-add" className="font-semibold text-text">
+              Let group Owners add me directly
+            </label>
+            <p id="direct-add-help" className="text-body-sm text-text-muted">
+              Turn this off to join groups only through an invite link.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <Button type="submit" size="lg" fullWidth loading={submitting}>
           {submitLabel}

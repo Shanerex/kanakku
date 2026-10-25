@@ -13,5 +13,9 @@ public record Profile(
     @Schema(requiredMode = RequiredMode.REQUIRED, example = "INR") String defaultCurrency,
     @Schema(requiredMode = RequiredMode.NOT_REQUIRED, nullable = true, example = "name@okbank")
         String upiId,
+    @Schema(
+            requiredMode = RequiredMode.REQUIRED,
+            description = "Whether a group Owner may add me directly or I join by invite only")
+        DirectAdd directAdd,
     @Schema(requiredMode = RequiredMode.REQUIRED, description = "Send back on every edit")
         int version) {}

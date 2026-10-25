@@ -147,6 +147,20 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
         return (OffsetDateTime) get(8);
     }
 
+    /**
+     * Setter for <code>public.users.direct_add</code>.
+     */
+    public void setDirectAdd(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.users.direct_add</code>.
+     */
+    public String getDirectAdd() {
+        return (String) get(9);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -170,7 +184,7 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
     /**
      * Create a detached, initialised UsersRecord
      */
-    public UsersRecord(UUID id, String email, Boolean emailVerified, String displayName, String defaultCurrency, String upiId, Integer version, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    public UsersRecord(UUID id, String email, Boolean emailVerified, String displayName, String defaultCurrency, String upiId, Integer version, OffsetDateTime createdAt, OffsetDateTime updatedAt, String directAdd) {
         super(Users.USERS);
 
         setId(id);
@@ -182,6 +196,7 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
         setVersion(version);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setDirectAdd(directAdd);
         resetTouchedOnNotNull();
     }
 }
