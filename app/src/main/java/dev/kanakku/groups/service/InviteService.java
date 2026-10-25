@@ -152,6 +152,7 @@ public class InviteService {
             throw GroupProblems.alreadyMember();
           }
           invites.markUsed(row.id(), callerId);
+          invites.revokeLiveForMember(row.memberId());
           return groups.findForCaller(row.groupId(), callerId).orElseThrow();
         });
   }

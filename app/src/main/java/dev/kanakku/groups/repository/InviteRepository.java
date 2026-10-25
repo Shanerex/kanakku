@@ -146,6 +146,20 @@ public class InviteRepository {
         .execute();
   }
 
+  /**
+   * Revokes every invite of the guest that is still live, for when the guest is claimed or removed
+   * and no link for that seat can work any more.
+   */
+  public void revokeLiveForMember(UUID memberId) {
+    dsl.update(GROUP_INVITES)
+        .set(GROUP_INVITES.REVOKED_AT, DSL.currentOffsetDateTime())
+        .set(GROUP_INVITES.VERSION, GROUP_INVITES.VERSION.plus(1))
+        .where(GROUP_INVITES.MEMBER_ID.eq(memberId))
+        .and(GROUP_INVITES.REVOKED_AT.isNull())
+        .and(GROUP_INVITES.USED_AT.isNull())
+        .execute();
+  }
+
   private org.jooq.SelectOnConditionStep<? extends Record> baseQuery() {
     return dsl.select(
             GROUP_INVITES.ID,

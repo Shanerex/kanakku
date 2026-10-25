@@ -1,5 +1,5 @@
 import { type FormEvent, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { newIdempotencyKey } from "../../api/client";
 import { AuthLayout } from "../../app/AuthLayout";
 import { useApi } from "../../app/api-context";
@@ -15,6 +15,7 @@ import { useSession } from "../../app/session";
 import { Button } from "../../ui/Button";
 import { PasswordField } from "../../ui/PasswordField";
 import { TextField } from "../../ui/TextField";
+import { safeReturnTo } from "./SignInPage";
 
 const MIN = 8;
 const MAX = 128;
@@ -77,6 +78,13 @@ function StrengthMeter({ password }: { password: string }) {
 export default function SignUpPage() {
   const api = useApi();
   const session = useSession();
+  const [params] = useSearchParams();
+  const location = useLocation();
+  // A visitor sent here from an invite link (returnTo plus the #token) goes back to it after
+  // sign-up; anyone else lands on /welcome.
+  const destination = params.has("returnTo")
+    ? `${safeReturnTo(params.get("returnTo"))}${location.hash}`
+    : "/welcome";
   const [fields, setFields] = useState<Fields>({
     displayName: "",
     email: "",
@@ -146,7 +154,7 @@ export default function SignUpPage() {
         body: { email: body.email, password: body.password },
       });
       if (signedIn.data) {
-        session.signedIn(signedIn.data, "/welcome");
+        session.signedIn(signedIn.data, destination);
       } else {
         setProblem({
           title: "Your account is ready",
@@ -207,7 +215,11 @@ export default function SignUpPage() {
       <p className="text-center text-body-sm">
         Already have an account?{" "}
         <Link
-          to="/sign-in"
+          to={{
+            pathname: "/sign-in",
+            search: location.search,
+            hash: location.hash,
+          }}
           className="font-semibold text-primary-text underline"
         >
           Sign in

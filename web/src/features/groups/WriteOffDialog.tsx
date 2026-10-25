@@ -39,6 +39,9 @@ export function WriteOffDialog({
     .join(" and ");
 
   function toggle(id: string) {
+    // A different body is a different request, so it gets its own key; a retry of the same body
+    // keeps this one and the server replays the write-off instead of doing it twice.
+    key.current = newIdempotencyKey();
     setPicked((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);

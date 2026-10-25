@@ -73,7 +73,7 @@ class JournalPropertiesTest {
     }
 
     Map<String, Long> sums = new HashMap<>();
-    for (MemberBalance b : balances.ofGroup(group)) {
+    for (MemberBalance b : balances.ofGroup(group, Seed.caller(dsl, group))) {
       sums.merge(b.currency(), b.amountMinor(), Long::sum);
     }
     assertThat(sums.values()).allMatch(sum -> sum == 0L);
@@ -85,7 +85,7 @@ class JournalPropertiesTest {
         .forEach(r -> fromJournal.merge(r.value1() + "/" + r.value2(), r.value3(), Long::sum));
     Map<String, Long> stored = new HashMap<>();
     balances
-        .ofGroup(group)
+        .ofGroup(group, Seed.caller(dsl, group))
         .forEach(b -> stored.put(b.memberId() + "/" + b.currency(), b.amountMinor()));
     fromJournal.values().removeIf(v -> v == 0L);
     stored.values().removeIf(v -> v == 0L);

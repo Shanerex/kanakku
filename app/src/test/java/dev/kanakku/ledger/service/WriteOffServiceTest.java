@@ -48,11 +48,15 @@ class WriteOffServiceTest extends PostgresIntegrationTest {
     List<MoneyBalance> written = writeOffs.writeOff(g, debtor, List.of(a1, a2, payer), null);
 
     assertThat(written).containsExactly(new MoneyBalance("INR", -1000));
-    assertThat(balances.ofMember(g, debtor)).containsExactly(new MoneyBalance("INR", 0));
+    assertThat(balances.ofMember(g, debtor, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", 0));
     // -1000 over three absorbers in order a1, a2, payer: the first one takes the extra unit.
-    assertThat(balances.ofMember(g, a1)).containsExactly(new MoneyBalance("INR", -334));
-    assertThat(balances.ofMember(g, a2)).containsExactly(new MoneyBalance("INR", -333));
-    assertThat(balances.ofMember(g, payer)).containsExactly(new MoneyBalance("INR", 1000 - 333));
+    assertThat(balances.ofMember(g, a1, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", -334));
+    assertThat(balances.ofMember(g, a2, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", -333));
+    assertThat(balances.ofMember(g, payer, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", 1000 - 333));
   }
 
   @Test
@@ -63,8 +67,10 @@ class WriteOffServiceTest extends PostgresIntegrationTest {
 
     writeOffs.writeOff(g, creditor, List.of(absorber), Seed.user(dsl, "Owner"));
 
-    assertThat(balances.ofMember(g, creditor)).containsExactly(new MoneyBalance("INR", 0));
-    assertThat(balances.ofMember(g, absorber)).containsExactly(new MoneyBalance("INR", 500));
+    assertThat(balances.ofMember(g, creditor, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", 0));
+    assertThat(balances.ofMember(g, absorber, Seed.caller(dsl, g)))
+        .containsExactly(new MoneyBalance("INR", 500));
   }
 
   @Test

@@ -2,7 +2,7 @@ package dev.kanakku.groups.request;
 
 import dev.kanakku.groups.domain.GroupType;
 import dev.kanakku.groups.validation.ValidCover;
-import dev.kanakku.groups.validation.ValidCurrency;
+import dev.kanakku.platform.validation.ValidCurrency;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

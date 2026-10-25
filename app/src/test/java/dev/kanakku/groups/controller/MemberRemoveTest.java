@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dev.kanakku.ledger.api.Balances;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.support.ApiTest;
+import dev.kanakku.support.Seed;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -64,7 +65,9 @@ class MemberRemoveTest extends ApiTest {
   }
 
   long groupSum(String group) {
-    return balances.ofGroup(UUID.fromString(group)).stream()
+    return balances
+        .ofGroup(UUID.fromString(group), Seed.caller(dsl, UUID.fromString(group)))
+        .stream()
         .mapToLong(MemberBalance::amountMinor)
         .sum();
   }
@@ -261,16 +264,19 @@ class MemberRemoveTest extends ApiTest {
 
     long ashaBalance =
         balances
-            .ofMember(UUID.fromString(s.group()), UUID.fromString(s.ashaMember()))
+            .ofMember(UUID.fromString(s.group()), UUID.fromString(s.ashaMember()), s.asha().id())
             .get(0)
             .amountMinor();
     long balaBalance =
         balances
-            .ofMember(UUID.fromString(s.group()), UUID.fromString(balaMember))
+            .ofMember(UUID.fromString(s.group()), UUID.fromString(balaMember), s.asha().id())
             .get(0)
             .amountMinor();
     long thirdBalance =
-        balances.ofMember(UUID.fromString(s.group()), UUID.fromString(third)).get(0).amountMinor();
+        balances
+            .ofMember(UUID.fromString(s.group()), UUID.fromString(third), s.asha().id())
+            .get(0)
+            .amountMinor();
     // Owner was owed 1000; the guest's -1000 is split 334/333/333 oldest first: owner gets the
     // extra unit.
     assertThat(ashaBalance).isEqualTo(1000 - 334);
@@ -311,7 +317,9 @@ class MemberRemoveTest extends ApiTest {
 
     leaver.get();
     pool.shutdown();
-    assertThat(balances.ofMember(UUID.fromString(s.group()), UUID.fromString(balaMember)))
+    assertThat(
+            balances.ofMember(
+                UUID.fromString(s.group()), UUID.fromString(balaMember), s.asha().id()))
         .allMatch(b -> b.amountMinor() == 0L);
     assertThat(groupSum(s.group())).isZero();
   }
@@ -349,7 +357,7 @@ class MemberRemoveTest extends ApiTest {
 
     assertThat(
             balances
-                .ofMember(UUID.fromString(s.group()), UUID.fromString(s.guest()))
+                .ofMember(UUID.fromString(s.group()), UUID.fromString(s.guest()), s.asha().id())
                 .get(0)
                 .amountMinor())
         .isEqualTo(-1000);
@@ -368,10 +376,39 @@ class MemberRemoveTest extends ApiTest {
 
     assertThat(
             balances
-                .ofMember(UUID.fromString(s.group()), UUID.fromString(s.guest()))
+                .ofMember(UUID.fromString(s.group()), UUID.fromString(s.guest()), s.asha().id())
                 .get(0)
                 .amountMinor())
         .isEqualTo(-1000);
+  }
+
+  @Test
+  void writeOffsThatCrossEachOtherNeitherDeadlockNorFail() throws Exception {
+    ExecutorService pool = Executors.newFixedThreadPool(2);
+    try {
+      for (int round = 0; round < 15; round++) {
+        Setup s = withDebt(1000);
+        CountDownLatch go = new CountDownLatch(1);
+        // Guest onto Owner and Owner onto guest: each takes the other's member row as an absorber.
+        Future<Integer> one =
+            pool.submit(() -> statusOfWriteOff(go, s, s.guest(), List.of(s.ashaMember())));
+        Future<Integer> two =
+            pool.submit(() -> statusOfWriteOff(go, s, s.ashaMember(), List.of(s.guest())));
+        go.countDown();
+
+        assertThat(one.get(30, java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(201);
+        assertThat(two.get(30, java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(201);
+        assertThat(groupSum(s.group())).isZero();
+      }
+    } finally {
+      pool.shutdownNow();
+    }
+  }
+
+  int statusOfWriteOff(CountDownLatch go, Setup s, String target, List<String> absorbers)
+      throws Exception {
+    go.await();
+    return writeOff(s.asha(), s.group(), target, absorbers).andReturn().getResponse().getStatus();
   }
 
   @Test

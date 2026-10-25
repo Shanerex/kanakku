@@ -9,6 +9,7 @@ import dev.kanakku.ledger.api.WriteOffs;
 import dev.kanakku.ledger.repository.JournalRepository;
 import dev.kanakku.ledger.util.LargestRemainder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -48,8 +49,20 @@ class WriteOffService implements WriteOffs {
   private List<MoneyBalance> writeOffInTransaction(
       UUID groupId, UUID memberId, List<UUID> absorberIds, UUID actorUserId) {
     List<MoneyBalance> written = new ArrayList<>();
-    // The rows stay locked until commit, so no post can slip in between the read and the entry.
-    for (MoneyBalance balance : repository.balancesOfMember(groupId, memberId, true)) {
+    // The balance rows of the target and the absorbers stay locked until commit, so no post can
+    // slip in between the read and the entry. A post locks its rows sorted by member id; taking
+    // these in the same order keeps a write-off and a post from waiting on each other.
+    List<UUID> lockOrder = new ArrayList<>(absorberIds);
+    lockOrder.add(memberId);
+    Collections.sort(lockOrder);
+    List<MoneyBalance> targetBalances = List.of();
+    for (UUID id : lockOrder) {
+      List<MoneyBalance> locked = repository.lockBalancesOfMember(groupId, id);
+      if (id.equals(memberId)) {
+        targetBalances = locked;
+      }
+    }
+    for (MoneyBalance balance : targetBalances) {
       long amount = balance.amountMinor();
       if (amount == 0L) {
         continue;

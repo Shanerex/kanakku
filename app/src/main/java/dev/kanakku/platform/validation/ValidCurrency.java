@@ -1,4 +1,4 @@
-package dev.kanakku.identity.validation;
+package dev.kanakku.platform.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;

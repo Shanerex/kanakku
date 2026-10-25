@@ -1,8 +1,8 @@
 package dev.kanakku.identity.request;
 
 import dev.kanakku.identity.domain.DirectAdd;
-import dev.kanakku.identity.validation.ValidCurrency;
 import dev.kanakku.identity.validation.ValidUpiId;
+import dev.kanakku.platform.validation.ValidCurrency;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

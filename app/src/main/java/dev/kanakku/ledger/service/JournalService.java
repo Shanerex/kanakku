@@ -75,12 +75,12 @@ class JournalService implements Journal, Balances {
   }
 
   @Override
-  public List<MoneyBalance> ofMember(UUID groupId, UUID memberId) {
-    return journal.balancesOfMember(groupId, memberId, false);
+  public List<MoneyBalance> ofMember(UUID groupId, UUID memberId, UUID callerId) {
+    return journal.balancesOfMember(groupId, memberId, callerId);
   }
 
   @Override
-  public List<MemberBalance> ofGroup(UUID groupId) {
-    return journal.balancesOfGroup(groupId);
+  public List<MemberBalance> ofGroup(UUID groupId, UUID callerId) {
+    return journal.balancesOfGroup(groupId, callerId);
   }
 }

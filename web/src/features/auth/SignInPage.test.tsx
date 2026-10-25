@@ -67,6 +67,12 @@ describe("SignInPage", () => {
     ).toBe("/sign-up");
   });
 
+  it("carries returnTo and the invite fragment on to sign-up", async () => {
+    renderApp("/sign-in?returnTo=%2Finvite#tok-1", screens, signedOut);
+    const link = await screen.findByRole("link", { name: "Create an account" });
+    expect(link.getAttribute("href")).toBe("/sign-up?returnTo=%2Finvite#tok-1");
+  });
+
   it("signs in and goes home", async () => {
     const user = userEvent.setup();
     const { requests } = renderApp("/sign-in", screens, {

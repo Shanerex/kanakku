@@ -4,6 +4,7 @@ import dev.kanakku.groups.domain.Member;
 import dev.kanakku.groups.domain.Role;
 import dev.kanakku.groups.domain.WriteOffResult;
 import dev.kanakku.groups.exception.GroupProblems;
+import dev.kanakku.groups.repository.InviteRepository;
 import dev.kanakku.groups.repository.MemberRepository;
 import dev.kanakku.groups.repository.MemberRepository.MemberRow;
 import dev.kanakku.groups.repository.MemberRepository.Membership;
@@ -31,6 +32,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MemberService {
 
   private final MemberRepository members;
+  private final InviteRepository invites;
   private final GroupGuard guard;
   private final UserDirectory directory;
   private final Balances balances;
@@ -39,12 +41,14 @@ public class MemberService {
 
   MemberService(
       MemberRepository members,
+      InviteRepository invites,
       GroupGuard guard,
       UserDirectory directory,
       Balances balances,
       WriteOffs writeOffs,
       TransactionTemplate transactions) {
     this.members = members;
+    this.invites = invites;
     this.guard = guard;
     this.directory = directory;
     this.balances = balances;
@@ -67,11 +71,11 @@ public class MemberService {
     String cleanEmail = email == null || email.isBlank() ? null : email.strip();
     return transactions.execute(
         status -> {
-          guard.member(groupId, callerId, true);
+          Membership caller = guard.member(groupId, callerId, true);
           if (!members.insertGuest(id, groupId, callerId, name.strip(), cleanEmail)) {
             throw GroupProblems.groupNotFound();
           }
-          return one(groupId, callerId, id);
+          return one(groupId, callerId, id, caller.role() == Role.OWNER);
         });
   }
 
@@ -101,7 +105,7 @@ public class MemberService {
           } catch (DuplicateKeyException e) {
             throw GroupProblems.alreadyMember();
           }
-          return one(groupId, callerId, id);
+          return one(groupId, callerId, id, true);
         });
   }
 
@@ -123,10 +127,11 @@ public class MemberService {
           if (target.version() != version) {
             throw GroupProblems.staleVersion();
           }
-          requireSettled(groupId, memberId);
+          requireSettled(groupId, memberId, callerId);
           if (!members.markLeft(groupId, memberId, callerId, version)) {
             throw GroupProblems.staleVersion();
           }
+          invites.revokeLiveForMember(memberId);
         });
   }
 
@@ -142,7 +147,7 @@ public class MemberService {
           if (self.role() == Role.OWNER) {
             throw GroupProblems.lastOwner();
           }
-          requireSettled(groupId, self.id());
+          requireSettled(groupId, self.id(), callerId);
           if (!members.markLeft(groupId, self.id(), callerId, self.version())) {
             throw GroupProblems.staleVersion();
           }
@@ -159,14 +164,19 @@ public class MemberService {
     return transactions.execute(
         status -> {
           guard.owner(groupId, callerId, true);
-          members
-              .findActive(groupId, memberId, callerId, true)
-              .orElseThrow(GroupProblems::memberNotFound);
+          // The target and the absorbers are locked in one query, so every write-off takes its
+          // member locks in the same (joined_at, id) order whichever member it targets.
           Set<UUID> distinct = new HashSet<>(absorberMemberIds);
+          Set<UUID> toLock = new HashSet<>(distinct);
+          toLock.add(memberId);
+          List<UUID> locked = members.activeIdsInOrderLocked(groupId, toLock, callerId);
+          if (!locked.contains(memberId)) {
+            throw GroupProblems.memberNotFound();
+          }
           if (distinct.size() != absorberMemberIds.size() || distinct.contains(memberId)) {
             throw GroupProblems.invalidAbsorbers();
           }
-          List<UUID> ordered = members.activeIdsInOrderLocked(groupId, distinct, callerId);
+          List<UUID> ordered = locked.stream().filter(id -> !id.equals(memberId)).toList();
           if (ordered.size() != distinct.size()) {
             throw GroupProblems.invalidAbsorbers();
           }
@@ -174,26 +184,36 @@ public class MemberService {
         });
   }
 
-  private void requireSettled(UUID groupId, UUID memberId) {
+  private void requireSettled(UUID groupId, UUID memberId, UUID callerId) {
     List<MoneyBalance> owed =
-        balances.ofMember(groupId, memberId).stream().filter(b -> b.amountMinor() != 0L).toList();
+        balances.ofMember(groupId, memberId, callerId).stream()
+            .filter(b -> b.amountMinor() != 0L)
+            .toList();
     if (!owed.isEmpty()) {
       throw GroupProblems.memberHasBalance(owed);
     }
   }
 
-  private Member one(UUID groupId, UUID callerId, UUID memberId) {
-    return view(groupId, callerId, members.listActive(groupId, callerId)).stream()
-        .filter(m -> m.id().equals(memberId))
-        .findFirst()
-        .orElseThrow(GroupProblems::memberNotFound);
+  /** One member as a screen shows them: reads that member's row and balances, not the group's. */
+  private Member one(UUID groupId, UUID callerId, UUID memberId, boolean callerIsOwner) {
+    MemberRow row =
+        members
+            .findActive(groupId, memberId, callerId, false)
+            .orElseThrow(GroupProblems::memberNotFound);
+    Map<UUID, UserSummary> users =
+        row.userId() == null ? Map.of() : directory.summaries(List.of(row.userId()));
+    List<MoneyBalance> owed =
+        balances.ofMember(groupId, memberId, callerId).stream()
+            .filter(b -> b.amountMinor() != 0L)
+            .toList();
+    return toMember(row, users, owed, callerIsOwner);
   }
 
   private List<Member> view(UUID groupId, UUID callerId, List<MemberRow> rows) {
     Map<UUID, UserSummary> users =
         directory.summaries(rows.stream().map(MemberRow::userId).filter(Objects::nonNull).toList());
     Map<UUID, List<MoneyBalance>> byMember =
-        balances.ofGroup(groupId).stream()
+        balances.ofGroup(groupId, callerId).stream()
             .filter(b -> b.amountMinor() != 0L)
             .collect(
                 Collectors.groupingBy(
@@ -205,21 +225,25 @@ public class MemberService {
         rows.stream().anyMatch(r -> callerId.equals(r.userId()) && r.role() == Role.OWNER);
     List<Member> result = new ArrayList<>();
     for (MemberRow row : rows) {
-      boolean guest = row.userId() == null;
-      UserSummary user = guest ? null : users.get(row.userId());
-      String name = user != null ? user.displayName() : row.guestName();
-      result.add(
-          new Member(
-              row.id(),
-              row.userId(),
-              name == null ? "Member" : name,
-              row.role(),
-              guest,
-              callerIsOwner && guest ? row.guestEmail() : null,
-              row.joinedAt(),
-              byMember.getOrDefault(row.id(), List.of()),
-              row.version()));
+      result.add(toMember(row, users, byMember.getOrDefault(row.id(), List.of()), callerIsOwner));
     }
     return result;
+  }
+
+  private static Member toMember(
+      MemberRow row, Map<UUID, UserSummary> users, List<MoneyBalance> owed, boolean callerIsOwner) {
+    boolean guest = row.userId() == null;
+    UserSummary user = guest ? null : users.get(row.userId());
+    String name = user != null ? user.displayName() : row.guestName();
+    return new Member(
+        row.id(),
+        row.userId(),
+        name == null ? "Member" : name,
+        row.role(),
+        guest,
+        callerIsOwner && guest ? row.guestEmail() : null,
+        row.joinedAt(),
+        owed,
+        row.version());
   }
 }

@@ -47,6 +47,31 @@ public final class Seed {
     return id;
   }
 
+  /**
+   * A user who is a current member of the group, created on first use; the caller that balance
+   * reads are scoped to.
+   */
+  public static UUID caller(DSLContext dsl, UUID groupId) {
+    UUID existing =
+        dsl.select(GROUP_MEMBERS.USER_ID)
+            .from(GROUP_MEMBERS)
+            .where(GROUP_MEMBERS.GROUP_ID.eq(groupId))
+            .and(GROUP_MEMBERS.USER_ID.isNotNull())
+            .and(GROUP_MEMBERS.LEFT_AT.isNull())
+            .fetchAny(GROUP_MEMBERS.USER_ID);
+    if (existing != null) {
+      return existing;
+    }
+    UUID userId = user(dsl, "Caller");
+    dsl.insertInto(GROUP_MEMBERS)
+        .set(GROUP_MEMBERS.ID, UUID.randomUUID())
+        .set(GROUP_MEMBERS.GROUP_ID, groupId)
+        .set(GROUP_MEMBERS.USER_ID, userId)
+        .set(GROUP_MEMBERS.ROLE, "OWNER")
+        .execute();
+    return userId;
+  }
+
   /** {@code count} guest members in a new INR group, as {@code [groupId, member...]}. */
   public static List<UUID> groupWithGuests(DSLContext dsl, int count) {
     UUID groupId = group(dsl, "INR");

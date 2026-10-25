@@ -309,6 +309,53 @@ class InviteTest extends ApiTest {
     get(karthik, "/api/v1/groups/" + group).andExpect(status().isOk());
   }
 
+  JsonNode inviteStatuses(Session who, String group) throws Exception {
+    return read(get(who, invitesPath(group)));
+  }
+
+  @Test
+  void claimingRevokesTheGuestsOtherLiveInvites() throws Exception {
+    Session asha = newUser("Asha");
+    Session karthik = newUser("Karthik Real");
+    String group = createGroup(asha, "Goa");
+    String guest = addGuest(asha, group, "Karthik");
+    String first = createInvite(asha, group, guest).get("token").asString();
+    String second = createInvite(asha, group, guest).get("token").asString();
+
+    post(karthik, "/api/v1/invites/claim", map("token", first), null).andExpect(status().isOk());
+
+    assertThat(
+            inviteStatuses(asha, group)
+                .valueStream()
+                .map(i -> i.get("status").asString())
+                .sorted()
+                .toList())
+        .containsExactly("REVOKED", "USED");
+    post(karthik, "/api/v1/invites/preview", map("token", second), null)
+        .andExpect(status().isGone());
+  }
+
+  @Test
+  void removingAGuestRevokesTheirLiveInvites() throws Exception {
+    Session asha = newUser("Asha");
+    String group = createGroup(asha, "Goa");
+    String guest = addGuest(asha, group, "Karthik");
+    createInvite(asha, group, guest);
+    int version =
+        read(get(asha, "/api/v1/groups/" + group + "/members"))
+            .valueStream()
+            .filter(m -> m.get("id").asString().equals(guest))
+            .findFirst()
+            .orElseThrow()
+            .get("version")
+            .asInt();
+
+    delete(asha, "/api/v1/groups/" + group + "/members/" + guest + "?version=" + version)
+        .andExpect(status().isNoContent());
+
+    assertThat(inviteStatuses(asha, group).get(0).get("status").asString()).isEqualTo("REVOKED");
+  }
+
   @Test
   void anInviteWorksOnce() throws Exception {
     Session asha = newUser("Asha");

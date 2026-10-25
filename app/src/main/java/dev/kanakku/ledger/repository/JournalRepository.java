@@ -1,15 +1,19 @@
 package dev.kanakku.ledger.repository;
 
+import static dev.kanakku.jooq.Tables.GROUP_MEMBERS;
 import static dev.kanakku.jooq.Tables.JOURNAL_ENTRIES;
 import static dev.kanakku.jooq.Tables.JOURNAL_LINES;
 import static dev.kanakku.jooq.Tables.MEMBER_BALANCES;
 
+import dev.kanakku.jooq.tables.GroupMembers;
 import dev.kanakku.ledger.api.JournalLine;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.ledger.api.MoneyBalance;
 import java.util.List;
 import java.util.UUID;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 /** All SQL for the journal and the running balances. Journal tables are insert-only. */
@@ -58,22 +62,49 @@ public class JournalRepository {
         .execute();
   }
 
-  public List<MoneyBalance> balancesOfMember(UUID groupId, UUID memberId, boolean lock) {
-    var query =
-        dsl.select(MEMBER_BALANCES.CURRENCY, MEMBER_BALANCES.BALANCE_MINOR)
-            .from(MEMBER_BALANCES)
-            .where(MEMBER_BALANCES.GROUP_ID.eq(groupId))
-            .and(MEMBER_BALANCES.MEMBER_ID.eq(memberId))
-            .orderBy(MEMBER_BALANCES.CURRENCY);
-    return (lock ? query.forUpdate() : query).fetch(r -> new MoneyBalance(r.value1(), r.value2()));
+  /** The member's balances if the caller is a current member of the group; empty otherwise. */
+  public List<MoneyBalance> balancesOfMember(UUID groupId, UUID memberId, UUID callerId) {
+    return dsl.select(MEMBER_BALANCES.CURRENCY, MEMBER_BALANCES.BALANCE_MINOR)
+        .from(MEMBER_BALANCES)
+        .where(MEMBER_BALANCES.GROUP_ID.eq(groupId))
+        .and(MEMBER_BALANCES.MEMBER_ID.eq(memberId))
+        .and(callerIsMember(groupId, callerId))
+        .orderBy(MEMBER_BALANCES.CURRENCY)
+        .fetch(r -> new MoneyBalance(r.value1(), r.value2()));
   }
 
-  public List<MemberBalance> balancesOfGroup(UUID groupId) {
+  /** Every balance in the group if the caller is a current member of it; empty otherwise. */
+  public List<MemberBalance> balancesOfGroup(UUID groupId, UUID callerId) {
     return dsl.select(
             MEMBER_BALANCES.MEMBER_ID, MEMBER_BALANCES.CURRENCY, MEMBER_BALANCES.BALANCE_MINOR)
         .from(MEMBER_BALANCES)
         .where(MEMBER_BALANCES.GROUP_ID.eq(groupId))
+        .and(callerIsMember(groupId, callerId))
         .orderBy(MEMBER_BALANCES.MEMBER_ID, MEMBER_BALANCES.CURRENCY)
         .fetch(r -> new MemberBalance(r.value1(), r.value2(), r.value3()));
+  }
+
+  /**
+   * Locks one member's balance rows until the transaction ends and returns them. Write path only:
+   * the caller is a write-off whose Owner check ran in the same transaction.
+   */
+  public List<MoneyBalance> lockBalancesOfMember(UUID groupId, UUID memberId) {
+    return dsl.select(MEMBER_BALANCES.CURRENCY, MEMBER_BALANCES.BALANCE_MINOR)
+        .from(MEMBER_BALANCES)
+        .where(MEMBER_BALANCES.GROUP_ID.eq(groupId))
+        .and(MEMBER_BALANCES.MEMBER_ID.eq(memberId))
+        .orderBy(MEMBER_BALANCES.CURRENCY)
+        .forUpdate()
+        .fetch(r -> new MoneyBalance(r.value1(), r.value2()));
+  }
+
+  private static Condition callerIsMember(UUID groupId, UUID callerId) {
+    GroupMembers me = GROUP_MEMBERS.as("me");
+    return DSL.exists(
+        DSL.selectOne()
+            .from(me)
+            .where(me.GROUP_ID.eq(groupId))
+            .and(me.USER_ID.eq(callerId))
+            .and(me.LEFT_AT.isNull()));
   }
 }

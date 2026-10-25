@@ -133,13 +133,16 @@ public class MemberRepository {
 
   /**
    * Those of {@code ids} that are current members, oldest first (joined_at, then id). The rows stay
-   * locked until the transaction ends, so none can leave before the caller finishes.
+   * locked until the transaction ends, so none can leave before the caller finishes. The lock is
+   * FOR NO KEY UPDATE: it blocks a leave (an update) and another caller locking the same rows, but
+   * not the key-share lock a journal post takes on a member through its foreign key. Callers that
+   * lock several members all use this one order, so two of them cannot wait on each other.
    */
   public List<UUID> activeIdsInOrderLocked(UUID groupId, Collection<UUID> ids, UUID callerId) {
     return activeQuery(groupId, callerId)
         .and(GROUP_MEMBERS.ID.in(ids))
         .orderBy(GROUP_MEMBERS.JOINED_AT, GROUP_MEMBERS.ID)
-        .forUpdate()
+        .forNoKeyUpdate()
         .fetch(GROUP_MEMBERS.ID);
   }
 

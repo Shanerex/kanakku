@@ -3,7 +3,8 @@
 #
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
 #
-# (or `make up-dev`). The Playwright run in e2e/ expects this stack.
+# (or `make up-dev`, which also supplies a throwaway KANAKKU_INVITE_TOKEN_SECRET; the raw command
+# needs one in .env or the shell). The Playwright run in e2e/ expects this stack.
 services:
   app:
     environment:

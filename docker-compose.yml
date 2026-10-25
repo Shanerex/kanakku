@@ -64,9 +64,10 @@ services:
       # another host or in Safari, and for the Playwright e2e run, add docker-compose.dev.yml,
       # the only place the opt-out is set.
       KANAKKU_AUTH_SECURE_COOKIES: "true"
-      # Invite link tokens are derived from this (at least 32 characters). The default is for local
-      # development only; set your own in .env for any shared deployment.
-      KANAKKU_INVITE_TOKEN_SECRET: ${KANAKKU_INVITE_TOKEN_SECRET:-dev-only-invite-secret-change-me-before-sharing}
+      # Invite link tokens are derived from this (at least 32 characters). There is no default: a
+      # value published in the repo would let any member forge an invite token. Set it in .env
+      # (for example `openssl rand -hex 32`); `make up-dev` supplies a throwaway one.
+      KANAKKU_INVITE_TOKEN_SECRET: ${KANAKKU_INVITE_TOKEN_SECRET:?set KANAKKU_INVITE_TOKEN_SECRET in .env (32+ characters, for example openssl rand -hex 32)}
     depends_on:
       postgres:
         condition: service_healthy

@@ -421,6 +421,42 @@ describe("GroupPage remove and write-off", () => {
     expect(post.headers.get("Idempotency-Key")).toMatch(/^[0-9a-f-]{36}$/);
   });
 
+  it("retries with the same Idempotency-Key, and a new one once the absorbers change", async () => {
+    const user = userEvent.setup();
+    const { requests } = renderApp(
+      `/groups/${GROUP_ID}`,
+      screens,
+      handlers(
+        { members: owing },
+        {
+          [`POST ${base}/members/${KARTHIK}/write-offs`]: () =>
+            problem(503, "unavailable"),
+        },
+      ),
+    );
+    await screen.findByRole("heading", { name: "Goa Trip" });
+    await user.click(
+      screen.getByRole("button", { name: "Write off Karthik's balance" }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    const confirm = () =>
+      user.click(within(dialog).getByRole("button", { name: "Write off" }));
+    const posts = () =>
+      requestsTo(requests, "POST", `${base}/members/${KARTHIK}/write-offs`);
+
+    await confirm();
+    await waitFor(() => expect(posts()).toHaveLength(1));
+    await confirm();
+    await waitFor(() => expect(posts()).toHaveLength(2));
+    await user.click(within(dialog).getByLabelText("Bala"));
+    await confirm();
+    await waitFor(() => expect(posts()).toHaveLength(3));
+
+    const keys = posts().map((r) => r.headers.get("Idempotency-Key"));
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
   it("will not write off with no absorber picked", async () => {
     const user = userEvent.setup();
     renderApp(`/groups/${GROUP_ID}`, screens, handlers({ members: owing }));

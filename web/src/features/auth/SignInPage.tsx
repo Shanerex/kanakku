@@ -47,7 +47,8 @@ export default function SignInPage() {
   const session = useSession();
   const [params] = useSearchParams();
   // A fragment on the sign-in URL (an invite token) is carried on to the page we return to.
-  const returnTo = `${safeReturnTo(params.get("returnTo"))}${useLocation().hash}`;
+  const location = useLocation();
+  const returnTo = `${safeReturnTo(params.get("returnTo"))}${location.hash}`;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -147,7 +148,11 @@ export default function SignInPage() {
       <p className="text-center text-body-sm">
         New here?{" "}
         <Link
-          to="/sign-up"
+          to={{
+            pathname: "/sign-up",
+            search: location.search,
+            hash: location.hash,
+          }}
           className="font-semibold text-primary-text underline"
         >
           Create an account

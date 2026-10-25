@@ -28,6 +28,10 @@ class WriteOffPropertiesTest {
 
   record Setup(UUID group, UUID target, List<UUID> absorbers) {}
 
+  UUID caller(Setup s) {
+    return Seed.caller(AppContext.bean(DSLContext.class), s.group());
+  }
+
   Setup setUp(long balance, int absorberCount) {
     DSLContext dsl = AppContext.bean(DSLContext.class);
     List<UUID> ids = Seed.groupWithGuests(dsl, 2 + absorberCount);
@@ -56,8 +60,12 @@ class WriteOffPropertiesTest {
 
     assertThat(written)
         .isEqualTo(balance == 0 ? List.of() : List.of(new MoneyBalance("INR", balance)));
-    assertThat(balances.ofMember(s.group(), s.target())).allMatch(b -> b.amountMinor() == 0L);
-    assertThat(balances.ofGroup(s.group()).stream().mapToLong(MemberBalance::amountMinor).sum())
+    assertThat(balances.ofMember(s.group(), s.target(), caller(s)))
+        .allMatch(b -> b.amountMinor() == 0L);
+    assertThat(
+            balances.ofGroup(s.group(), caller(s)).stream()
+                .mapToLong(MemberBalance::amountMinor)
+                .sum())
         .isZero();
   }
 
@@ -69,7 +77,9 @@ class WriteOffPropertiesTest {
     AppContext.bean(WriteOffs.class).writeOff(s.group(), s.target(), s.absorbers(), null);
 
     long absorbed =
-        AppContext.bean(Balances.class).ofMember(s.group(), s.absorbers().get(0)).stream()
+        AppContext.bean(Balances.class)
+            .ofMember(s.group(), s.absorbers().get(0), caller(s))
+            .stream()
             .mapToLong(MoneyBalance::amountMinor)
             .sum();
     assertThat(absorbed).isEqualTo(balance);
@@ -87,7 +97,7 @@ class WriteOffPropertiesTest {
         s.absorbers().stream()
             .mapToLong(
                 id ->
-                    AppContext.bean(Balances.class).ofMember(s.group(), id).stream()
+                    AppContext.bean(Balances.class).ofMember(s.group(), id, caller(s)).stream()
                         .mapToLong(MoneyBalance::amountMinor)
                         .sum())
             .toArray();

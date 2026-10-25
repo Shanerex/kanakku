@@ -1,4 +1,4 @@
-package dev.kanakku.identity.validation;
+package dev.kanakku.platform.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
