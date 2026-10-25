@@ -1,5 +1,6 @@
 package dev.kanakku.identity.service;
 
+import dev.kanakku.identity.domain.DirectAdd;
 import dev.kanakku.identity.domain.Profile;
 import dev.kanakku.identity.exception.VersionConflictException;
 import dev.kanakku.identity.repository.UserRepository;
@@ -26,9 +27,24 @@ public class ProfileService {
    */
   public Profile update(
       UUID callerId, String displayName, String currency, String upiId, int version) {
+    return update(callerId, displayName, currency, upiId, null, version);
+  }
+
+  /**
+   * @param upiId blank means none
+   * @param directAdd null keeps the stored choice
+   * @throws VersionConflictException when {@code version} is not the stored version
+   */
+  public Profile update(
+      UUID callerId,
+      String displayName,
+      String currency,
+      String upiId,
+      DirectAdd directAdd,
+      int version) {
     String upi = upiId == null || upiId.isBlank() ? null : upiId.strip();
     return users
-        .updateProfile(callerId, displayName.strip(), currency, upi, version)
+        .updateProfile(callerId, displayName.strip(), currency, upi, directAdd, version)
         .orElseThrow(VersionConflictException::new);
   }
 }

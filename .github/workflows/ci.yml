@@ -54,6 +54,10 @@ jobs:
 
   compose-smoke:
     runs-on: ubuntu-latest
+    env:
+      # Throwaway. The base compose file has no default for it, and every `docker compose` call
+      # (up, logs, down) interpolates the file, so it is set for the whole job.
+      KANAKKU_INVITE_TOKEN_SECRET: ci-only-invite-secret-not-for-deployments
     steps:
       - uses: actions/checkout@v4
       - name: Start the stack

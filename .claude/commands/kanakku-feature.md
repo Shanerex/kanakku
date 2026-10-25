@@ -1,5 +1,5 @@
 ---
-description: Start the next Kanakku backlog row as an rx feature, with the intake filled from the PRD backlog table. Use instead of /rx-feature for rows 1-28.
+description: Start the next Kanakku backlog row as an rx feature, with the intake filled from the PRD backlog table. Use instead of /rx-feature for rows 1-29.
 argument-hint: "<row number or backlog name, e.g. 5 or ledger-core>"
 allowed-tools: Bash(.rx/scripts/rx-new-feature.sh *), Bash(.rx/scripts/rx-status.sh *), Bash(git branch *), Grep, Read, Edit
 ---
@@ -16,6 +16,6 @@ Start backlog row: $ARGUMENTS
    - `- <date> intake: who: <who>`
    - `- <date> intake: done-when: <done-when>`
    Set `phase: requirements`, `status: draft`, `next: /rx-next, pm drafts requirements.md`.
-7. Reply in at most 6 lines: row, id, branch, the three intake answers in one line each, and "edit the Log in state.md if any answer is off, then run /rx-next". For rows 2, 3, 4, 16, 22, 24, 25 and 27 add: "security review matters most here (PRD)".
+7. Reply in at most 6 lines: row, id, branch, the three intake answers in one line each, and "edit the Log in state.md if any answer is off, then run /rx-next". For rows 2, 3, 4, 16, 22, 24, 25, 27 and 29 add: "security review matters most here (PRD)".
 
 Do not commit, write other spec files, or read the codebase. Gates `g1` to `g3` stay `none`. Small follow-ups that are not backlog rows use `/rx-feature --quick`.

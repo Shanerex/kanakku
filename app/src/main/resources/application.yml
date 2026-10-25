@@ -31,6 +31,10 @@ kanakku:
   auth:
     # SESSION and XSRF-TOKEN are Secure unless this is false (plain-HTTP local development only).
     secure-cookies: ${KANAKKU_AUTH_SECURE_COOKIES:true}
+  invites:
+    # Server secret (at least 32 characters) that invite link tokens are derived from. Required, no
+    # default; it is never logged or sent to the browser. Changing it kills every unclaimed link.
+    token-secret: ${KANAKKU_INVITE_TOKEN_SECRET:}
   cors:
     allowed-origins: ${KANAKKU_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   # kanakku.minio.endpoint (KANAKKU_MINIO_ENDPOINT) and kanakku.smtp.host/port

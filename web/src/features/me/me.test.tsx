@@ -129,6 +129,7 @@ describe("ProfilePage", () => {
       displayName: "Asha K",
       defaultCurrency: "INR",
       upiId: "asha@okbank",
+      directAdd: "ALLOW",
       version: 0,
     });
     expect(puts(requests)[0].headers.get("X-XSRF-TOKEN")).toBe("tok-1");
@@ -145,6 +146,7 @@ describe("ProfilePage", () => {
     expect(puts(requests)[0].body).toEqual({
       displayName: "Asha Rao",
       defaultCurrency: "INR",
+      directAdd: "ALLOW",
       version: 0,
     });
   });
@@ -262,5 +264,84 @@ describe("WelcomePage", () => {
       ),
     ).toBeTruthy();
     expect(within(document.body).queryByText(/Test link/)).toBeNull();
+  });
+});
+
+describe("who can add me directly", () => {
+  it("is on by default and explains what it does", async () => {
+    renderApp("/me/profile", screens, signedIn);
+    const toggle = (await screen.findByLabelText(
+      "Let group Owners add me directly",
+    )) as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    expect(
+      screen.getByText(
+        "Turn this off to join groups only through an invite link.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("saves invite-only with the version the form started from", async () => {
+    const user = userEvent.setup();
+    const { requests } = renderApp("/me/profile", screens, {
+      ...signedIn,
+      "PUT /api/v1/me": () =>
+        Response.json({ ...aProfile, directAdd: "INVITE_ONLY", version: 1 }),
+    });
+    await user.click(
+      await screen.findByLabelText("Let group Owners add me directly"),
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect((await screen.findByRole("status")).textContent).toBe("Saved.");
+    expect(puts(requests)[0].body).toEqual({
+      displayName: "Asha Rao",
+      defaultCurrency: "INR",
+      directAdd: "INVITE_ONLY",
+      version: 0,
+    });
+    expect(
+      (
+        screen.getByLabelText(
+          "Let group Owners add me directly",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(false);
+  });
+
+  it("shows the stored invite-only choice and switches back to allow", async () => {
+    const user = userEvent.setup();
+    const { requests } = renderApp("/me/profile", screens, {
+      "GET /api/v1/me": () =>
+        Response.json({ ...aProfile, directAdd: "INVITE_ONLY", version: 3 }),
+      "PUT /api/v1/me": () =>
+        Response.json({ ...aProfile, directAdd: "ALLOW", version: 4 }),
+    });
+    const toggle = (await screen.findByLabelText(
+      "Let group Owners add me directly",
+    )) as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+
+    await user.click(toggle);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByRole("status");
+    expect((puts(requests)[0].body as { directAdd: string }).directAdd).toBe(
+      "ALLOW",
+    );
+  });
+
+  it("is not part of the welcome step, which leaves the stored choice alone", async () => {
+    const user = userEvent.setup();
+    const { requests } = renderApp("/welcome", screens, {
+      ...signedIn,
+      "PUT /api/v1/me": () => Response.json({ ...aProfile, version: 1 }),
+    });
+    await screen.findByLabelText("Display name");
+    expect(
+      screen.queryByLabelText("Let group Owners add me directly"),
+    ).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Let's go" }));
+    await waitFor(() => expect(puts(requests)).toHaveLength(1));
+    expect(puts(requests)[0].body).not.toHaveProperty("directAdd");
   });
 });

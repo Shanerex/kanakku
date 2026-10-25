@@ -78,5 +78,6 @@ export const aProfile = {
   emailVerified: false,
   displayName: "Asha Rao",
   defaultCurrency: "INR",
+  directAdd: "ALLOW",
   version: 0,
 };

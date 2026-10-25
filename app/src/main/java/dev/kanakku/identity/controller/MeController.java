@@ -74,6 +74,7 @@ public class MeController {
         request.displayName(),
         request.defaultCurrency(),
         request.upiId(),
+        request.directAdd(),
         request.version());
   }
 }

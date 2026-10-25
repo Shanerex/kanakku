@@ -53,6 +53,57 @@ export function describeProblem(problem?: Partial<Problem>): PlainProblem {
         title: "Changed somewhere else",
         body: "Your profile was changed somewhere else. Reload it and try again.",
       };
+    case "group-not-found":
+      return {
+        title: "This group isn't available",
+        body: "It may have been removed, or you may not be in it.",
+      };
+    case "member-not-found":
+    case "invite-not-found":
+      return { body: "That isn't there any more. Reload and try again." };
+    case "owner-only":
+      return {
+        title: "Only the Owner can do this",
+        body: "Ask the group's Owner to do it.",
+      };
+    case "stale-version":
+      return {
+        title: "Changed somewhere else",
+        body: "This was changed somewhere else. Reload and try again.",
+      };
+    case "group-archived":
+      return {
+        title: "This group is archived",
+        body: "Unarchive it to make changes.",
+      };
+    case "last-owner":
+      return {
+        title: "The Owner can't leave",
+        body: "A group always keeps its Owner.",
+      };
+    case "already-member":
+      return { body: "That person is already in this group." };
+    case "invite-only":
+      return {
+        title: "Can't add them directly",
+        body: "They only join through an invite link. Add them as a guest and share an invite.",
+      };
+    case "not-a-guest":
+      return { body: "Invites are only for guests who haven't joined yet." };
+    case "invalid-absorbers":
+      return { body: "Pick at least one other member to share the balance." };
+    case "search-too-short":
+      return { body: "Type at least 3 characters to search." };
+    case "invite-unusable":
+      return {
+        title: "This invite no longer works",
+        body: "It expired, was revoked or was already used. Ask for a new one.",
+      };
+    case "member-has-balance":
+      return {
+        title: "Balance isn't settled",
+        body: "Settle it first, or write it off.",
+      };
     case "validation":
       return { body: "Check the highlighted fields and try again." };
     case "idempotency-key-required":

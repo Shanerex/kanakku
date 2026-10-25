@@ -202,4 +202,55 @@ class MeEndpointTest extends PostgresIntegrationTest {
                 .content(json.writeValueAsString(body("Asha", "INR", null, 0))))
         .andExpect(status().isForbidden());
   }
+
+  @Test
+  void directAddDefaultsToAllowAndCanBeToggledToInviteOnlyAndBack() throws Exception {
+    Session a = newUser("Asha");
+    mvc.perform(get("/api/v1/me").cookie(a.cookie()))
+        .andExpect(jsonPath("$.directAdd").value("ALLOW"));
+
+    Map<String, Object> toInviteOnly = body("Asha", "INR", null, 0);
+    toInviteOnly.put("directAdd", "INVITE_ONLY");
+    update(a, toInviteOnly)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.directAdd").value("INVITE_ONLY"))
+        .andExpect(jsonPath("$.version").value(1));
+    mvc.perform(get("/api/v1/me").cookie(a.cookie()))
+        .andExpect(jsonPath("$.directAdd").value("INVITE_ONLY"));
+
+    Map<String, Object> back = body("Asha", "INR", null, 1);
+    back.put("directAdd", "ALLOW");
+    update(a, back).andExpect(status().isOk()).andExpect(jsonPath("$.directAdd").value("ALLOW"));
+  }
+
+  @Test
+  void leavingDirectAddOutOfTheBodyKeepsTheStoredChoice() throws Exception {
+    Session a = newUser("Asha");
+    Map<String, Object> toInviteOnly = body("Asha", "INR", null, 0);
+    toInviteOnly.put("directAdd", "INVITE_ONLY");
+    update(a, toInviteOnly).andExpect(status().isOk());
+
+    update(a, body("Asha K", "INR", null, 1))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.directAdd").value("INVITE_ONLY"));
+  }
+
+  @Test
+  void anUnknownDirectAddValueIsRefused() throws Exception {
+    Session a = newUser("Asha");
+    Map<String, Object> bad = body("Asha", "INR", null, 0);
+    bad.put("directAdd", "EVERYONE");
+    update(a, bad).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void aStaleVersionDoesNotChangeDirectAdd() throws Exception {
+    Session a = newUser("Asha");
+    update(a, body("First", "INR", null, 0)).andExpect(status().isOk());
+    Map<String, Object> stale = body("Stale", "INR", null, 0);
+    stale.put("directAdd", "INVITE_ONLY");
+    update(a, stale).andExpect(status().isConflict());
+    mvc.perform(get("/api/v1/me").cookie(a.cookie()))
+        .andExpect(jsonPath("$.directAdd").value("ALLOW"));
+  }
 }

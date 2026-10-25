@@ -1,11 +1,15 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { RouteObject } from "react-router";
+import { type RouteObject, useLocation } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 import { authRoutes } from "../../app/routes";
 import { aProfile, problem, renderApp, type Seen } from "../../test/harness";
 
 afterEach(cleanup);
+
+function InvitePage() {
+  return <p>Invite page {useLocation().hash}</p>;
+}
 
 const welcome: RouteObject = { path: "/welcome", element: <p>Welcome page</p> };
 const screens = [...authRoutes, welcome];
@@ -108,6 +112,28 @@ describe("SignUpPage", () => {
         .map((r) => `${r.method} ${r.path}`)
         .filter((r) => r.startsWith("POST")),
     ).toEqual(["POST /api/v1/auth/sign-up", "POST /api/v1/auth/sign-in"]);
+  });
+
+  it("returns to the invite link, fragment kept, after sign-up", async () => {
+    const user = userEvent.setup();
+    const invite: RouteObject = {
+      path: "/invite",
+      element: <InvitePage />,
+    };
+    renderApp("/sign-up?returnTo=%2Finvite#tok-1", [...authRoutes, invite], {
+      ...signedOut,
+      "POST /api/v1/auth/sign-up": () =>
+        Response.json(aProfile, { status: 201 }),
+      "POST /api/v1/auth/sign-in": () => Response.json(aProfile),
+    });
+    await fill(user, {
+      name: "Asha Rao",
+      email: "asha@example.com",
+      password: "correct horse",
+    });
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByText("Invite page #tok-1")).toBeTruthy();
   });
 
   it("keeps the same Idempotency-Key when retrying the same form, and a new one after a change", async () => {
