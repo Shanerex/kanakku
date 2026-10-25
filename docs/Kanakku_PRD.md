@@ -70,7 +70,7 @@ The v1.0 goal is a self-hostable app that a group of 3–20 friends or flatmates
 
 ## Scope at a glance
 
-The scope is 26 features in four tiers. P0 and P1 (core, AI foundation and native apps) are the table stakes; P2 holds the differentiators that make Kanakku worth switching to; P3 is optional and built only if time allows. Feature IDs (F-nn) are used throughout this PRD and in the rx backlog.
+The scope is 27 features in four tiers. P0 and P1 (core, AI foundation and native apps) are the table stakes; P2 holds the differentiators that make Kanakku worth switching to; P3 is optional and built only if time allows. Feature IDs (F-nn) are used throughout this PRD and in the rx backlog.
 
 | ID | Feature | Tier | Milestone |
 | --- | --- | --- | --- |
@@ -87,6 +87,7 @@ The scope is 26 features in four tiers. P0 and P1 (core, AI foundation and nativ
 | F-11 | Notifications and reminders | P0 Core | v0.1 |
 | F-12 | Splitwise import and CSV/JSON export | P0 Core | v0.1 |
 | F-13 | Responsive web app and guest share links | P0 Core | v0.1 |
+| F-27 | Phone numbers and contact matching | P0 Core | v0.1 |
 | F-14 | AI gateway and bring-your-own model | P1 AI | v0.2 |
 | F-15 | Draft expenses and review queue | P1 AI | v0.2 |
 | F-16 | Quick add in plain English | P1 AI | v0.2 |
@@ -159,7 +160,7 @@ Each feature below lists what it must do and how we know it works. The acceptanc
 
 **F-11 Notifications and reminders.** People find out without opening the app.
 
-- Requirements: in-app, email and web-push notifications when you are added to an expense, a settlement is recorded or a draft awaits review. A weekly reminder of open balances. Per-user preferences. Notifications leave through a transactional outbox (Spring Modulith event publication).
+- Requirements: in-app, email and web-push notifications when you are added to an expense, a settlement is recorded or a draft awaits review. A weekly reminder of open balances. Per-user preferences. Notifications leave through a transactional outbox (Spring Modulith event publication). Guests have no account or preferences; reaching them is part of F-13.
 - Acceptance: a rolled-back transaction sends nothing. A crash after commit still sends the notification once on restart. A user who turns off email gets none.
 
 **F-12 Splitwise import and CSV/JSON export.** Move in without retyping and leave without lock-in.
@@ -170,7 +171,16 @@ Each feature below lists what it must do and how we know it works. The acceptanc
 **F-13 Responsive web app and guest share links.** The web is for desktops, admins and friends who will never install an app.
 
 - Requirements: a React + Vite + TypeScript single-page app, served as static files by Spring Boot from the same image. Its API client is generated from the backend's OpenAPI spec, like the mobile apps'. Usable at 360 px wide and installable to the home screen through a web manifest (online only). Every v0.1 feature has its web screen. A read-only share link per guest shows what they owe and a UPI pay button, with no account needed; links last until revoked or the group is archived. Charts with Recharts. Offline entry lives in the native apps (F-26), not the web.
-- Acceptance: adding, editing and settling an expense work at 360 px and with the keyboard alone. A share link shows only the expenses that guest is part of. A revoked share link returns 404. The first screen loads in under 2 seconds on a mid-range phone over 4G.
+- Reaching guests: Kanakku cannot message a guest on WhatsApp (no paid Business API), so it gives members the tools to tell them.
+  - A guest with an email gets an email, through the F-11 outbox, when added to an expense, plus the weekly open-balance reminder, each with their share link. Every email has a one-click unsubscribe that needs no account; the opt-out is stored on the guest's member row.
+  - A "Send on WhatsApp" button on each guest opens a `https://wa.me/` link with a prefilled message: the amount owed, the group name and the share link. It targets the guest's number when known (F-27) and otherwise lets the member pick the chat; on phones it uses the Web Share API. The server sends nothing to WhatsApp.
+  - A user's weekly reminder lists guests who owe them, each linking to that guest's send button, so guests with no email are still chased.
+- Acceptance: adding, editing and settling an expense work at 360 px and with the keyboard alone. A share link shows only the expenses that guest is part of. A revoked share link returns 404. The first screen loads in under 2 seconds on a mid-range phone over 4G. A guest with an email receives the expense email with a working share link; after unsubscribing they receive none. A guest without an email gets nothing, and appears in the weekly reminder of each member they owe. The WhatsApp link carries the exact amount and the share link, and the guest's number when one is stored.
+
+**F-27 Phone numbers and contact matching.** In India people know each other by phone number, not email, and WhatsApp runs on it.
+
+- Requirements: a user can add one mobile number to their profile, and a guest can carry an optional one. Numbers are stored in E.164 form, parsed with libphonenumber, with +91 as the default country. A number is verified by an SMS one-time code through an SMS provider the admin configures; Kanakku bundles none, since Indian SMS needs a paid, DLT-registered sender. Without a provider, numbers stay unverified. A verified number belongs to one account. Owner search (F-03) also matches a full phone number exactly, never a prefix, and only verified numbers; it still honours the invite-only setting and shows the number masked. When a user verifies an email or phone that matches a guest's, Kanakku suggests claiming that guest; nothing merges until the user confirms, and the claim then works exactly like an invite claim. Phone numbers never appear in logs or share links.
+- Acceptance: "98765 43210", "+91 98765 43210" and "09876543210" store as the same number. A partial number finds no one. An unverified number is never matched by search. A second account cannot verify a number already verified on another. Five wrong codes lock verification for 15 minutes. With no SMS provider, the profile shows the number as unverified and search by phone is off. A suggested claim changes nothing until confirmed; once confirmed, the guest's expenses and balance carry over.
 
 ### P1 AI foundation (v0.2)
 
@@ -293,7 +303,7 @@ Each milestone ends only when its exit gate passes. Every milestone after v0.1 i
 
 | Milestone | Features | Exit gate |
 | --- | --- | --- |
-| v0.1 Core | F-01 to F-13 | Property tests find zero ledger violations; you run one real trip or a month of flat expenses on it |
+| v0.1 Core | F-01 to F-13, F-27 | Property tests find zero ledger violations; you run one real trip or a month of flat expenses on it |
 | v0.2 AI foundation | F-14 to F-18 | Every AI result lands as a draft; quick add reaches 80% and receipts 90% on their test sets; switching between Claude, OpenAI and Ollama needs no restart |
 | v0.3 Chat and agents | F-19 to F-21 | A real trip chat imports with at least 75% of drafts confirmed; Claude adds a draft expense over MCP |
 | v0.4 Statements | F-22 to F-23 | Your own bank's PDF statement imports without the password being stored; at least 90% of settle-up matches are correct |
@@ -339,6 +349,7 @@ Four build notes for rx:
 | 2 | accounts-password | F-02 (part 1) | 1 | No identity / every user / sign-up, verification, password sign-in and rate limits pass F-02 acceptance |
 | 3 | oidc-sign-in | F-02 (part 2) | 2 | People want to sign in with Google, Microsoft or Apple / every user and admins / all three work by config alone; bad tokens are refused; Apple relay emails link |
 | 4 | groups-members | F-03 | 2 | No way to share costs / trip organizers and flatmates / groups, guests, invites and the remove-with-balance rule pass F-03 acceptance |
+| 29 | phone-numbers | F-27 | 4 | Indians find friends by phone, not email / every user and guests / numbers normalise to E.164; search matches only verified numbers exactly; matching guests are suggested for claim, never merged silently |
 | 5 | ledger-core | F-05 | 4 | Balances need a source of truth / every member / journal and balances keep the zero-sum invariant under property tests |
 | 6 | expenses-splits | F-04 (part 1) | 5 | Nothing to split yet / every member / equal, exact, percentage and share splits post to the ledger with exact rounding and idempotent creates |
 | 7 | expenses-payers-receipts | F-04 (part 2) | 6 | Real bills have several payers and a photo / trip organizers / multiple payers, adjustments and receipt images work; edits lock optimistically |
@@ -349,7 +360,7 @@ Four build notes for rx:
 | 12 | search-charts | F-10 | 6 | Pro features are paywalled elsewhere / every member / scoped search under 300 ms; charts by category and month |
 | 13 | notifications-outbox | F-11 | 8 | People miss updates / every member / outbox delivery: nothing on rollback, exactly once after a crash |
 | 14 | splitwise-import-export | F-12 | 7, 9 | Switching costs and lock-in fear / people leaving Splitwise / imported balances match to the paisa; JSON round trip is lossless |
-| 15 | web-share-links | F-13 | 8 | Guests will not install an app / casual members / share links show a guest's balance and a UPI button; revoked links return 404; core pages work at 360 px |
+| 15 | web-share-links | F-13 | 8, 13 | Guests will not install an app / casual members / share links show a guest's balance and a UPI button; guests with an email get updates and can unsubscribe; WhatsApp send links carry the amount; revoked links return 404; core pages work at 360 px |
 | 16 | ai-gateway | F-14 | 2 | No AI layer / admins and every AI feature / provider switch without restart; keys never reach the browser |
 | 17 | draft-review-queue | F-15 | 6, 16 | AI must not post to the ledger / every member / drafts change no balance until confirmed; confirm is idempotent |
 | 18 | quick-add | F-16 | 17 | Typing forms is slow / every member / ≥ 80% of the 100-phrase test set confirmed without edits |
@@ -364,7 +375,9 @@ Four build notes for rx:
 | 27 | mobile-app-core | F-26 (part 1) | 3, 8 | Groups live on phones, not browsers / every member / Kotlin Multiplatform apps sign in natively with rotating tokens, show groups and balances, and add expenses offline exactly once |
 | 28 | mobile-camera-push-upi | F-26 (part 2) | 13, 19, 27 | Bills get photographed and paid on the phone / trip organizers and payers / receipt camera, push notifications and UPI intents work on both platforms; store test builds pass |
 
-Use rx's `--quick` lane for small follow-ups such as a new bank layout parser or a new category, not for any row above. The security agent's review deserves the closest read on rows 2, 3, 4, 16, 22, 24, 25 and 27, where auth, group scoping, secrets, tokens, mobile sessions and financial statements live.
+Row 29 was added after the table was first numbered; it is built right after row 4, so numbers stay stable for existing branches and specs.
+
+Use rx's `--quick` lane for small follow-ups such as a new bank layout parser or a new category, not for any row above. The security agent's review deserves the closest read on rows 2, 3, 4, 16, 22, 24, 25, 27 and 29, where auth, group scoping, secrets, tokens, mobile sessions, financial statements and phone numbers live.
 
 ## Seed architecture.md
 
@@ -434,7 +447,7 @@ Paste this as `docs/knowledge/architecture.md` (59 lines, under rx's 80-line cap
 
 ## Risks and open questions
 
-The biggest risk is scope: 28 rx features on weekends, alongside Margin. v0.1 must ship and be used on one real trip before any AI work starts.
+The biggest risk is scope: 29 rx features on weekends, alongside Margin. v0.1 must ship and be used on one real trip before any AI work starts.
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
@@ -451,6 +464,8 @@ The biggest risk is scope: 28 rx features on weekends, alongside Margin. v0.1 mu
 | Prompt injection through chats, receipts or statements | Wrong drafts | Schema-validated output; drafts only, including over MCP; no tool access beyond the requester's groups |
 | Model costs on self-hosted installs | Admins turn AI off | Per-user budgets; Ollama support; small models for quick add |
 | Friends keep using Splitwise | Your own groups never switch | Splitwise import, guest members and share links, so friends need nothing installed to start |
+| Guests never hear about what they owe | Balances stay open for months | Email guests who have one; a WhatsApp send button for every guest; creditors' weekly reminders list guests who owe them |
+| Phone numbers are personal data and easy to enumerate | Strangers learn who uses the instance | Exact full-number match only, verified numbers only, the invite-only setting honoured, masked in results, kept out of logs |
 
 **Open questions**
 
@@ -463,6 +478,7 @@ The biggest risk is scope: 28 rx features on weekends, alongside Margin. v0.1 mu
 - [x] Web client: React + Vite + TypeScript, built as a single-page app and served by Spring Boot (decided 2026-10-19). Not Next.js: Kanakku needs no SEO or server rendering, and Next would add a Node server to every self-hosted install. Offline entry lives in the native apps, so the web needs no offline PWA work.
 - [x] License: Apache-2.0 (decided 2026-10-19). The goal is a portfolio and your own groups, not protection from hosted clones, so a permissive license that matches Spring and Kotlin is the simplest choice.
 - [x] MCP writes: always drafts; no `post` scope in v1.0 (decided 2026-10-19). Chats and prompts can carry injected instructions, and one tap to confirm costs little.
+- [ ] Phone verification (F-27): SMS one-time codes need a paid, DLT-registered sender in India. Planned: an optional, admin-configured SMS provider, with phone search off without one. Revisit if a free verification path appears.
 - [x] Statement parsers in v0.4: SBI, HDFC Bank, ICICI Bank, Axis Bank and Kotak Mahindra Bank (decided 2026-10-19), plus the model fallback for any other layout. Each further bank is a quick-lane rx change.
 
 ## Sources
