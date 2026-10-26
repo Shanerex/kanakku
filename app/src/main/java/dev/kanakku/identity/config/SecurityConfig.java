@@ -107,8 +107,11 @@ public class SecurityConfig {
                     .requestMatchers(
                         "/api/v1/auth/csrf",
                         "/api/v1/auth/sign-up",
+                        "/api/v1/auth/sign-up-options",
                         "/api/v1/auth/sign-in",
                         "/api/v1/auth/sign-out")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/sign-ups/*/*")
                     .permitAll()
                     .requestMatchers("/v3/api-docs", "/v3/api-docs/**")
                     .permitAll()

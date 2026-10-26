@@ -71,4 +71,61 @@ class OpenApiSnapshotTest extends PostgresIntegrationTest {
             "/api/v1/auth/sign-out",
             "/api/v1/me");
   }
+
+  @Test
+  void documentsTheGroupsMembersAndInviteEndpoints() throws Exception {
+    JsonNode paths =
+        JsonMapper.builder()
+            .build()
+            .readTree(
+                mvc.perform(get("/v3/api-docs"))
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString(StandardCharsets.UTF_8))
+            .get("paths");
+    assertThat(paths.propertyNames())
+        .contains(
+            "/api/v1/groups",
+            "/api/v1/groups/{groupId}",
+            "/api/v1/groups/{groupId}/archive",
+            "/api/v1/groups/{groupId}/unarchive",
+            "/api/v1/groups/{groupId}/members",
+            "/api/v1/groups/{groupId}/guests",
+            "/api/v1/groups/{groupId}/user-search",
+            "/api/v1/groups/{groupId}/members/{memberId}",
+            "/api/v1/groups/{groupId}/members/{memberId}/write-offs",
+            "/api/v1/groups/{groupId}/leave",
+            "/api/v1/groups/{groupId}/invites",
+            "/api/v1/groups/{groupId}/invites/{inviteId}/revoke",
+            "/api/v1/invites/preview",
+            "/api/v1/invites/claim");
+  }
+
+  @Test
+  void documentsThePhoneNumberEndpoints() throws Exception {
+    JsonNode paths =
+        JsonMapper.builder()
+            .build()
+            .readTree(
+                mvc.perform(get("/v3/api-docs"))
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString(StandardCharsets.UTF_8))
+            .get("paths");
+    assertThat(paths.propertyNames())
+        .contains(
+            "/api/v1/auth/sign-up-options",
+            "/api/v1/auth/sign-ups/{id}/verify",
+            "/api/v1/auth/sign-ups/{id}/resend",
+            "/api/v1/auth/sign-ups/{id}/finish-unverified",
+            "/api/v1/me/phone",
+            "/api/v1/me/phone/verification",
+            "/api/v1/me/phone/verification/confirm",
+            "/api/v1/groups/{groupId}/user-invites",
+            "/api/v1/claim-suggestions",
+            "/api/v1/claim-suggestions/{id}/confirm",
+            "/api/v1/claim-suggestions/{id}/decline");
+    assertThat(paths.get("/api/v1/groups/{groupId}/user-search").propertyNames())
+        .containsExactly("post");
+  }
 }

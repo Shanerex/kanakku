@@ -1,5 +1,8 @@
 COMPOSE ?= docker compose
 COMPOSE_DEV ?= $(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml
+# Throwaway invite-token secret for the dev and e2e stack. It is public, so anyone who knows it can
+# forge invite tokens: never for a deployment. A KANAKKU_INVITE_TOKEN_SECRET in the shell wins.
+DEV_INVITE_TOKEN_SECRET ?= dev-only-invite-secret-change-me-before-sharing
 
 .PHONY: help up up-d up-dev build down clean logs ps infra
 
@@ -13,7 +16,7 @@ up-d: ## Start all services in the background
 	$(COMPOSE) up -d
 
 up-dev: ## Build and start all services over plain HTTP (cookies not Secure); the e2e stack
-	$(COMPOSE_DEV) up -d --build --wait
+	KANAKKU_INVITE_TOKEN_SECRET="$${KANAKKU_INVITE_TOKEN_SECRET:-$(DEV_INVITE_TOKEN_SECRET)}" $(COMPOSE_DEV) up -d --build --wait
 
 build: ## Rebuild images, then start all services in the background
 	$(COMPOSE) up -d --build

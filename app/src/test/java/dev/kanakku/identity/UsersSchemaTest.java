@@ -64,4 +64,42 @@ class UsersSchemaTest extends PostgresIntegrationTest {
         .extracting("name")
         .contains("user_id", "password_hash");
   }
+
+  private UUID userWithPhone(String phone, boolean verified) {
+    UUID id = UUID.randomUUID();
+    dsl.insertInto(USERS)
+        .set(USERS.ID, id)
+        .set(USERS.EMAIL, TestData.email())
+        .set(USERS.DISPLAY_NAME, "P")
+        .set(USERS.PHONE_E164, phone)
+        .set(USERS.PHONE_VERIFIED_AT, verified ? java.time.OffsetDateTime.now() : null)
+        .execute();
+    return id;
+  }
+
+  @Test
+  void aNewUserHasNoPhone() {
+    UUID id = userWithPhone(null, false);
+
+    var row = dsl.selectFrom(USERS).where(USERS.ID.eq(id)).fetchOne();
+
+    assertThat(row.getPhoneE164()).isNull();
+    assertThat(row.getPhoneVerifiedAt()).isNull();
+  }
+
+  @Test
+  void manyUsersMayHoldTheSameUnverifiedNumber() {
+    String phone = TestData.phone();
+    userWithPhone(phone, false);
+    userWithPhone(phone, false);
+  }
+
+  @Test
+  void aNumberCanBeVerifiedByOnlyOneUser() {
+    String phone = TestData.phone();
+    userWithPhone(phone, true);
+    userWithPhone(phone, false);
+
+    assertThatThrownBy(() -> userWithPhone(phone, true)).isInstanceOf(DuplicateKeyException.class);
+  }
 }

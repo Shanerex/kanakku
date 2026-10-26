@@ -55,8 +55,13 @@ machine: Maven, Node and Java run inside the image builds.
 
 ```sh
 git clone <this repository> && cd kanakku
+cp .env.example .env
+# put a secret after KANAKKU_INVITE_TOKEN_SECRET= in .env, for example: openssl rand -hex 32
 docker compose up
 ```
+
+`KANAKKU_INVITE_TOKEN_SECRET` has no default, so compose refuses to start without it. (`make up-dev`
+supplies a throwaway one for local development unless you set your own in the shell.)
 
 The first build downloads dependencies; a cold build took about 2 minutes on a laptop with a
 fast connection (timed 2026-10-20: `docker compose up -d --wait --build` with an empty build

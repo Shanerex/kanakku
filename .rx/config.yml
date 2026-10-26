@@ -8,5 +8,5 @@ enforce_plan_first: true
 security_review: verify
 feature_id: date-slug
 branch_pattern: feature/{id}
-base_branch: main
+base_branch: develop
 version_bump: release

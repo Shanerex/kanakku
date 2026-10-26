@@ -19,6 +19,14 @@ public abstract class PostgresIntegrationTest {
     POSTGRES.start();
   }
 
+  /** The shared container's connection settings, for tests that boot their own context. */
+  public static java.util.Map<String, Object> datasourceProperties() {
+    return java.util.Map.of(
+        "spring.datasource.url", POSTGRES.getJdbcUrl(),
+        "spring.datasource.username", POSTGRES.getUsername(),
+        "spring.datasource.password", POSTGRES.getPassword());
+  }
+
   @DynamicPropertySource
   static void datasource(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);

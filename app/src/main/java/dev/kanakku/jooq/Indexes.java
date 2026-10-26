@@ -4,10 +4,18 @@
 package dev.kanakku.jooq;
 
 
+import dev.kanakku.jooq.tables.ClaimSuggestions;
+import dev.kanakku.jooq.tables.GroupInvites;
+import dev.kanakku.jooq.tables.GroupMembers;
 import dev.kanakku.jooq.tables.IdempotencyKeys;
+import dev.kanakku.jooq.tables.JournalEntries;
+import dev.kanakku.jooq.tables.JournalLines;
+import dev.kanakku.jooq.tables.PendingSignUps;
+import dev.kanakku.jooq.tables.RateLimitHits;
 import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
+import dev.kanakku.jooq.tables.Users;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -25,7 +33,18 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index CLAIM_SUGGESTIONS_USER_IDX = Internal.createIndex(DSL.name("claim_suggestions_user_idx"), ClaimSuggestions.CLAIM_SUGGESTIONS, new OrderField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.USER_ID, ClaimSuggestions.CLAIM_SUGGESTIONS.STATUS }, false);
+    public static final Index GROUP_INVITES_GROUP_IDX = Internal.createIndex(DSL.name("group_invites_group_idx"), GroupInvites.GROUP_INVITES, new OrderField[] { GroupInvites.GROUP_INVITES.GROUP_ID }, false);
+    public static final Index GROUP_MEMBERS_ACTIVE_USER_KEY = Internal.createIndex(DSL.name("group_members_active_user_key"), GroupMembers.GROUP_MEMBERS, new OrderField[] { GroupMembers.GROUP_MEMBERS.GROUP_ID, GroupMembers.GROUP_MEMBERS.USER_ID }, true);
+    public static final Index GROUP_MEMBERS_GROUP_IDX = Internal.createIndex(DSL.name("group_members_group_idx"), GroupMembers.GROUP_MEMBERS, new OrderField[] { GroupMembers.GROUP_MEMBERS.GROUP_ID }, false);
+    public static final Index GROUP_MEMBERS_GUEST_PHONE_IDX = Internal.createIndex(DSL.name("group_members_guest_phone_idx"), GroupMembers.GROUP_MEMBERS, new OrderField[] { GroupMembers.GROUP_MEMBERS.GUEST_PHONE_E164 }, false);
+    public static final Index GROUP_MEMBERS_USER_IDX = Internal.createIndex(DSL.name("group_members_user_idx"), GroupMembers.GROUP_MEMBERS, new OrderField[] { GroupMembers.GROUP_MEMBERS.USER_ID }, false);
     public static final Index IDEMPOTENCY_KEYS_CREATED_AT_IDX = Internal.createIndex(DSL.name("idempotency_keys_created_at_idx"), IdempotencyKeys.IDEMPOTENCY_KEYS, new OrderField[] { IdempotencyKeys.IDEMPOTENCY_KEYS.CREATED_AT }, false);
+    public static final Index JOURNAL_ENTRIES_GROUP_IDX = Internal.createIndex(DSL.name("journal_entries_group_idx"), JournalEntries.JOURNAL_ENTRIES, new OrderField[] { JournalEntries.JOURNAL_ENTRIES.GROUP_ID }, false);
+    public static final Index JOURNAL_LINES_MEMBER_IDX = Internal.createIndex(DSL.name("journal_lines_member_idx"), JournalLines.JOURNAL_LINES, new OrderField[] { JournalLines.JOURNAL_LINES.GROUP_ID, JournalLines.JOURNAL_LINES.MEMBER_ID }, false);
+    public static final Index PENDING_SIGN_UPS_EXPIRES_AT_IDX = Internal.createIndex(DSL.name("pending_sign_ups_expires_at_idx"), PendingSignUps.PENDING_SIGN_UPS, new OrderField[] { PendingSignUps.PENDING_SIGN_UPS.EXPIRES_AT }, false);
+    public static final Index RATE_LIMIT_HITS_AT_IDX = Internal.createIndex(DSL.name("rate_limit_hits_at_idx"), RateLimitHits.RATE_LIMIT_HITS, new OrderField[] { RateLimitHits.RATE_LIMIT_HITS.AT }, false);
+    public static final Index RATE_LIMIT_HITS_BUCKET_KEY_AT_IDX = Internal.createIndex(DSL.name("rate_limit_hits_bucket_key_at_idx"), RateLimitHits.RATE_LIMIT_HITS, new OrderField[] { RateLimitHits.RATE_LIMIT_HITS.BUCKET, RateLimitHits.RATE_LIMIT_HITS.KEY, RateLimitHits.RATE_LIMIT_HITS.AT }, false);
     public static final Index SCHEDULED_TASKS_EXECUTION_TIME_IDX = Internal.createIndex(DSL.name("scheduled_tasks_execution_time_idx"), ScheduledTasks.SCHEDULED_TASKS, new OrderField[] { ScheduledTasks.SCHEDULED_TASKS.EXECUTION_TIME }, false);
     public static final Index SCHEDULED_TASKS_LAST_HEARTBEAT_IDX = Internal.createIndex(DSL.name("scheduled_tasks_last_heartbeat_idx"), ScheduledTasks.SCHEDULED_TASKS, new OrderField[] { ScheduledTasks.SCHEDULED_TASKS.LAST_HEARTBEAT }, false);
     public static final Index SCHEDULED_TASKS_PRIORITY_EXECUTION_TIME_IDX = Internal.createIndex(DSL.name("scheduled_tasks_priority_execution_time_idx"), ScheduledTasks.SCHEDULED_TASKS, new OrderField[] { ScheduledTasks.SCHEDULED_TASKS.PRIORITY.desc(), ScheduledTasks.SCHEDULED_TASKS.EXECUTION_TIME }, false);
@@ -34,4 +53,5 @@ public class Indexes {
     public static final Index SPRING_SESSION_IX1 = Internal.createIndex(DSL.name("spring_session_ix1"), SpringSession.SPRING_SESSION, new OrderField[] { SpringSession.SPRING_SESSION.SESSION_ID }, true);
     public static final Index SPRING_SESSION_IX2 = Internal.createIndex(DSL.name("spring_session_ix2"), SpringSession.SPRING_SESSION, new OrderField[] { SpringSession.SPRING_SESSION.EXPIRY_TIME }, false);
     public static final Index SPRING_SESSION_IX3 = Internal.createIndex(DSL.name("spring_session_ix3"), SpringSession.SPRING_SESSION, new OrderField[] { SpringSession.SPRING_SESSION.PRINCIPAL_NAME }, false);
+    public static final Index USERS_PHONE_VERIFIED_KEY = Internal.createIndex(DSL.name("users_phone_verified_key"), Users.USERS, new OrderField[] { Users.USERS.PHONE_E164 }, true);
 }

@@ -147,6 +147,48 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
         return (OffsetDateTime) get(8);
     }
 
+    /**
+     * Setter for <code>public.users.direct_add</code>.
+     */
+    public void setDirectAdd(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.users.direct_add</code>.
+     */
+    public String getDirectAdd() {
+        return (String) get(9);
+    }
+
+    /**
+     * Setter for <code>public.users.phone_e164</code>.
+     */
+    public void setPhoneE164(String value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.users.phone_e164</code>.
+     */
+    public String getPhoneE164() {
+        return (String) get(10);
+    }
+
+    /**
+     * Setter for <code>public.users.phone_verified_at</code>.
+     */
+    public void setPhoneVerifiedAt(OffsetDateTime value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.users.phone_verified_at</code>.
+     */
+    public OffsetDateTime getPhoneVerifiedAt() {
+        return (OffsetDateTime) get(11);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -170,7 +212,7 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
     /**
      * Create a detached, initialised UsersRecord
      */
-    public UsersRecord(UUID id, String email, Boolean emailVerified, String displayName, String defaultCurrency, String upiId, Integer version, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    public UsersRecord(UUID id, String email, Boolean emailVerified, String displayName, String defaultCurrency, String upiId, Integer version, OffsetDateTime createdAt, OffsetDateTime updatedAt, String directAdd, String phoneE164, OffsetDateTime phoneVerifiedAt) {
         super(Users.USERS);
 
         setId(id);
@@ -182,6 +224,9 @@ public class UsersRecord extends UpdatableRecordImpl<UsersRecord> {
         setVersion(version);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setDirectAdd(directAdd);
+        setPhoneE164(phoneE164);
+        setPhoneVerifiedAt(phoneVerifiedAt);
         resetTouchedOnNotNull();
     }
 }

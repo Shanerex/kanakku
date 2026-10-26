@@ -78,6 +78,8 @@ describe("describeProblem", () => {
       "unauthenticated",
       "forbidden",
       "internal",
+      "sms-busy",
+      "phone-country-unsupported",
       "nonsense",
     ]) {
       const words = describeProblem(

@@ -60,6 +60,52 @@ overflow menu:
   other 4 members." and posts as a visible journal entry.
 - "＋ Add person": name + optional email → guest member.
 
+## Find people (member picker, F-27) — group page, Owner only
+
+One search field "Find people": a name, an email or a phone number. Digits only (spaces,
+dashes and a leading + allowed) is a phone search and needs 4 digits; anything else needs 3
+characters. Helper: "Search by name, email or phone number. A part of a number works."
+
+Each result is a row: Avatar, display name, and one masked line for the field that matched,
+the email ("a***@example.com") or the number ("+91 ••••• ••10"), never both. The button is:
+- **Add** (secondary, sm) for someone who allows direct add.
+- **Invite** (secondary, sm) for someone who chose invite-only. It creates a guest named after
+  them and a single-use invite, then the row is replaced by "Invite ready for Bala" with the
+  link in a read-only field and Copy; they join only when they open the link.
+
+Errors:
+- Adding someone whose number on file is not verified is refused. A toast (see Toast in
+  components) reads "Can't add Bala: their number is not verified. Send an invite link
+  instead." and the row's button switches to **Invite**.
+- Searching more than 20 times a minute: InlineProblem "You searched too often. Try again in
+  40 seconds."
+- No match: "No one found for that search. Add them as a guest instead."
+
+Search sends the query in a POST body so a number never sits in a URL.
+
+## Add a guest — phone (F-27)
+
+The guest form gains "Mobile number (optional)" with the helper "If they sign up later and
+verify this number, we'll suggest their seat to them." Owners see it masked on the guest's
+member row ("Guest · +91 ••••• ••10"); other members never see it.
+
+## Claim suggestions banner (F-27) — top of `/groups`
+
+One banner card per pending suggestion, above the group list, in `primary-soft` with a
+`UserSwitch` icon: "You might be Bala (guest) in Goa Trip." and the caption "Claiming moves
+their balance onto your own entry. Nothing changes until you choose." Two buttons: primary sm
+**Claim**, ghost sm **Not me**.
+
+- Claim: the row shows a spinner, then a toast "Claimed. Bala (guest)'s balance is now yours."
+  and the banner leaves.
+- Not me: the banner leaves with the toast "Got it. We won't suggest this seat again."
+- 409 (answered elsewhere, guest gone, group archived): InlineProblem in the banner, "This
+  suggestion no longer applies." and the banner is removed on the next load.
+- Nothing is shown when there are no suggestions.
+
+API: `GET /claim-suggestions`, `POST /claim-suggestions/{id}/confirm` and `/decline`, each with
+the suggestion's `version`.
+
 ## Invite link
 
 Card: the link in a read-only mono field, Copy button (toast "Link copied"), Share (Web Share

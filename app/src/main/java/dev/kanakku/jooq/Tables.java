@@ -4,8 +4,18 @@
 package dev.kanakku.jooq;
 
 
+import dev.kanakku.jooq.tables.ClaimSuggestions;
+import dev.kanakku.jooq.tables.GroupInvites;
+import dev.kanakku.jooq.tables.GroupMembers;
+import dev.kanakku.jooq.tables.Groups;
 import dev.kanakku.jooq.tables.IdempotencyKeys;
+import dev.kanakku.jooq.tables.JournalEntries;
+import dev.kanakku.jooq.tables.JournalLines;
+import dev.kanakku.jooq.tables.MemberBalances;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.PendingSignUps;
+import dev.kanakku.jooq.tables.PhoneChallenges;
+import dev.kanakku.jooq.tables.RateLimitHits;
 import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
@@ -20,14 +30,64 @@ import dev.kanakku.jooq.tables.Users;
 public class Tables {
 
     /**
+     * The table <code>public.claim_suggestions</code>.
+     */
+    public static final ClaimSuggestions CLAIM_SUGGESTIONS = ClaimSuggestions.CLAIM_SUGGESTIONS;
+
+    /**
+     * The table <code>public.group_invites</code>.
+     */
+    public static final GroupInvites GROUP_INVITES = GroupInvites.GROUP_INVITES;
+
+    /**
+     * The table <code>public.group_members</code>.
+     */
+    public static final GroupMembers GROUP_MEMBERS = GroupMembers.GROUP_MEMBERS;
+
+    /**
+     * The table <code>public.groups</code>.
+     */
+    public static final Groups GROUPS = Groups.GROUPS;
+
+    /**
      * The table <code>public.idempotency_keys</code>.
      */
     public static final IdempotencyKeys IDEMPOTENCY_KEYS = IdempotencyKeys.IDEMPOTENCY_KEYS;
 
     /**
+     * The table <code>public.journal_entries</code>.
+     */
+    public static final JournalEntries JOURNAL_ENTRIES = JournalEntries.JOURNAL_ENTRIES;
+
+    /**
+     * The table <code>public.journal_lines</code>.
+     */
+    public static final JournalLines JOURNAL_LINES = JournalLines.JOURNAL_LINES;
+
+    /**
+     * The table <code>public.member_balances</code>.
+     */
+    public static final MemberBalances MEMBER_BALANCES = MemberBalances.MEMBER_BALANCES;
+
+    /**
      * The table <code>public.password_credentials</code>.
      */
     public static final PasswordCredentials PASSWORD_CREDENTIALS = PasswordCredentials.PASSWORD_CREDENTIALS;
+
+    /**
+     * The table <code>public.pending_sign_ups</code>.
+     */
+    public static final PendingSignUps PENDING_SIGN_UPS = PendingSignUps.PENDING_SIGN_UPS;
+
+    /**
+     * The table <code>public.phone_challenges</code>.
+     */
+    public static final PhoneChallenges PHONE_CHALLENGES = PhoneChallenges.PHONE_CHALLENGES;
+
+    /**
+     * The table <code>public.rate_limit_hits</code>.
+     */
+    public static final RateLimitHits RATE_LIMIT_HITS = RateLimitHits.RATE_LIMIT_HITS;
 
     /**
      * The table <code>public.scheduled_tasks</code>.

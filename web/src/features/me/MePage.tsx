@@ -67,7 +67,23 @@ export default function MePage() {
           <span>
             <span className="block font-semibold text-text">Profile</span>
             <span className="block text-body-sm text-text-muted">
-              Name, default currency, UPI ID
+              Name, default currency, UPI ID, who can add you
+            </span>
+          </span>
+          <CaretRight
+            size={20}
+            aria-hidden="true"
+            className="text-text-muted"
+          />
+        </Link>
+        <Link
+          to="/groups"
+          className="flex min-h-16 items-center justify-between gap-3 rounded-lg px-4"
+        >
+          <span>
+            <span className="block font-semibold text-text">Groups</span>
+            <span className="block text-body-sm text-text-muted">
+              Trips, flats and couples you share costs with
             </span>
           </span>
           <CaretRight

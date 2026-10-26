@@ -4,15 +4,33 @@
 package dev.kanakku.jooq;
 
 
+import dev.kanakku.jooq.tables.ClaimSuggestions;
+import dev.kanakku.jooq.tables.GroupInvites;
+import dev.kanakku.jooq.tables.GroupMembers;
+import dev.kanakku.jooq.tables.Groups;
 import dev.kanakku.jooq.tables.IdempotencyKeys;
+import dev.kanakku.jooq.tables.JournalEntries;
+import dev.kanakku.jooq.tables.JournalLines;
+import dev.kanakku.jooq.tables.MemberBalances;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.PendingSignUps;
+import dev.kanakku.jooq.tables.PhoneChallenges;
 import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
 import dev.kanakku.jooq.tables.SpringSessionAttributes;
 import dev.kanakku.jooq.tables.Users;
+import dev.kanakku.jooq.tables.records.ClaimSuggestionsRecord;
+import dev.kanakku.jooq.tables.records.GroupInvitesRecord;
+import dev.kanakku.jooq.tables.records.GroupMembersRecord;
+import dev.kanakku.jooq.tables.records.GroupsRecord;
 import dev.kanakku.jooq.tables.records.IdempotencyKeysRecord;
+import dev.kanakku.jooq.tables.records.JournalEntriesRecord;
+import dev.kanakku.jooq.tables.records.JournalLinesRecord;
+import dev.kanakku.jooq.tables.records.MemberBalancesRecord;
 import dev.kanakku.jooq.tables.records.PasswordCredentialsRecord;
+import dev.kanakku.jooq.tables.records.PendingSignUpsRecord;
+import dev.kanakku.jooq.tables.records.PhoneChallengesRecord;
 import dev.kanakku.jooq.tables.records.ScheduledTasksRecord;
 import dev.kanakku.jooq.tables.records.SignInFailuresRecord;
 import dev.kanakku.jooq.tables.records.SpringSessionAttributesRecord;
@@ -38,8 +56,20 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final UniqueKey<ClaimSuggestionsRecord> CLAIM_SUGGESTIONS_MEMBER_USER_KEY = Internal.createUniqueKey(ClaimSuggestions.CLAIM_SUGGESTIONS, DSL.name("claim_suggestions_member_user_key"), new TableField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.MEMBER_ID, ClaimSuggestions.CLAIM_SUGGESTIONS.USER_ID }, true);
+    public static final UniqueKey<ClaimSuggestionsRecord> CLAIM_SUGGESTIONS_PKEY = Internal.createUniqueKey(ClaimSuggestions.CLAIM_SUGGESTIONS, DSL.name("claim_suggestions_pkey"), new TableField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.ID }, true);
+    public static final UniqueKey<GroupInvitesRecord> GROUP_INVITES_PKEY = Internal.createUniqueKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_pkey"), new TableField[] { GroupInvites.GROUP_INVITES.ID }, true);
+    public static final UniqueKey<GroupInvitesRecord> GROUP_INVITES_TOKEN_HASH_KEY = Internal.createUniqueKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_token_hash_key"), new TableField[] { GroupInvites.GROUP_INVITES.TOKEN_HASH }, true);
+    public static final UniqueKey<GroupMembersRecord> GROUP_MEMBERS_ID_GROUP_KEY = Internal.createUniqueKey(GroupMembers.GROUP_MEMBERS, DSL.name("group_members_id_group_key"), new TableField[] { GroupMembers.GROUP_MEMBERS.ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, true);
+    public static final UniqueKey<GroupMembersRecord> GROUP_MEMBERS_PKEY = Internal.createUniqueKey(GroupMembers.GROUP_MEMBERS, DSL.name("group_members_pkey"), new TableField[] { GroupMembers.GROUP_MEMBERS.ID }, true);
+    public static final UniqueKey<GroupsRecord> GROUPS_PKEY = Internal.createUniqueKey(Groups.GROUPS, DSL.name("groups_pkey"), new TableField[] { Groups.GROUPS.ID }, true);
     public static final UniqueKey<IdempotencyKeysRecord> IDEMPOTENCY_KEYS_PKEY = Internal.createUniqueKey(IdempotencyKeys.IDEMPOTENCY_KEYS, DSL.name("idempotency_keys_pkey"), new TableField[] { IdempotencyKeys.IDEMPOTENCY_KEYS.SCOPE, IdempotencyKeys.IDEMPOTENCY_KEYS.KEY }, true);
+    public static final UniqueKey<JournalEntriesRecord> JOURNAL_ENTRIES_PKEY = Internal.createUniqueKey(JournalEntries.JOURNAL_ENTRIES, DSL.name("journal_entries_pkey"), new TableField[] { JournalEntries.JOURNAL_ENTRIES.ID }, true);
+    public static final UniqueKey<JournalLinesRecord> JOURNAL_LINES_PKEY = Internal.createUniqueKey(JournalLines.JOURNAL_LINES, DSL.name("journal_lines_pkey"), new TableField[] { JournalLines.JOURNAL_LINES.ENTRY_ID, JournalLines.JOURNAL_LINES.LINE_NO }, true);
+    public static final UniqueKey<MemberBalancesRecord> MEMBER_BALANCES_PKEY = Internal.createUniqueKey(MemberBalances.MEMBER_BALANCES, DSL.name("member_balances_pkey"), new TableField[] { MemberBalances.MEMBER_BALANCES.GROUP_ID, MemberBalances.MEMBER_BALANCES.MEMBER_ID, MemberBalances.MEMBER_BALANCES.CURRENCY }, true);
     public static final UniqueKey<PasswordCredentialsRecord> PASSWORD_CREDENTIALS_PKEY = Internal.createUniqueKey(PasswordCredentials.PASSWORD_CREDENTIALS, DSL.name("password_credentials_pkey"), new TableField[] { PasswordCredentials.PASSWORD_CREDENTIALS.USER_ID }, true);
+    public static final UniqueKey<PendingSignUpsRecord> PENDING_SIGN_UPS_PKEY = Internal.createUniqueKey(PendingSignUps.PENDING_SIGN_UPS, DSL.name("pending_sign_ups_pkey"), new TableField[] { PendingSignUps.PENDING_SIGN_UPS.ID }, true);
+    public static final UniqueKey<PhoneChallengesRecord> PHONE_CHALLENGES_PKEY = Internal.createUniqueKey(PhoneChallenges.PHONE_CHALLENGES, DSL.name("phone_challenges_pkey"), new TableField[] { PhoneChallenges.PHONE_CHALLENGES.USER_ID }, true);
     public static final UniqueKey<ScheduledTasksRecord> SCHEDULED_TASKS_PKEY = Internal.createUniqueKey(ScheduledTasks.SCHEDULED_TASKS, DSL.name("scheduled_tasks_pkey"), new TableField[] { ScheduledTasks.SCHEDULED_TASKS.TASK_NAME, ScheduledTasks.SCHEDULED_TASKS.TASK_INSTANCE }, true);
     public static final UniqueKey<SignInFailuresRecord> SIGN_IN_FAILURES_PKEY = Internal.createUniqueKey(SignInFailures.SIGN_IN_FAILURES, DSL.name("sign_in_failures_pkey"), new TableField[] { SignInFailures.SIGN_IN_FAILURES.ID }, true);
     public static final UniqueKey<SpringSessionRecord> SPRING_SESSION_PK = Internal.createUniqueKey(SpringSession.SPRING_SESSION, DSL.name("spring_session_pk"), new TableField[] { SpringSession.SPRING_SESSION.PRIMARY_ID }, true);
@@ -50,6 +80,25 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<ClaimSuggestionsRecord, GroupsRecord> CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_GROUP_ID_FKEY = Internal.createForeignKey(ClaimSuggestions.CLAIM_SUGGESTIONS, DSL.name("claim_suggestions_group_id_fkey"), new TableField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<ClaimSuggestionsRecord, GroupMembersRecord> CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_MEMBER_FK = Internal.createForeignKey(ClaimSuggestions.CLAIM_SUGGESTIONS, DSL.name("claim_suggestions_member_fk"), new TableField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.MEMBER_ID, ClaimSuggestions.CLAIM_SUGGESTIONS.GROUP_ID }, Keys.GROUP_MEMBERS_ID_GROUP_KEY, new TableField[] { GroupMembers.GROUP_MEMBERS.ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<ClaimSuggestionsRecord, UsersRecord> CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_USER_ID_FKEY = Internal.createForeignKey(ClaimSuggestions.CLAIM_SUGGESTIONS, DSL.name("claim_suggestions_user_id_fkey"), new TableField[] { ClaimSuggestions.CLAIM_SUGGESTIONS.USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupInvitesRecord, UsersRecord> GROUP_INVITES__GROUP_INVITES_CREATED_BY_FKEY = Internal.createForeignKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_created_by_fkey"), new TableField[] { GroupInvites.GROUP_INVITES.CREATED_BY }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupInvitesRecord, GroupsRecord> GROUP_INVITES__GROUP_INVITES_GROUP_ID_FKEY = Internal.createForeignKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_group_id_fkey"), new TableField[] { GroupInvites.GROUP_INVITES.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupInvitesRecord, UsersRecord> GROUP_INVITES__GROUP_INVITES_INVITED_USER_ID_FKEY = Internal.createForeignKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_invited_user_id_fkey"), new TableField[] { GroupInvites.GROUP_INVITES.INVITED_USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupInvitesRecord, GroupMembersRecord> GROUP_INVITES__GROUP_INVITES_MEMBER_ID_FKEY = Internal.createForeignKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_member_id_fkey"), new TableField[] { GroupInvites.GROUP_INVITES.MEMBER_ID }, Keys.GROUP_MEMBERS_PKEY, new TableField[] { GroupMembers.GROUP_MEMBERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupInvitesRecord, UsersRecord> GROUP_INVITES__GROUP_INVITES_USED_BY_FKEY = Internal.createForeignKey(GroupInvites.GROUP_INVITES, DSL.name("group_invites_used_by_fkey"), new TableField[] { GroupInvites.GROUP_INVITES.USED_BY }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupMembersRecord, GroupsRecord> GROUP_MEMBERS__GROUP_MEMBERS_GROUP_ID_FKEY = Internal.createForeignKey(GroupMembers.GROUP_MEMBERS, DSL.name("group_members_group_id_fkey"), new TableField[] { GroupMembers.GROUP_MEMBERS.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupMembersRecord, GroupMembersRecord> GROUP_MEMBERS__GROUP_MEMBERS_MERGED_INTO_FK = Internal.createForeignKey(GroupMembers.GROUP_MEMBERS, DSL.name("group_members_merged_into_fk"), new TableField[] { GroupMembers.GROUP_MEMBERS.MERGED_INTO_MEMBER_ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, Keys.GROUP_MEMBERS_ID_GROUP_KEY, new TableField[] { GroupMembers.GROUP_MEMBERS.ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<GroupMembersRecord, UsersRecord> GROUP_MEMBERS__GROUP_MEMBERS_USER_ID_FKEY = Internal.createForeignKey(GroupMembers.GROUP_MEMBERS, DSL.name("group_members_user_id_fkey"), new TableField[] { GroupMembers.GROUP_MEMBERS.USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<JournalEntriesRecord, UsersRecord> JOURNAL_ENTRIES__JOURNAL_ENTRIES_ACTOR_USER_ID_FKEY = Internal.createForeignKey(JournalEntries.JOURNAL_ENTRIES, DSL.name("journal_entries_actor_user_id_fkey"), new TableField[] { JournalEntries.JOURNAL_ENTRIES.ACTOR_USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<JournalEntriesRecord, GroupsRecord> JOURNAL_ENTRIES__JOURNAL_ENTRIES_GROUP_ID_FKEY = Internal.createForeignKey(JournalEntries.JOURNAL_ENTRIES, DSL.name("journal_entries_group_id_fkey"), new TableField[] { JournalEntries.JOURNAL_ENTRIES.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<JournalLinesRecord, JournalEntriesRecord> JOURNAL_LINES__JOURNAL_LINES_ENTRY_ID_FKEY = Internal.createForeignKey(JournalLines.JOURNAL_LINES, DSL.name("journal_lines_entry_id_fkey"), new TableField[] { JournalLines.JOURNAL_LINES.ENTRY_ID }, Keys.JOURNAL_ENTRIES_PKEY, new TableField[] { JournalEntries.JOURNAL_ENTRIES.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<JournalLinesRecord, GroupsRecord> JOURNAL_LINES__JOURNAL_LINES_GROUP_ID_FKEY = Internal.createForeignKey(JournalLines.JOURNAL_LINES, DSL.name("journal_lines_group_id_fkey"), new TableField[] { JournalLines.JOURNAL_LINES.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<JournalLinesRecord, GroupMembersRecord> JOURNAL_LINES__JOURNAL_LINES_MEMBER_FK = Internal.createForeignKey(JournalLines.JOURNAL_LINES, DSL.name("journal_lines_member_fk"), new TableField[] { JournalLines.JOURNAL_LINES.MEMBER_ID, JournalLines.JOURNAL_LINES.GROUP_ID }, Keys.GROUP_MEMBERS_ID_GROUP_KEY, new TableField[] { GroupMembers.GROUP_MEMBERS.ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<MemberBalancesRecord, GroupsRecord> MEMBER_BALANCES__MEMBER_BALANCES_GROUP_ID_FKEY = Internal.createForeignKey(MemberBalances.MEMBER_BALANCES, DSL.name("member_balances_group_id_fkey"), new TableField[] { MemberBalances.MEMBER_BALANCES.GROUP_ID }, Keys.GROUPS_PKEY, new TableField[] { Groups.GROUPS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<MemberBalancesRecord, GroupMembersRecord> MEMBER_BALANCES__MEMBER_BALANCES_MEMBER_FK = Internal.createForeignKey(MemberBalances.MEMBER_BALANCES, DSL.name("member_balances_member_fk"), new TableField[] { MemberBalances.MEMBER_BALANCES.MEMBER_ID, MemberBalances.MEMBER_BALANCES.GROUP_ID }, Keys.GROUP_MEMBERS_ID_GROUP_KEY, new TableField[] { GroupMembers.GROUP_MEMBERS.ID, GroupMembers.GROUP_MEMBERS.GROUP_ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
     public static final ForeignKey<PasswordCredentialsRecord, UsersRecord> PASSWORD_CREDENTIALS__PASSWORD_CREDENTIALS_USER_ID_FKEY = Internal.createForeignKey(PasswordCredentials.PASSWORD_CREDENTIALS, DSL.name("password_credentials_user_id_fkey"), new TableField[] { PasswordCredentials.PASSWORD_CREDENTIALS.USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<PhoneChallengesRecord, UsersRecord> PHONE_CHALLENGES__PHONE_CHALLENGES_USER_ID_FKEY = Internal.createForeignKey(PhoneChallenges.PHONE_CHALLENGES, DSL.name("phone_challenges_user_id_fkey"), new TableField[] { PhoneChallenges.PHONE_CHALLENGES.USER_ID }, Keys.USERS_PKEY, new TableField[] { Users.USERS.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
     public static final ForeignKey<SpringSessionAttributesRecord, SpringSessionRecord> SPRING_SESSION_ATTRIBUTES__SPRING_SESSION_ATTRIBUTES_FK = Internal.createForeignKey(SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES, DSL.name("spring_session_attributes_fk"), new TableField[] { SpringSessionAttributes.SPRING_SESSION_ATTRIBUTES.SESSION_PRIMARY_ID }, Keys.SPRING_SESSION_PK, new TableField[] { SpringSession.SPRING_SESSION.PRIMARY_ID }, true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION);
 }

@@ -19,6 +19,34 @@ phones; never sends), Locale (English for now; listed so the setting exists).
 > "Your profile was changed somewhere else. Reload it and try again." with a "Load the latest
 > version" button.
 
+### Mobile number (F-27) — a Card under the profile form
+
+Heading "Mobile number". Friends find you by it, and a verified number lets Kanakku suggest
+the guest seat you may already have in a group.
+
+States, one at a time:
+- **None**: body "Add your number so friends can find you." TextField "Mobile number" (helper
+  "Starts with +91 unless you type another country code.") and secondary "Save number".
+- **Saved, not verified**: the number as typed back in E.164 ("+91 98765 43210"), a
+  `info-soft` chip "Unverified" with a `WarningCircle` icon. With codes on: secondary "Send
+  code" and ghost "Change number". With codes off: the caption "This server can't send texts, so
+  your number stays unverified." and "Change number" only.
+- **Code sent**: "We texted a 6-digit code to +91 98765 43210." One-time-code field (as at
+  sign-up), primary "Confirm number", ghost "Resend code" (30 s cooldown), ghost "Change
+  number".
+- **Verified**: `positive-soft` chip "Verified" with a `CheckCircle` icon and ghost "Change
+  number". Changing it starts again from the form; the new number is unverified.
+
+Errors: invalid ("Enter a mobile number like 98765 43210."), taken ("That number is verified on
+another account."), wrong / expired / locked codes and too many texts use the same words as the
+sign-up code step; a stale version shows the profile's "Load the latest version" button.
+
+Saving the number sends the profile's current `version` and does not discard unsaved edits in
+the profile form above.
+
+API: `PUT /me/phone`, `POST /me/phone/verification` (Idempotency-Key),
+`POST /me/phone/verification/confirm`.
+
 ## Appearance — `/me/appearance`
 
 Theme radio cards with mini previews: System (default) / Light / Dark. Number format radio:

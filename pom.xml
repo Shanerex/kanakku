@@ -25,6 +25,8 @@
     <bouncycastle.version>1.86</bouncycastle.version>
     <springdoc.version>3.1.1</springdoc.version>
     <db-scheduler.version>16.12.0</db-scheduler.version>
+    <jqwik.version>1.9.3</jqwik.version>
+    <libphonenumber.version>9.0.42</libphonenumber.version>
   </properties>
 
   <dependencyManagement>

@@ -59,6 +59,11 @@
       <version>${db-scheduler.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.googlecode.libphonenumber</groupId>
+      <artifactId>libphonenumber</artifactId><!-- Apache-2.0 -->
+      <version>${libphonenumber.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
       <version>${bouncycastle.version}</version>
@@ -118,6 +123,12 @@
     <dependency>
       <groupId>org.jooq</groupId>
       <artifactId>jooq-codegen</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jqwik</groupId>
+      <artifactId>jqwik</artifactId>
+      <version>${jqwik.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
