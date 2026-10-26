@@ -309,6 +309,7 @@ describe("PhoneSection", () => {
           }),
       }),
     );
+    await screen.findByRole("heading", { name: "Mobile number" });
     await user.click(
       await section().findByRole("button", { name: "Remove number" }),
     );
