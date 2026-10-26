@@ -11,7 +11,9 @@ export function useCooldown(seconds: number) {
   useEffect(() => {
     if (until <= Date.now()) return;
     const timer = setInterval(() => {
-      setNow(Date.now());
+      const t = Date.now();
+      setNow(t);
+      if (t >= until) clearInterval(timer);
     }, 250);
     return () => clearInterval(timer);
   }, [until]);

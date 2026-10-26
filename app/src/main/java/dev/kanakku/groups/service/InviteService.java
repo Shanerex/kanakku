@@ -42,6 +42,7 @@ public class InviteService {
   private final TransactionTemplate transactions;
   private final Clock clock;
   private final byte[] tokenSecret;
+  private final ClaimSuggestionService claims;
 
   InviteService(
       InviteRepository invites,
@@ -51,7 +52,8 @@ public class InviteService {
       UserDirectory directory,
       TransactionTemplate transactions,
       Clock clock,
-      @Value("${kanakku.invites.token-secret}") String tokenSecret) {
+      @Value("${kanakku.invites.token-secret}") String tokenSecret,
+      ClaimSuggestionService claims) {
     if (tokenSecret == null || tokenSecret.length() < MIN_SECRET_LENGTH) {
       throw new IllegalStateException(
           "kanakku.invites.token-secret (KANAKKU_INVITE_TOKEN_SECRET) must be at least "
@@ -66,6 +68,7 @@ public class InviteService {
     this.directory = directory;
     this.transactions = transactions;
     this.clock = clock;
+    this.claims = claims;
   }
 
   /**
@@ -197,6 +200,7 @@ public class InviteService {
           }
           invites.markUsed(row.id(), callerId);
           invites.revokeLiveForMember(row.memberId());
+          claims.suggestForNewMember(callerId);
           return groups.findForCaller(row.groupId(), callerId).orElseThrow();
         });
   }

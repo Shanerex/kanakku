@@ -117,6 +117,15 @@ public class UserRepository {
         r.get(USERS.VERSION));
   }
 
+  /** The profile, with its row locked until the transaction ends. */
+  public Optional<Profile> findProfileLocked(UUID id) {
+    return dsl.select(PROFILE_FIELDS)
+        .from(USERS)
+        .where(USERS.ID.eq(id))
+        .forUpdate()
+        .fetchOptional(UserRepository::toProfile);
+  }
+
   public Optional<Profile> findProfile(UUID id) {
     return dsl.select(PROFILE_FIELDS)
         .from(USERS)

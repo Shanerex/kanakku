@@ -170,6 +170,7 @@ public class MemberService {
           } catch (DuplicateKeyException e) {
             throw GroupProblems.alreadyMember();
           }
+          claims.suggestForNewMember(userId);
           return one(groupId, callerId, id, true);
         });
   }

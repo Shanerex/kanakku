@@ -118,6 +118,16 @@ public class ClaimSuggestionRepository {
   }
 
   /**
+   * One suggestion of the caller, without a lock. Empty under the same conditions as {@link
+   * #findLocked}.
+   */
+  public Optional<ClaimSuggestion> find(UUID id, UUID callerId) {
+    return baseQuery(callerId)
+        .and(CLAIM_SUGGESTIONS.ID.eq(id))
+        .fetchOptional(ClaimSuggestionRepository::toSuggestion);
+  }
+
+  /**
    * One suggestion of the caller, locked until the transaction ends. Empty for someone else's
    * suggestion and for a group the caller is no longer a member of.
    */

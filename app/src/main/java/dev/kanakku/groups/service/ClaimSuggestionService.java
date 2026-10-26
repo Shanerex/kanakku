@@ -72,6 +72,17 @@ public class ClaimSuggestionService {
   }
 
   /**
+   * The user just became a member of a group, by direct add or by claiming an invite: any guest
+   * there with the number they hold verified is suggested to them. Runs in the caller's
+   * transaction, after the member row exists.
+   */
+  void suggestForNewMember(UUID userId) {
+    directory
+        .verifiedPhone(userId)
+        .ifPresent(phone -> suggestions.createForVerifiedPhone(userId, phone));
+  }
+
+  /**
    * The Owner changed a guest's number: its pending suggestions no longer hold and are withdrawn.
    * Runs in the caller's transaction, which checked the Owner guard.
    */
@@ -105,11 +116,15 @@ public class ClaimSuggestionService {
   }
 
   private ClaimSuggestion confirmInTransaction(UUID suggestionId, UUID callerId, int version) {
-    ClaimSuggestion suggestion = pendingLocked(suggestionId, callerId, version);
-    Membership mine = guard.member(suggestion.groupId(), callerId, true);
+    // Member rows first, then the suggestion row: setGuestPhone locks the guest and then withdraws
+    // its suggestions, so the other order could deadlock. The first read only finds the ids.
+    ClaimSuggestion peek =
+        suggestions.find(suggestionId, callerId).orElseThrow(GroupProblems::suggestionNotFound);
+    Membership mine = guard.member(peek.groupId(), callerId, true);
     List<UUID> locked =
         members.activeIdsInOrderLocked(
-            suggestion.groupId(), List.of(suggestion.guestMemberId(), mine.memberId()), callerId);
+            peek.groupId(), List.of(peek.guestMemberId(), mine.memberId()), callerId);
+    ClaimSuggestion suggestion = pendingLocked(suggestionId, callerId, version);
     if (!locked.contains(suggestion.guestMemberId())) {
       throw GroupProblems.suggestionResolved();
     }

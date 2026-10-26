@@ -125,11 +125,15 @@ public class PhoneVerificationService {
    * Checks the code against the caller's pending one and, if right, marks the number verified.
    *
    * @param ip the client address, for the per-address guess limit
-   * @throws dev.kanakku.platform.problem.ProblemException 422 for a wrong code or none pending, 410
-   *     when expired, 429 while locked (even for the right code)
+   * @throws dev.kanakku.platform.problem.ProblemException 409 when no provider is configured, 422
+   *     for a wrong code or none pending, 410 when expired, 429 while locked (even for the right
+   *     code)
    * @throws PhoneTakenException when another account verified this number first
    */
   public Profile confirm(UUID userId, String code, String ip) {
+    if (!codes.enabled()) {
+      throw PhoneProblems.smsNotConfigured();
+    }
     Outcome outcome;
     try {
       outcome = transactions.execute(status -> confirmInTransaction(userId, code, ip));
@@ -145,7 +149,9 @@ public class PhoneVerificationService {
   }
 
   private Outcome confirmInTransaction(UUID userId, String code, String ip) {
-    Profile profile = users.findProfile(userId).orElseThrow();
+    // The user row first, then the challenge row: updatePhone and removePhone take them in that
+    // order, so the other order could deadlock.
+    Profile profile = users.findProfileLocked(userId).orElseThrow();
     String userKey = key(userId);
     String ipKey = "ip:" + ThrottleIp.of(ip);
     String numberKey = profile.phone() == null ? null : codes.numberKey(profile.phone());
