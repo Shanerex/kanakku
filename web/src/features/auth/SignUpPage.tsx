@@ -1,4 +1,4 @@
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { newIdempotencyKey } from "../../api/client";
 import { AuthLayout } from "../../app/AuthLayout";
@@ -15,19 +15,27 @@ import { useSession } from "../../app/session";
 import { Button } from "../../ui/Button";
 import { PasswordField } from "../../ui/PasswordField";
 import { TextField } from "../../ui/TextField";
+import { type Pending, PhoneCodeStep } from "./PhoneCodeStep";
 import { safeReturnTo } from "./SignInPage";
 
 const MIN = 8;
 const MAX = 128;
 
-type Fields = { displayName: string; email: string; password: string };
+type Fields = {
+  displayName: string;
+  email: string;
+  password: string;
+  phone: string;
+};
 type Errors = Partial<Record<keyof Fields, string>>;
 
 function length(text: string): number {
   return Array.from(text).length;
 }
 
-export function validate(fields: Fields): Errors {
+export function validate(
+  fields: Omit<Fields, "phone"> & { phone?: string },
+): Errors {
   const errors: Errors = {};
   if (!fields.displayName.trim()) errors.displayName = "Enter your name.";
   else if (length(fields.displayName.trim()) > 80)
@@ -89,7 +97,15 @@ export default function SignUpPage() {
     displayName: "",
     email: "",
     password: "",
+    phone: "",
   });
+  // Whether the server texts codes decides the phone helper; unknown until it answers.
+  const [textsCodes, setTextsCodes] = useState<boolean>();
+  const [pending, setPending] = useState<Pending>();
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    password: string;
+  }>();
   const [errors, setErrors] = useState<Errors>({});
   const [problem, setProblem] = useState<PlainProblem>();
   const [submitting, setSubmitting] = useState(false);
@@ -97,8 +113,25 @@ export default function SignUpPage() {
   const refs = {
     displayName: useRef<HTMLInputElement>(null),
     email: useRef<HTMLInputElement>(null),
+    phone: useRef<HTMLInputElement>(null),
     password: useRef<HTMLInputElement>(null),
   };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: asked once on arrival
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await api.GET("/api/v1/auth/sign-up-options");
+        if (active) setTextsCodes(data?.phoneVerification ?? false);
+      } catch {
+        if (active) setTextsCodes(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function change(name: keyof Fields, value: string) {
     setFields((current) => ({ ...current, [name]: value }));
@@ -107,11 +140,28 @@ export default function SignUpPage() {
   }
 
   function focusFirst(found: Errors) {
-    for (const name of ["displayName", "email", "password"] as const) {
+    for (const name of ["displayName", "email", "phone", "password"] as const) {
       if (found[name]) {
         refs[name].current?.focus();
         return;
       }
+    }
+  }
+
+  /** The account exists (verified or not): sign in with what was typed, then move on. */
+  async function signIn(email: string, password: string) {
+    idempotencyKey.current = newIdempotencyKey();
+    const signedIn = await api.POST("/api/v1/auth/sign-in", {
+      body: { email, password },
+    });
+    if (signedIn.data) {
+      session.signedIn(signedIn.data, destination);
+    } else {
+      setPending(undefined);
+      setProblem({
+        title: "Your account is ready",
+        body: "We couldn't sign you in just now. Go to sign in and try again.",
+      });
     }
   }
 
@@ -131,6 +181,7 @@ export default function SignUpPage() {
         displayName: fields.displayName.trim(),
         email: fields.email.trim(),
         password: fields.password,
+        ...(fields.phone.trim() ? { phone: fields.phone.trim() } : {}),
       };
       const created = await api.POST("/api/v1/auth/sign-up", {
         params: { header: { "Idempotency-Key": idempotencyKey.current } },
@@ -143,29 +194,55 @@ export default function SignUpPage() {
           setErrors(serverErrors);
           focusFirst(serverErrors);
         }
-        if (raw?.type?.endsWith(":email-taken"))
+        const slug = raw?.type?.split(":").pop();
+        if (slug === "email-taken")
           setErrors({ email: "That email already has an account." });
-        setProblem(describeProblem(raw));
+        if (slug === "invalid-phone" || slug === "phone-taken") {
+          setErrors({ phone: describeProblem(raw).body });
+          refs.phone.current?.focus();
+        }
+        setProblem(
+          slug === "invalid-phone" || slug === "phone-taken"
+            ? undefined
+            : describeProblem(raw),
+        );
+        return;
+      }
+      setCredentials({ email: body.email, password: body.password });
+      if (created.response.status === 202) {
+        // No account yet: the code has to be confirmed first.
+        setPending(created.data as Pending);
         return;
       }
       // The account exists; this key is spent. A later attempt is a new submission.
       idempotencyKey.current = newIdempotencyKey();
-      const signedIn = await api.POST("/api/v1/auth/sign-in", {
-        body: { email: body.email, password: body.password },
-      });
-      if (signedIn.data) {
-        session.signedIn(signedIn.data, destination);
-      } else {
-        setProblem({
-          title: "Your account is ready",
-          body: "We couldn't sign you in just now. Go to sign in and try again.",
-        });
-      }
+      await signIn(body.email, body.password);
     } catch {
       setProblem(describeNetworkError());
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (pending && credentials) {
+    return (
+      <AuthLayout>
+        <PhoneCodeStep
+          pending={pending}
+          onPending={setPending}
+          onCreated={() => signIn(credentials.email, credentials.password)}
+          onBack={() => {
+            setPending(undefined);
+            idempotencyKey.current = newIdempotencyKey();
+          }}
+          onExpired={(words) => {
+            setPending(undefined);
+            setProblem(words);
+            idempotencyKey.current = newIdempotencyKey();
+          }}
+        />
+      </AuthLayout>
+    );
   }
 
   return (
@@ -195,6 +272,24 @@ export default function SignUpPage() {
           onChange={(e) => change("email", e.target.value)}
           inputRef={refs.email}
         />
+        {textsCodes !== undefined && (
+          <TextField
+            label="Mobile number (optional)"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            inputMode="tel"
+            value={fields.phone}
+            error={errors.phone}
+            helper={
+              textsCodes
+                ? "Friends can find you by it. We'll text you a code to confirm it, or you can skip that. Starts with +91 unless you type another country code."
+                : "Friends can find you by it. It stays unverified on this server. Starts with +91 unless you type another country code."
+            }
+            onChange={(e) => change("phone", e.target.value)}
+            inputRef={refs.phone}
+          />
+        )}
         <div className="flex flex-col gap-2">
           <PasswordField
             label="Password"

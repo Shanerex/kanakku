@@ -12,6 +12,8 @@ import dev.kanakku.groups.repository.InviteRepository.InviteRow;
 import dev.kanakku.groups.repository.MemberRepository;
 import dev.kanakku.groups.repository.MemberRepository.MemberRow;
 import dev.kanakku.groups.util.InviteTokens;
+import dev.kanakku.identity.api.UserDirectory;
+import dev.kanakku.identity.api.UserSummary;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -36,6 +38,7 @@ public class InviteService {
   private final MemberRepository members;
   private final GroupRepository groups;
   private final GroupGuard guard;
+  private final UserDirectory directory;
   private final TransactionTemplate transactions;
   private final Clock clock;
   private final byte[] tokenSecret;
@@ -45,6 +48,7 @@ public class InviteService {
       MemberRepository members,
       GroupRepository groups,
       GroupGuard guard,
+      UserDirectory directory,
       TransactionTemplate transactions,
       Clock clock,
       @Value("${kanakku.invites.token-secret}") String tokenSecret) {
@@ -59,6 +63,7 @@ public class InviteService {
     this.members = members;
     this.groups = groups;
     this.guard = guard;
+    this.directory = directory;
     this.transactions = transactions;
     this.clock = clock;
   }
@@ -69,27 +74,60 @@ public class InviteService {
    */
   public CreatedInvite create(UUID groupId, UUID callerId, UUID memberId, Integer expiryDays) {
     int days = expiryDays == null ? DEFAULT_EXPIRY_DAYS : expiryDays;
-    UUID id = UUID.randomUUID();
-    String token = tokenFor(id);
     return transactions.execute(
         status -> {
           guard.owner(groupId, callerId, true);
-          MemberRow guest =
-              members
-                  .findActive(groupId, memberId, callerId, false)
-                  .orElseThrow(GroupProblems::memberNotFound);
-          if (guest.userId() != null) {
-            throw GroupProblems.notAGuest();
-          }
-          OffsetDateTime expiresAt = now().plusDays(days);
-          if (!invites.insert(
-              id, groupId, memberId, InviteTokens.hash(token), expiresAt, callerId)) {
-            throw GroupProblems.notAGuest();
-          }
-          Invite invite =
-              toInvite(invites.findForCaller(groupId, id, callerId).orElseThrow(), now());
-          return new CreatedInvite(invite, token);
+          return createFor(groupId, callerId, memberId, days, null);
         });
+  }
+
+  /**
+   * Invites a registered user the Owner found: makes a guest named after them and a single-use
+   * invite for it in one transaction. The invite is bound to that user, so a forwarded link is of
+   * no use to anyone else. The user is not a member until they claim it. Owner only.
+   *
+   * @throws dev.kanakku.platform.problem.ProblemException 404 for an unknown user, 409 when the
+   *     user is already a member
+   */
+  public CreatedInvite inviteUser(UUID groupId, UUID callerId, UUID userId, Integer expiryDays) {
+    int days = expiryDays == null ? DEFAULT_EXPIRY_DAYS : expiryDays;
+    return transactions.execute(
+        status -> {
+          guard.owner(groupId, callerId, true);
+          UserSummary user = directory.summaries(List.of(userId)).get(userId);
+          if (user == null) {
+            throw GroupProblems.userNotFound();
+          }
+          if (members.activeUserIds(groupId, callerId).contains(userId)) {
+            throw GroupProblems.alreadyMember();
+          }
+          UUID guestId = UUID.randomUUID();
+          if (!members.insertGuest(guestId, groupId, callerId, user.displayName(), null, null)) {
+            throw GroupProblems.groupNotFound();
+          }
+          return createFor(groupId, callerId, guestId, days, userId);
+        });
+  }
+
+  /** Inserts the invite for a current guest; the caller checked the Owner guard in this tx. */
+  private CreatedInvite createFor(
+      UUID groupId, UUID callerId, UUID memberId, int days, UUID invitedUserId) {
+    UUID id = UUID.randomUUID();
+    String token = tokenFor(id);
+    MemberRow guest =
+        members
+            .findActive(groupId, memberId, callerId, false)
+            .orElseThrow(GroupProblems::memberNotFound);
+    if (guest.userId() != null) {
+      throw GroupProblems.notAGuest();
+    }
+    OffsetDateTime expiresAt = now().plusDays(days);
+    if (!invites.insert(
+        id, groupId, memberId, InviteTokens.hash(token), expiresAt, callerId, invitedUserId)) {
+      throw GroupProblems.notAGuest();
+    }
+    Invite invite = toInvite(invites.findForCaller(groupId, id, callerId).orElseThrow(), now());
+    return new CreatedInvite(invite, token);
   }
 
   /** The link token of an invite, recomputed from its id and the server secret. */
@@ -129,7 +167,10 @@ public class InviteService {
     return new InvitePreview(row.groupName(), row.guestName());
   }
 
-  /** The caller takes the guest's place; history and balance stay on the same member row. */
+  /**
+   * The caller takes the guest's place; history and balance stay on the same member row. An invite
+   * bound to a user can be claimed by that user only.
+   */
   public Group claim(String token, UUID callerId) {
     return transactions.execute(
         status -> {
@@ -138,6 +179,9 @@ public class InviteService {
                   .lockByTokenHash(InviteTokens.hash(token))
                   .orElseThrow(GroupProblems::inviteUnusable);
           requireUsable(row);
+          if (row.invitedUserId() != null && !row.invitedUserId().equals(callerId)) {
+            throw GroupProblems.inviteForSomeoneElse();
+          }
           if (row.groupArchivedAt() != null) {
             throw GroupProblems.groupArchived();
           }

@@ -15,6 +15,7 @@ import GroupsPage from "../features/groups/GroupsPage";
 import MePage from "../features/me/MePage";
 import ProfilePage from "../features/me/ProfilePage";
 import WelcomePage from "../features/me/WelcomePage";
+import { ToastProvider } from "../ui/Toast";
 import { ApiProvider } from "./api-context";
 import { InlineProblem } from "./InlineProblem";
 import { SessionProvider, useSession } from "./session";
@@ -23,7 +24,9 @@ function Root({ client }: { client: ApiClient }) {
   return (
     <ApiProvider value={client}>
       <SessionProvider>
-        <Outlet />
+        <ToastProvider>
+          <Outlet />
+        </ToastProvider>
       </SessionProvider>
     </ApiProvider>
   );

@@ -118,6 +118,11 @@ public class GroupInvites extends TableImpl<GroupInvitesRecord> {
      */
     public final TableField<GroupInvitesRecord, Integer> VERSION = createField(DSL.name("version"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
 
+    /**
+     * The column <code>public.group_invites.invited_user_id</code>.
+     */
+    public final TableField<GroupInvitesRecord, UUID> INVITED_USER_ID = createField(DSL.name("invited_user_id"), SQLDataType.UUID, this, "");
+
     private GroupInvites(Name alias, Table<GroupInvitesRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -202,7 +207,7 @@ public class GroupInvites extends TableImpl<GroupInvitesRecord> {
 
     @Override
     public List<ForeignKey<GroupInvitesRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.GROUP_INVITES__GROUP_INVITES_CREATED_BY_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_GROUP_ID_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_MEMBER_ID_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_USED_BY_FKEY);
+        return Arrays.asList(Keys.GROUP_INVITES__GROUP_INVITES_CREATED_BY_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_GROUP_ID_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_INVITED_USER_ID_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_MEMBER_ID_FKEY, Keys.GROUP_INVITES__GROUP_INVITES_USED_BY_FKEY);
     }
 
     private transient UsersPath _groupInvitesCreatedByFkey;
@@ -228,6 +233,19 @@ public class GroupInvites extends TableImpl<GroupInvitesRecord> {
             _groups = new GroupsPath(this, Keys.GROUP_INVITES__GROUP_INVITES_GROUP_ID_FKEY, null);
 
         return _groups;
+    }
+
+    private transient UsersPath _groupInvitesInvitedUserIdFkey;
+
+    /**
+     * Get the implicit join path to the <code>public.users</code> table, via
+     * the <code>group_invites_invited_user_id_fkey</code> key.
+     */
+    public UsersPath groupInvitesInvitedUserIdFkey() {
+        if (_groupInvitesInvitedUserIdFkey == null)
+            _groupInvitesInvitedUserIdFkey = new UsersPath(this, Keys.GROUP_INVITES__GROUP_INVITES_INVITED_USER_ID_FKEY, null);
+
+        return _groupInvitesInvitedUserIdFkey;
     }
 
     private transient GroupMembersPath _groupMembers;

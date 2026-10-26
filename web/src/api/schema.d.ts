@@ -22,6 +22,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set my mobile number */
+        put: operations["updateMyPhone"];
+        post?: never;
+        /** Remove my mobile number */
+        delete: operations["removeMyPhone"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{groupId}/members/{memberId}/guest-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set, change or clear a guest's phone number (Owner only) */
+        put: operations["setGuestPhone"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/phone/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Text a verification code to my number */
+        post: operations["sendMyPhoneCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/phone/verification/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the code I was texted */
+        post: operations["confirmMyPhoneCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invites/preview": {
         parameters: {
             query?: never;
@@ -68,6 +137,40 @@ export interface paths {
         put?: never;
         /** Create a group; the caller becomes its Owner */
         post: operations["createGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{groupId}/user-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search users by name, email or phone to add or invite (Owner only) */
+        post: operations["searchUsers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{groupId}/user-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite a found user with a guest and a single-use invite (Owner only) */
+        post: operations["inviteUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -187,7 +290,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add a guest (a name, optionally an email) */
+        /** Add a guest (a name, optionally an email and a phone number) */
         post: operations["addGuest"];
         delete?: never;
         options?: never;
@@ -206,6 +309,91 @@ export interface paths {
         put?: never;
         /** Archive a group (Owner only) */
         post: operations["archiveGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/claim-suggestions/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Not me: leave the guest alone */
+        post: operations["declineClaimSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/claim-suggestions/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** It is me: move the guest's balance onto my own row and retire the guest */
+        post: operations["confirmClaimSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sign-ups/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the SMS code and create the account */
+        post: operations["verifySignUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sign-ups/{id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Text a new code for a pending sign-up */
+        post: operations["resendSignUpCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sign-ups/{id}/finish-unverified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the account with the number unverified, skipping the code */
+        post: operations["finishSignUpUnverified"];
         delete?: never;
         options?: never;
         head?: never;
@@ -281,15 +469,32 @@ export interface paths {
         patch: operations["updateGroup"];
         trace?: never;
     };
-    "/api/v1/groups/{groupId}/user-search": {
+    "/api/v1/claim-suggestions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Search users to add directly (Owner only) */
-        get: operations["searchUsers"];
+        /** List my pending suggestions to claim a guest */
+        get: operations["listClaimSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sign-up-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether sign-up verifies a phone number by SMS */
+        get: operations["getSignUpOptions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -364,6 +569,13 @@ export interface components {
              */
             directAdd: "ALLOW" | "INVITE_ONLY";
             /**
+             * @description My mobile number in E.164; only ever shown to me
+             * @example +919876543210
+             */
+            phone?: string | null;
+            /** @description True once an SMS code confirmed the number */
+            phoneVerified: boolean;
+            /**
              * Format: int32
              * @description Send back on every edit
              */
@@ -389,6 +601,67 @@ export interface components {
              * @description Seconds until a throttled sign-in may be retried (429 only)
              */
             retryAfterSeconds?: number;
+        };
+        UpdatePhoneRequest: {
+            phone: string;
+            /** Format: int32 */
+            version: number;
+        };
+        GuestPhoneRequest: {
+            phone?: string;
+            /** Format: int32 */
+            version: number;
+        };
+        Member: {
+            /**
+             * Format: uuid
+             * @description The member row; ledger lines name it
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The account behind this member; absent for a guest
+             */
+            userId?: string | null;
+            displayName: string;
+            /** @enum {string} */
+            role: "OWNER" | "MEMBER";
+            /** @description True until an account claims it */
+            guest: boolean;
+            /** @description A guest's email, shown to the Owner only */
+            guestEmail?: string | null;
+            /**
+             * @description A guest's phone number, masked, shown to the Owner only
+             * @example +91 ••••• ••10
+             */
+            guestPhoneMasked?: string | null;
+            /** Format: date-time */
+            joinedAt: string;
+            /** @description Non-zero balances per currency; empty when settled */
+            balances: components["schemas"]["MoneyBalance"][];
+            /**
+             * Format: int32
+             * @description Send back when removing
+             */
+            version: number;
+        };
+        MoneyBalance: {
+            /** @example INR */
+            currency: string;
+            /**
+             * Format: int64
+             * @description Minor units; positive means owed to the member, negative means owed by
+             */
+            amountMinor: number;
+        };
+        CodeSent: {
+            /** Format: date-time */
+            codeExpiresAt: string;
+            /** @description False when the SMS provider did not accept the message */
+            smsSent: boolean;
+        };
+        ConfirmPhoneCodeRequest: {
+            code: string;
         };
         InviteTokenRequest: {
             token: string;
@@ -435,63 +708,39 @@ export interface components {
             /** @example color:mango */
             cover?: string | null;
         };
-        VersionRequest: {
-            /** Format: int32 */
-            version: number;
+        UserSearchRequest: {
+            q: string;
         };
-        AddMemberRequest: {
+        UserMatch: {
             /** Format: uuid */
-            userId: string;
-        };
-        Member: {
-            /**
-             * Format: uuid
-             * @description The member row; ledger lines name it
-             */
             id: string;
-            /**
-             * Format: uuid
-             * @description The account behind this member; absent for a guest
-             */
-            userId?: string | null;
             displayName: string;
-            /** @enum {string} */
-            role: "OWNER" | "MEMBER";
-            /** @description True until an account claims it */
-            guest: boolean;
-            /** @description A guest's email, shown to the Owner only */
-            guestEmail?: string | null;
-            /** Format: date-time */
-            joinedAt: string;
-            /** @description Non-zero balances per currency; empty when settled */
-            balances: components["schemas"]["MoneyBalance"][];
             /**
-             * Format: int32
-             * @description Send back when removing
+             * @description The field the query matched
+             * @enum {string}
              */
-            version: number;
-        };
-        MoneyBalance: {
-            /** @example INR */
-            currency: string;
+            matchedBy: "NAME" | "EMAIL" | "PHONE";
             /**
-             * Format: int64
-             * @description Minor units; positive means owed to the member, negative means owed by
+             * @description Set for a name or email match; absent for a phone match
+             * @example a***@example.com
              */
-            amountMinor: number;
+            maskedEmail?: string | null;
+            /**
+             * @description Set for a phone match only
+             * @example +91 ••••• ••10
+             */
+            maskedPhone?: string | null;
+            /** @description Set for a phone match only: false means anyone could have typed that number, so the picker marks it Unverified. It never blocks adding */
+            phoneVerified?: boolean | null;
+            /** @description True: add directly. False: the user is invite-only, so offer Invite */
+            directAdd: boolean;
         };
-        WriteOffRequest: {
-            absorberMemberIds: string[];
-        };
-        WriteOffResult: {
-            writtenOff: components["schemas"]["MoneyBalance"][];
-        };
-        CreateInviteRequest: {
+        UserInviteRequest: {
             /**
              * Format: uuid
-             * @description A guest member of this group
+             * @description A registered user found by search
              */
-            memberId: string;
+            userId: string;
             /**
              * Format: int32
              * @description 1, 7 or 30; 7 when left out
@@ -525,16 +774,84 @@ export interface components {
              */
             version: number;
         };
+        VersionRequest: {
+            /** Format: int32 */
+            version: number;
+        };
+        AddMemberRequest: {
+            /** Format: uuid */
+            userId: string;
+        };
+        WriteOffRequest: {
+            absorberMemberIds: string[];
+        };
+        WriteOffResult: {
+            writtenOff: components["schemas"]["MoneyBalance"][];
+        };
+        CreateInviteRequest: {
+            /**
+             * Format: uuid
+             * @description A guest member of this group
+             */
+            memberId: string;
+            /**
+             * Format: int32
+             * @description 1, 7 or 30; 7 when left out
+             * @example 7
+             */
+            expiryDays?: number;
+        };
         AddGuestRequest: {
             name: string;
             /** Format: email */
             email?: string;
+            phone?: string;
+        };
+        ClaimSuggestion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            groupId: string;
+            groupName: string;
+            /**
+             * Format: uuid
+             * @description The guest's member row
+             */
+            guestMemberId: string;
+            guestName: string;
+            /** @enum {string} */
+            status: "PENDING" | "DECLINED" | "CONFIRMED" | "STALE";
+            /**
+             * Format: int32
+             * @description Send back to confirm or decline
+             */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PendingSignUp: {
+            /**
+             * Format: uuid
+             * @description Use it for verify and resend
+             */
+            id: string;
+            /** @example +91 ••••• ••10 */
+            maskedPhone: string;
+            /** Format: date-time */
+            codeExpiresAt: string;
+            /** @description False when the provider failed to take the text */
+            smsSent: boolean;
         };
         SignUpRequest: {
             /** Format: email */
             email: string;
             password: string;
             displayName: string;
+            /**
+             * @description Mobile number. Required when the server can send SMS codes (see sign-up-options), otherwise optional and left unverified.
+             * @example 98765 43210
+             */
+            phone?: string;
         };
         SignInRequest: {
             email: string;
@@ -549,12 +866,9 @@ export interface components {
             /** Format: int32 */
             version: number;
         };
-        UserMatch: {
-            /** Format: uuid */
-            id: string;
-            displayName: string;
-            /** @example a***@example.com */
-            maskedEmail: string;
+        SignUpOptions: {
+            /** @description True when an SMS provider is set: the phone is required and verified by a code. False: the phone is optional and stays unverified. */
+            phoneVerification: boolean;
         };
         CsrfTokenResponse: {
             headerName: string;
@@ -649,6 +963,225 @@ export interface operations {
             };
         };
     };
+    updateMyPhone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description The saved profile; the number is unverified until a code confirms it */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description Not a valid phone number */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale version, or the number is verified on another account (phone-taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ten saves an hour per user and thirty per address (too-many-codes); see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeMyPhone: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The saved profile, with no number */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description Stale version */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setGuestPhone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuestPhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description The guest, with the number masked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+            /** @description Not a valid phone number */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not a guest, stale version, or the group is archived */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sendMyPhoneCode: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A fresh value per submit attempt */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A code was made; smsSent is false if the provider failed */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeSent"];
+                };
+            };
+            /** @description No SMS provider (sms-not-configured), no number, already verified, or phone-taken */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Four codes an hour per user and per number, ten per address, or the server's hourly ceiling (too-many-codes, sms-busy); see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    confirmMyPhoneCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPhoneCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description My profile, with the number verified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description The code expired (code-expired) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Wrong code (wrong-code) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Five wrong codes lock this for 15 minutes (code-locked); see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     previewInvite: {
         parameters: {
             query?: never;
@@ -702,6 +1235,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Group"];
+                };
+            };
+            /** @description The invite was made for another account (invite-for-someone-else) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description The caller is already in the group, or the group is archived */
@@ -780,6 +1322,97 @@ export interface operations {
             };
             /** @description Idempotency-Key reused with a different body */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    searchUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description At most 10 matches, members left out; each shows the one masked field it matched */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMatch"][];
+                };
+            };
+            /** @description The query is under 3 characters, or under 4 digits for a phone search */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description More than 20 searches in a minute; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    inviteUser: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A fresh value per submit attempt */
+                "Idempotency-Key": string;
+            };
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description The invite and its token (shown once). The user is not a member until they claim it. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedInvite"];
+                };
+            };
+            /** @description No such group, or no such user */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already a member, or the group is archived */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -882,7 +1515,7 @@ export interface operations {
                     "application/json": components["schemas"]["Member"];
                 };
             };
-            /** @description Already a member, invite-only, or the group is archived */
+            /** @description Already a member, invite-only, or the group is archived. A phone number, verified or not, never blocks an add */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -1130,6 +1763,245 @@ export interface operations {
             };
         };
     };
+    declineClaimSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The suggestion, now DECLINED */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimSuggestion"];
+                };
+            };
+            /** @description Not my suggestion */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale version or already answered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    confirmClaimSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The suggestion, now CONFIRMED */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimSuggestion"];
+                };
+            };
+            /** @description Not my suggestion */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale version, already answered, the guest is gone or the group is archived */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    verifySignUp: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A fresh value per submit attempt */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPhoneCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created with a verified number (shown masked). No session is started. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description The email or the number got an account first (email-taken, phone-taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The sign-up expired (sign-up-expired) or the code did (code-expired) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Wrong code (wrong-code) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Five wrong codes lock this number for 15 minutes (code-locked) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resendSignUpCode: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A fresh value per submit attempt */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A new code was made; smsSent is false if the provider failed */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingSignUp"];
+                };
+            };
+            /** @description The sign-up expired (sign-up-expired) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Four texts an hour per number, ten per address, or the server's hourly ceiling; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    finishSignUpUnverified: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A fresh value per submit attempt */
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account created; the number stays unverified (shown masked). No session is started. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description The email is taken */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The sign-up expired (sign-up-expired) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     signUp: {
         parameters: {
             query?: never;
@@ -1146,7 +2018,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Account created. No session is started; call sign-in next. */
+            /** @description Account created (no phone, or no SMS provider); the number is shown masked. No session is started; call sign-in next. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -1155,7 +2027,16 @@ export interface operations {
                     "application/json": components["schemas"]["Profile"];
                 };
             };
-            /** @description Invalid fields or missing Idempotency-Key */
+            /** @description An SMS code was sent and no account exists yet; confirm it with verifySignUp */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingSignUp"];
+                };
+            };
+            /** @description Invalid fields or no Idempotency-Key */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -1164,7 +2045,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Email already registered */
+            /** @description Email already registered, or the number is verified on another account */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -1182,7 +2063,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Too busy: this IP has too many sign-ins or sign-ups in flight, or no hash slot was free in time; see Retry-After */
+            /** @description Too busy: this IP has too many sign-ins or sign-ups in flight, no hash slot was free in time, or too many codes were sent; see Retry-After */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -1337,35 +2218,42 @@ export interface operations {
             };
         };
     };
-    searchUsers: {
+    listClaimSuggestions: {
         parameters: {
-            query?: {
-                q?: string;
-            };
+            query?: never;
             header?: never;
-            path: {
-                groupId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description At most 10 matches with masked emails */
+            /** @description Only mine, only in groups I am in, oldest first */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserMatch"][];
+                    "application/json": components["schemas"]["ClaimSuggestion"][];
                 };
             };
-            /** @description The query is under 3 characters */
-            400: {
+        };
+    };
+    getSignUpOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sign-up options */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/problem+json": components["schemas"]["Problem"];
+                    "application/json": components["schemas"]["SignUpOptions"];
                 };
             };
         };

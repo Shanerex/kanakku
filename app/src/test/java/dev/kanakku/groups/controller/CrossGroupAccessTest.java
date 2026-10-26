@@ -47,9 +47,17 @@ class CrossGroupAccessTest extends ApiTest {
             201,
             (s, i) -> post(s, "/api/v1/groups/" + i.group() + "/guests", map("name", "Planted"))),
         new Call(
-            "GET user-search",
+            "POST user-search",
             403,
-            (s, i) -> get(s, "/api/v1/groups/" + i.group() + "/user-search?q=Asha")),
+            (s, i) -> post(s, "/api/v1/groups/" + i.group() + "/user-search", map("q", "Asha"))),
+        new Call(
+            "POST user-invites",
+            403,
+            (s, i) ->
+                post(
+                    s,
+                    "/api/v1/groups/" + i.group() + "/user-invites",
+                    map("userId", s.id().toString()))),
         new Call(
             "POST members",
             403,

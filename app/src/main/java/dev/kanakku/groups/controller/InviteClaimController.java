@@ -54,6 +54,11 @@ public class InviteClaimController {
       description = "The group the caller has joined",
       content = @Content(schema = @Schema(implementation = Group.class)))
   @ApiResponse(
+      responseCode = "403",
+      description = "The invite was made for another account (invite-for-someone-else)",
+      content =
+          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
+  @ApiResponse(
       responseCode = "409",
       description = "The caller is already in the group, or the group is archived",
       content =

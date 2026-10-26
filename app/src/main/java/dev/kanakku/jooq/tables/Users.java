@@ -4,12 +4,15 @@
 package dev.kanakku.jooq.tables;
 
 
+import dev.kanakku.jooq.Indexes;
 import dev.kanakku.jooq.Keys;
 import dev.kanakku.jooq.Public;
+import dev.kanakku.jooq.tables.ClaimSuggestions.ClaimSuggestionsPath;
 import dev.kanakku.jooq.tables.GroupInvites.GroupInvitesPath;
 import dev.kanakku.jooq.tables.GroupMembers.GroupMembersPath;
 import dev.kanakku.jooq.tables.JournalEntries.JournalEntriesPath;
 import dev.kanakku.jooq.tables.PasswordCredentials.PasswordCredentialsPath;
+import dev.kanakku.jooq.tables.PhoneChallenges.PhoneChallengesPath;
 import dev.kanakku.jooq.tables.records.UsersRecord;
 
 import java.time.OffsetDateTime;
@@ -22,6 +25,7 @@ import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -113,6 +117,16 @@ public class Users extends TableImpl<UsersRecord> {
      */
     public final TableField<UsersRecord, String> DIRECT_ADD = createField(DSL.name("direct_add"), SQLDataType.CLOB.nullable(false).defaultValue(DSL.field(DSL.raw("'ALLOW'::text"), SQLDataType.CLOB)), this, "");
 
+    /**
+     * The column <code>public.users.phone_e164</code>.
+     */
+    public final TableField<UsersRecord, String> PHONE_E164 = createField(DSL.name("phone_e164"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.users.phone_verified_at</code>.
+     */
+    public final TableField<UsersRecord, OffsetDateTime> PHONE_VERIFIED_AT = createField(DSL.name("phone_verified_at"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
+
     private Users(Name alias, Table<UsersRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -181,8 +195,26 @@ public class Users extends TableImpl<UsersRecord> {
     }
 
     @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.USERS_PHONE_VERIFIED_KEY);
+    }
+
+    @Override
     public UniqueKey<UsersRecord> getPrimaryKey() {
         return Keys.USERS_PKEY;
+    }
+
+    private transient ClaimSuggestionsPath _claimSuggestions;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.claim_suggestions</code> table
+     */
+    public ClaimSuggestionsPath claimSuggestions() {
+        if (_claimSuggestions == null)
+            _claimSuggestions = new ClaimSuggestionsPath(this, null, Keys.CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_USER_ID_FKEY.getInverseKey());
+
+        return _claimSuggestions;
     }
 
     private transient GroupInvitesPath _groupInvitesCreatedByFkey;
@@ -197,6 +229,20 @@ public class Users extends TableImpl<UsersRecord> {
             _groupInvitesCreatedByFkey = new GroupInvitesPath(this, null, Keys.GROUP_INVITES__GROUP_INVITES_CREATED_BY_FKEY.getInverseKey());
 
         return _groupInvitesCreatedByFkey;
+    }
+
+    private transient GroupInvitesPath _groupInvitesInvitedUserIdFkey;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.group_invites</code> table, via the
+     * <code>group_invites_invited_user_id_fkey</code> key
+     */
+    public GroupInvitesPath groupInvitesInvitedUserIdFkey() {
+        if (_groupInvitesInvitedUserIdFkey == null)
+            _groupInvitesInvitedUserIdFkey = new GroupInvitesPath(this, null, Keys.GROUP_INVITES__GROUP_INVITES_INVITED_USER_ID_FKEY.getInverseKey());
+
+        return _groupInvitesInvitedUserIdFkey;
     }
 
     private transient GroupInvitesPath _groupInvitesUsedByFkey;
@@ -250,6 +296,19 @@ public class Users extends TableImpl<UsersRecord> {
             _passwordCredentials = new PasswordCredentialsPath(this, null, Keys.PASSWORD_CREDENTIALS__PASSWORD_CREDENTIALS_USER_ID_FKEY.getInverseKey());
 
         return _passwordCredentials;
+    }
+
+    private transient PhoneChallengesPath _phoneChallenges;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.phone_challenges</code> table
+     */
+    public PhoneChallengesPath phoneChallenges() {
+        if (_phoneChallenges == null)
+            _phoneChallenges = new PhoneChallengesPath(this, null, Keys.PHONE_CHALLENGES__PHONE_CHALLENGES_USER_ID_FKEY.getInverseKey());
+
+        return _phoneChallenges;
     }
 
     @Override

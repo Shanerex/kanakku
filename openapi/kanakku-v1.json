@@ -95,6 +95,275 @@
         }
       }
     },
+    "/api/v1/me/phone" : {
+      "put" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Set my mobile number",
+        "operationId" : "updateMyPhone",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The saved profile; the number is unverified until a code confirms it",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Not a valid phone number",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version, or the number is verified on another account (phone-taken)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Ten saves an hour per user and thirty per address (too-many-codes); see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Remove my mobile number",
+        "operationId" : "removeMyPhone",
+        "parameters" : [ {
+          "name" : "version",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The saved profile, with no number",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/members/{memberId}/guest-phone" : {
+      "put" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Set, change or clear a guest's phone number (Owner only)",
+        "operationId" : "setGuestPhone",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "memberId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GuestPhoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The guest, with the number masked",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Not a valid phone number",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Not a guest, stale version, or the group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/phone/verification" : {
+      "post" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Text a verification code to my number",
+        "operationId" : "sendMyPhoneCode",
+        "parameters" : [ {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "202" : {
+            "description" : "A code was made; smsSent is false if the provider failed",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CodeSent"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "No SMS provider (sms-not-configured), no number, already verified, or phone-taken",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Four codes an hour per user and per number, ten per address, or the server's hourly ceiling (too-many-codes, sms-busy); see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/phone/verification/confirm" : {
+      "post" : {
+        "tags" : [ "me-controller" ],
+        "summary" : "Confirm the code I was texted",
+        "operationId" : "confirmMyPhoneCode",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmPhoneCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "My profile, with the number verified",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "The code expired (code-expired)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Wrong code (wrong-code)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Five wrong codes lock this for 15 minutes (code-locked); see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/invites/preview" : {
       "post" : {
         "tags" : [ "invite-claim-controller" ],
@@ -156,6 +425,16 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The invite was made for another account (invite-for-someone-else)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
                 }
               }
             }
@@ -250,6 +529,133 @@
           },
           "422" : {
             "description" : "Idempotency-Key reused with a different body",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/user-search" : {
+      "post" : {
+        "tags" : [ "member-controller" ],
+        "summary" : "Search users by name, email or phone to add or invite (Owner only)",
+        "operationId" : "searchUsers",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UserSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "At most 10 matches, members left out; each shows the one masked field it matched",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserMatch"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The query is under 3 characters, or under 4 digits for a phone search",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "More than 20 searches in a minute; see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/user-invites" : {
+      "post" : {
+        "tags" : [ "user-invite-controller" ],
+        "summary" : "Invite a found user with a guest and a single-use invite (Owner only)",
+        "operationId" : "inviteUser",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UserInviteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The invite and its token (shown once). The user is not a member until they claim it.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatedInvite"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such group, or no such user",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Already a member, or the group is archived",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -392,7 +798,7 @@
             }
           },
           "409" : {
-            "description" : "Already a member, invite-only, or the group is archived",
+            "description" : "Already a member, invite-only, or the group is archived. A phone number, verified or not, never blocks an add",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -643,7 +1049,7 @@
     "/api/v1/groups/{groupId}/guests" : {
       "post" : {
         "tags" : [ "member-controller" ],
-        "summary" : "Add a guest (a name, optionally an email)",
+        "summary" : "Add a guest (a name, optionally an email and a phone number)",
         "operationId" : "addGuest",
         "parameters" : [ {
           "name" : "groupId",
@@ -744,6 +1150,320 @@
         }
       }
     },
+    "/api/v1/claim-suggestions/{id}/decline" : {
+      "post" : {
+        "tags" : [ "claim-suggestion-controller" ],
+        "summary" : "Not me: leave the guest alone",
+        "operationId" : "declineClaimSuggestion",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The suggestion, now DECLINED",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClaimSuggestion"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not my suggestion",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version or already answered",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/claim-suggestions/{id}/confirm" : {
+      "post" : {
+        "tags" : [ "claim-suggestion-controller" ],
+        "summary" : "It is me: move the guest's balance onto my own row and retire the guest",
+        "operationId" : "confirmClaimSuggestion",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The suggestion, now CONFIRMED",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClaimSuggestion"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not my suggestion",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Stale version, already answered, the guest is gone or the group is archived",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-ups/{id}/verify" : {
+      "post" : {
+        "tags" : [ "pending-sign-up-controller" ],
+        "summary" : "Confirm the SMS code and create the account",
+        "operationId" : "verifySignUp",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmPhoneCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Account created with a verified number (shown masked). No session is started.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The email or the number got an account first (email-taken, phone-taken)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "The sign-up expired (sign-up-expired) or the code did (code-expired)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Wrong code (wrong-code)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Five wrong codes lock this number for 15 minutes (code-locked)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-ups/{id}/resend" : {
+      "post" : {
+        "tags" : [ "pending-sign-up-controller" ],
+        "summary" : "Text a new code for a pending sign-up",
+        "operationId" : "resendSignUpCode",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "202" : {
+            "description" : "A new code was made; smsSent is false if the provider failed",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PendingSignUp"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "The sign-up expired (sign-up-expired)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Four texts an hour per number, ten per address, or the server's hourly ceiling; see Retry-After",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-ups/{id}/finish-unverified" : {
+      "post" : {
+        "tags" : [ "pending-sign-up-controller" ],
+        "summary" : "Create the account with the number unverified, skipping the code",
+        "operationId" : "finishSignUpUnverified",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "description" : "A fresh value per submit attempt",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "Account created; the number stays unverified (shown masked). No session is started.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The email is taken",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "The sign-up expired (sign-up-expired)",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/sign-up" : {
       "post" : {
         "tags" : [ "auth-controller" ],
@@ -770,7 +1490,7 @@
         },
         "responses" : {
           "201" : {
-            "description" : "Account created. No session is started; call sign-in next.",
+            "description" : "Account created (no phone, or no SMS provider); the number is shown masked. No session is started; call sign-in next.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -779,8 +1499,18 @@
               }
             }
           },
+          "202" : {
+            "description" : "An SMS code was sent and no account exists yet; confirm it with verifySignUp",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PendingSignUp"
+                }
+              }
+            }
+          },
           "400" : {
-            "description" : "Invalid fields or missing Idempotency-Key",
+            "description" : "Invalid fields or no Idempotency-Key",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -790,7 +1520,7 @@
             }
           },
           "409" : {
-            "description" : "Email already registered",
+            "description" : "Email already registered, or the number is verified on another account",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -810,7 +1540,7 @@
             }
           },
           "429" : {
-            "description" : "Too busy: this IP has too many sign-ins or sign-ups in flight, or no hash slot was free in time; see Retry-After",
+            "description" : "Too busy: this IP has too many sign-ins or sign-ups in flight, no hash slot was free in time, or too many codes were sent; see Retry-After",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -987,48 +1717,40 @@
         }
       }
     },
-    "/api/v1/groups/{groupId}/user-search" : {
+    "/api/v1/claim-suggestions" : {
       "get" : {
-        "tags" : [ "member-controller" ],
-        "summary" : "Search users to add directly (Owner only)",
-        "operationId" : "searchUsers",
-        "parameters" : [ {
-          "name" : "groupId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }, {
-          "name" : "q",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : ""
-          }
-        } ],
+        "tags" : [ "claim-suggestion-controller" ],
+        "summary" : "List my pending suggestions to claim a guest",
+        "operationId" : "listClaimSuggestions",
         "responses" : {
           "200" : {
-            "description" : "At most 10 matches with masked emails",
+            "description" : "Only mine, only in groups I am in, oldest first",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/UserMatch"
+                    "$ref" : "#/components/schemas/ClaimSuggestion"
                   }
                 }
               }
             }
-          },
-          "400" : {
-            "description" : "The query is under 3 characters",
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-up-options" : {
+      "get" : {
+        "tags" : [ "auth-controller" ],
+        "summary" : "Whether sign-up verifies a phone number by SMS",
+        "operationId" : "getSignUpOptions",
+        "responses" : {
+          "200" : {
+            "description" : "The sign-up options",
             "content" : {
-              "application/problem+json" : {
+              "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
+                  "$ref" : "#/components/schemas/SignUpOptions"
                 }
               }
             }
@@ -1164,13 +1886,22 @@
             "description" : "Whether a group Owner may add me directly or I join by invite only",
             "enum" : [ "ALLOW", "INVITE_ONLY" ]
           },
+          "phone" : {
+            "type" : [ "string", "null" ],
+            "description" : "My mobile number in E.164; only ever shown to me",
+            "example" : "+919876543210"
+          },
+          "phoneVerified" : {
+            "type" : "boolean",
+            "description" : "True once an SMS code confirmed the number"
+          },
           "version" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Send back on every edit"
           }
         },
-        "required" : [ "defaultCurrency", "directAdd", "displayName", "email", "emailVerified", "id", "version" ]
+        "required" : [ "defaultCurrency", "directAdd", "displayName", "email", "emailVerified", "id", "phoneVerified", "version" ]
       },
       "FieldError" : {
         "type" : "object",
@@ -1218,6 +1949,129 @@
           }
         },
         "required" : [ "status", "title", "type" ]
+      },
+      "UpdatePhoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 40,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "phone", "version" ]
+      },
+      "GuestPhoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 40,
+            "minLength" : 0
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "Member" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The member row; ledger lines name it"
+          },
+          "userId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid",
+            "description" : "The account behind this member; absent for a guest"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "OWNER", "MEMBER" ]
+          },
+          "guest" : {
+            "type" : "boolean",
+            "description" : "True until an account claims it"
+          },
+          "guestEmail" : {
+            "type" : [ "string", "null" ],
+            "description" : "A guest's email, shown to the Owner only"
+          },
+          "guestPhoneMasked" : {
+            "type" : [ "string", "null" ],
+            "description" : "A guest's phone number, masked, shown to the Owner only",
+            "example" : "+91 ••••• ••10"
+          },
+          "joinedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "balances" : {
+            "type" : "array",
+            "description" : "Non-zero balances per currency; empty when settled",
+            "items" : {
+              "$ref" : "#/components/schemas/MoneyBalance"
+            }
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back when removing"
+          }
+        },
+        "required" : [ "balances", "displayName", "guest", "id", "joinedAt", "role", "version" ]
+      },
+      "MoneyBalance" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string",
+            "example" : "INR"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Minor units; positive means owed to the member, negative means owed by"
+          }
+        },
+        "required" : [ "amountMinor", "currency" ]
+      },
+      "CodeSent" : {
+        "type" : "object",
+        "properties" : {
+          "codeExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "smsSent" : {
+            "type" : "boolean",
+            "description" : "False when the SMS provider did not accept the message"
+          }
+        },
+        "required" : [ "codeExpiresAt", "smsSent" ]
+      },
+      "ConfirmPhoneCodeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "pattern" : "\\d{6}"
+          }
+        },
+        "required" : [ "code" ]
       },
       "InviteTokenRequest" : {
         "type" : "object",
@@ -1306,123 +2160,60 @@
         },
         "required" : [ "currency", "name", "type" ]
       },
-      "VersionRequest" : {
+      "UserSearchRequest" : {
         "type" : "object",
         "properties" : {
-          "version" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 0
-          }
-        },
-        "required" : [ "version" ]
-      },
-      "AddMemberRequest" : {
-        "type" : "object",
-        "properties" : {
-          "userId" : {
+          "q" : {
             "type" : "string",
-            "format" : "uuid"
+            "maxLength" : 100,
+            "minLength" : 0
           }
         },
-        "required" : [ "userId" ]
+        "required" : [ "q" ]
       },
-      "Member" : {
+      "UserMatch" : {
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid",
-            "description" : "The member row; ledger lines name it"
-          },
-          "userId" : {
-            "type" : [ "string", "null" ],
-            "format" : "uuid",
-            "description" : "The account behind this member; absent for a guest"
+            "format" : "uuid"
           },
           "displayName" : {
             "type" : "string"
           },
-          "role" : {
+          "matchedBy" : {
             "type" : "string",
-            "enum" : [ "OWNER", "MEMBER" ]
+            "description" : "The field the query matched",
+            "enum" : [ "NAME", "EMAIL", "PHONE" ]
           },
-          "guest" : {
-            "type" : "boolean",
-            "description" : "True until an account claims it"
-          },
-          "guestEmail" : {
+          "maskedEmail" : {
             "type" : [ "string", "null" ],
-            "description" : "A guest's email, shown to the Owner only"
+            "description" : "Set for a name or email match; absent for a phone match",
+            "example" : "a***@example.com"
           },
-          "joinedAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "maskedPhone" : {
+            "type" : [ "string", "null" ],
+            "description" : "Set for a phone match only",
+            "example" : "+91 ••••• ••10"
           },
-          "balances" : {
-            "type" : "array",
-            "description" : "Non-zero balances per currency; empty when settled",
-            "items" : {
-              "$ref" : "#/components/schemas/MoneyBalance"
-            }
+          "phoneVerified" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Set for a phone match only: false means anyone could have typed that number, so the picker marks it Unverified. It never blocks adding"
           },
-          "version" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Send back when removing"
+          "directAdd" : {
+            "type" : "boolean",
+            "description" : "True: add directly. False: the user is invite-only, so offer Invite"
           }
         },
-        "required" : [ "balances", "displayName", "guest", "id", "joinedAt", "role", "version" ]
+        "required" : [ "directAdd", "displayName", "id", "matchedBy" ]
       },
-      "MoneyBalance" : {
+      "UserInviteRequest" : {
         "type" : "object",
         "properties" : {
-          "currency" : {
-            "type" : "string",
-            "example" : "INR"
-          },
-          "amountMinor" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Minor units; positive means owed to the member, negative means owed by"
-          }
-        },
-        "required" : [ "amountMinor", "currency" ]
-      },
-      "WriteOffRequest" : {
-        "type" : "object",
-        "properties" : {
-          "absorberMemberIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string",
-              "format" : "uuid"
-            },
-            "maxItems" : 50,
-            "minItems" : 0
-          }
-        },
-        "required" : [ "absorberMemberIds" ]
-      },
-      "WriteOffResult" : {
-        "type" : "object",
-        "properties" : {
-          "writtenOff" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/MoneyBalance"
-            }
-          }
-        },
-        "required" : [ "writtenOff" ]
-      },
-      "CreateInviteRequest" : {
-        "type" : "object",
-        "properties" : {
-          "memberId" : {
+          "userId" : {
             "type" : "string",
             "format" : "uuid",
-            "description" : "A guest member of this group"
+            "description" : "A registered user found by search"
           },
           "expiryDays" : {
             "type" : "integer",
@@ -1431,7 +2222,7 @@
             "example" : 7
           }
         },
-        "required" : [ "memberId" ]
+        "required" : [ "userId" ]
       },
       "CreatedInvite" : {
         "type" : "object",
@@ -1481,6 +2272,71 @@
         },
         "required" : [ "createdAt", "expiresAt", "guestName", "id", "memberId", "status", "version" ]
       },
+      "VersionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "version" ]
+      },
+      "AddMemberRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "userId" ]
+      },
+      "WriteOffRequest" : {
+        "type" : "object",
+        "properties" : {
+          "absorberMemberIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "absorberMemberIds" ]
+      },
+      "WriteOffResult" : {
+        "type" : "object",
+        "properties" : {
+          "writtenOff" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MoneyBalance"
+            }
+          }
+        },
+        "required" : [ "writtenOff" ]
+      },
+      "CreateInviteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "memberId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "A guest member of this group"
+          },
+          "expiryDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "1, 7 or 30; 7 when left out",
+            "example" : 7
+          }
+        },
+        "required" : [ "memberId" ]
+      },
       "AddGuestRequest" : {
         "type" : "object",
         "properties" : {
@@ -1494,9 +2350,75 @@
             "format" : "email",
             "maxLength" : 254,
             "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 40,
+            "minLength" : 0
           }
         },
         "required" : [ "name" ]
+      },
+      "ClaimSuggestion" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "groupId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "groupName" : {
+            "type" : "string"
+          },
+          "guestMemberId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The guest's member row"
+          },
+          "guestName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "DECLINED", "CONFIRMED", "STALE" ]
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Send back to confirm or decline"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "createdAt", "groupId", "groupName", "guestMemberId", "guestName", "id", "status", "version" ]
+      },
+      "PendingSignUp" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Use it for verify and resend"
+          },
+          "maskedPhone" : {
+            "type" : "string",
+            "example" : "+91 ••••• ••10"
+          },
+          "codeExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "smsSent" : {
+            "type" : "boolean",
+            "description" : "False when the provider failed to take the text"
+          }
+        },
+        "required" : [ "codeExpiresAt", "id", "maskedPhone", "smsSent" ]
       },
       "SignUpRequest" : {
         "type" : "object",
@@ -1513,6 +2435,13 @@
           "displayName" : {
             "type" : "string",
             "maxLength" : 80,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "Mobile number. Required when the server can send SMS codes (see sign-up-options), otherwise optional and left unverified.",
+            "example" : "98765 43210",
+            "maxLength" : 40,
             "minLength" : 0
           }
         },
@@ -1559,22 +2488,15 @@
         },
         "required" : [ "version" ]
       },
-      "UserMatch" : {
+      "SignUpOptions" : {
         "type" : "object",
         "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "displayName" : {
-            "type" : "string"
-          },
-          "maskedEmail" : {
-            "type" : "string",
-            "example" : "a***@example.com"
+          "phoneVerification" : {
+            "type" : "boolean",
+            "description" : "True when an SMS provider is set: the phone is required and verified by a code. False: the phone is optional and stays unverified."
           }
         },
-        "required" : [ "displayName", "id", "maskedEmail" ]
+        "required" : [ "phoneVerification" ]
       },
       "CsrfTokenResponse" : {
         "type" : "object",

@@ -4,6 +4,7 @@
 package dev.kanakku.jooq;
 
 
+import dev.kanakku.jooq.tables.ClaimSuggestions;
 import dev.kanakku.jooq.tables.GroupInvites;
 import dev.kanakku.jooq.tables.GroupMembers;
 import dev.kanakku.jooq.tables.Groups;
@@ -12,6 +13,9 @@ import dev.kanakku.jooq.tables.JournalEntries;
 import dev.kanakku.jooq.tables.JournalLines;
 import dev.kanakku.jooq.tables.MemberBalances;
 import dev.kanakku.jooq.tables.PasswordCredentials;
+import dev.kanakku.jooq.tables.PendingSignUps;
+import dev.kanakku.jooq.tables.PhoneChallenges;
+import dev.kanakku.jooq.tables.RateLimitHits;
 import dev.kanakku.jooq.tables.ScheduledTasks;
 import dev.kanakku.jooq.tables.SignInFailures;
 import dev.kanakku.jooq.tables.SpringSession;
@@ -24,6 +28,11 @@ import dev.kanakku.jooq.tables.Users;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
+
+    /**
+     * The table <code>public.claim_suggestions</code>.
+     */
+    public static final ClaimSuggestions CLAIM_SUGGESTIONS = ClaimSuggestions.CLAIM_SUGGESTIONS;
 
     /**
      * The table <code>public.group_invites</code>.
@@ -64,6 +73,21 @@ public class Tables {
      * The table <code>public.password_credentials</code>.
      */
     public static final PasswordCredentials PASSWORD_CREDENTIALS = PasswordCredentials.PASSWORD_CREDENTIALS;
+
+    /**
+     * The table <code>public.pending_sign_ups</code>.
+     */
+    public static final PendingSignUps PENDING_SIGN_UPS = PendingSignUps.PENDING_SIGN_UPS;
+
+    /**
+     * The table <code>public.phone_challenges</code>.
+     */
+    public static final PhoneChallenges PHONE_CHALLENGES = PhoneChallenges.PHONE_CHALLENGES;
+
+    /**
+     * The table <code>public.rate_limit_hits</code>.
+     */
+    public static final RateLimitHits RATE_LIMIT_HITS = RateLimitHits.RATE_LIMIT_HITS;
 
     /**
      * The table <code>public.scheduled_tasks</code>.

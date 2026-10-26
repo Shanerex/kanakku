@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dev.kanakku.support.ApiTest;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.JsonNode;
 
 class MemberAddTest extends ApiTest {
@@ -25,7 +26,11 @@ class MemberAddTest extends ApiTest {
     return dsl.fetchCount(GROUP_MEMBERS, GROUP_MEMBERS.GROUP_ID.eq(UUID.fromString(group)));
   }
 
-  // --- user-search (T-10)
+  // --- user-search
+
+  ResultActions search(Session by, String group, String q) throws Exception {
+    return post(by, "/api/v1/groups/" + group + "/user-search", map("q", q), null);
+  }
 
   @Test
   void searchFindsUsersByNameExcludingCurrentMembersAndMasksEmails() throws Exception {
@@ -36,15 +41,15 @@ class MemberAddTest extends ApiTest {
     Session arun = userNamed(tag + "b");
     directAdd(asha, group, arun);
 
-    JsonNode hits =
-        read(
-            get(asha, "/api/v1/groups/" + group + "/user-search?q=" + tag)
-                .andExpect(status().isOk()));
+    JsonNode hits = read(search(asha, group, tag).andExpect(status().isOk()));
 
     assertThat(hits.valueStream().map(h -> h.get("id").asString()))
         .containsExactly(priya.id().toString());
     JsonNode hit = hits.get(0);
-    assertThat(hit.propertyNames()).containsExactlyInAnyOrder("id", "displayName", "maskedEmail");
+    assertThat(hit.propertyNames())
+        .containsExactlyInAnyOrder("id", "displayName", "matchedBy", "maskedEmail", "directAdd");
+    assertThat(hit.get("matchedBy").asString()).isEqualTo("NAME");
+    assertThat(hit.get("directAdd").asBoolean()).isTrue();
     assertThat(hit.get("maskedEmail").asString())
         .startsWith("u***@")
         .doesNotContain(priya.email().substring(1, 12));
@@ -55,28 +60,31 @@ class MemberAddTest extends ApiTest {
     Session asha = newUser("Asha");
     String group = createGroup(asha, "Goa");
 
-    get(asha, "/api/v1/groups/" + group + "/user-search?q=ab")
+    search(asha, group, "ab")
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.type").value("urn:kanakku:problem:search-too-short"));
-    get(asha, "/api/v1/groups/" + group + "/user-search").andExpect(status().isBadRequest());
+    search(asha, group, "").andExpect(status().isBadRequest());
+    post(asha, "/api/v1/groups/" + group + "/user-search", map(), null)
+        .andExpect(status().isBadRequest());
   }
 
   @Test
-  void searchReturnsAtMostTenAndHidesInviteOnlyUsers() throws Exception {
+  void searchReturnsAtMostTenAndNowIncludesInviteOnlyUsersFlaggedForInvite() throws Exception {
     Session asha = newUser("Asha");
     String group = createGroup(asha, "Goa");
     String tag = tag();
     for (int i = 0; i < 12; i++) {
       userNamed(tag + i);
     }
-    Session hidden = userNamed(tag + "hidden");
-    setDirectAdd(hidden, "INVITE_ONLY");
+    Session invite = userNamed(tag + "hidden");
+    setDirectAdd(invite, "INVITE_ONLY");
 
-    JsonNode hits = read(get(asha, "/api/v1/groups/" + group + "/user-search?q=" + tag));
+    JsonNode hits = read(search(asha, group, tag + "hidden"));
 
-    assertThat(hits).hasSize(10);
-    assertThat(hits.valueStream().map(h -> h.get("id").asString()))
-        .doesNotContain(hidden.id().toString());
+    assertThat(read(search(asha, group, tag))).hasSize(10);
+    assertThat(hits).hasSize(1);
+    assertThat(hits.get(0).get("id").asString()).isEqualTo(invite.id().toString());
+    assertThat(hits.get(0).get("directAdd").asBoolean()).isFalse();
   }
 
   @Test
@@ -87,9 +95,8 @@ class MemberAddTest extends ApiTest {
     String group = createGroup(asha, "Goa");
     join(group, bala);
 
-    get(bala, "/api/v1/groups/" + group + "/user-search?q=Asha").andExpect(status().isForbidden());
-    get(outsider, "/api/v1/groups/" + group + "/user-search?q=Asha")
-        .andExpect(status().isNotFound());
+    search(bala, group, "Asha").andExpect(status().isForbidden());
+    search(outsider, group, "Asha").andExpect(status().isNotFound());
   }
 
   // --- direct add (T-11)
@@ -153,6 +160,58 @@ class MemberAddTest extends ApiTest {
         .andExpect(jsonPath("$.type").value("urn:kanakku:problem:invite-only"));
 
     assertThat(memberCount(group)).isEqualTo(1);
+  }
+
+  @Test
+  void aUserWithAnUnverifiedNumberIsAddedLikeAnyOther() throws Exception {
+    Session asha = newUser("Asha");
+    Session bala = newUser("Bala");
+    String group = createGroup(asha, "Goa");
+    dsl.update(USERS)
+        .set(USERS.PHONE_E164, dev.kanakku.support.TestData.phone())
+        .where(USERS.ID.eq(bala.id()))
+        .execute();
+
+    post(asha, "/api/v1/groups/" + group + "/members", map("userId", bala.id().toString()))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.userId").value(bala.id().toString()))
+        .andExpect(jsonPath("$.role").value("MEMBER"));
+
+    assertThat(memberCount(group)).isEqualTo(2);
+  }
+
+  @Test
+  void aUserWithAVerifiedNumberOrNoNumberIsAddedAsBefore() throws Exception {
+    Session asha = newUser("Asha");
+    Session verified = newUser("Vera");
+    Session none = newUser("Nora");
+    String group = createGroup(asha, "Goa");
+    dsl.update(USERS)
+        .set(USERS.PHONE_E164, dev.kanakku.support.TestData.phone())
+        .set(USERS.PHONE_VERIFIED_AT, java.time.OffsetDateTime.now())
+        .where(USERS.ID.eq(verified.id()))
+        .execute();
+
+    post(asha, "/api/v1/groups/" + group + "/members", map("userId", verified.id().toString()))
+        .andExpect(status().isCreated());
+    post(asha, "/api/v1/groups/" + group + "/members", map("userId", none.id().toString()))
+        .andExpect(status().isCreated());
+  }
+
+  @Test
+  void anInviteOnlyUserWithAnUnverifiedNumberStillGetsTheInviteOnlyAnswer() throws Exception {
+    Session asha = newUser("Asha");
+    Session bala = newUser("Bala");
+    String group = createGroup(asha, "Goa");
+    dsl.update(USERS)
+        .set(USERS.PHONE_E164, dev.kanakku.support.TestData.phone())
+        .set(USERS.DIRECT_ADD, "INVITE_ONLY")
+        .where(USERS.ID.eq(bala.id()))
+        .execute();
+
+    post(asha, "/api/v1/groups/" + group + "/members", map("userId", bala.id().toString()))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.type").value("urn:kanakku:problem:invite-only"));
   }
 
   @Test

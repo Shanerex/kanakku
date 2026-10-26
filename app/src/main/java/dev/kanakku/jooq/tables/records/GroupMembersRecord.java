@@ -147,6 +147,34 @@ public class GroupMembersRecord extends UpdatableRecordImpl<GroupMembersRecord> 
         return (Integer) get(8);
     }
 
+    /**
+     * Setter for <code>public.group_members.guest_phone_e164</code>.
+     */
+    public void setGuestPhoneE164(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.group_members.guest_phone_e164</code>.
+     */
+    public String getGuestPhoneE164() {
+        return (String) get(9);
+    }
+
+    /**
+     * Setter for <code>public.group_members.merged_into_member_id</code>.
+     */
+    public void setMergedIntoMemberId(UUID value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.group_members.merged_into_member_id</code>.
+     */
+    public UUID getMergedIntoMemberId() {
+        return (UUID) get(10);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -170,7 +198,7 @@ public class GroupMembersRecord extends UpdatableRecordImpl<GroupMembersRecord> 
     /**
      * Create a detached, initialised GroupMembersRecord
      */
-    public GroupMembersRecord(UUID id, UUID groupId, UUID userId, String guestName, String guestEmail, String role, OffsetDateTime joinedAt, OffsetDateTime leftAt, Integer version) {
+    public GroupMembersRecord(UUID id, UUID groupId, UUID userId, String guestName, String guestEmail, String role, OffsetDateTime joinedAt, OffsetDateTime leftAt, Integer version, String guestPhoneE164, UUID mergedIntoMemberId) {
         super(GroupMembers.GROUP_MEMBERS);
 
         setId(id);
@@ -182,6 +210,8 @@ public class GroupMembersRecord extends UpdatableRecordImpl<GroupMembersRecord> 
         setJoinedAt(joinedAt);
         setLeftAt(leftAt);
         setVersion(version);
+        setGuestPhoneE164(guestPhoneE164);
+        setMergedIntoMemberId(mergedIntoMemberId);
         resetTouchedOnNotNull();
     }
 }

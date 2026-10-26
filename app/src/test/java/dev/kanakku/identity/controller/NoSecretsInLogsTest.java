@@ -82,7 +82,7 @@ class NoSecretsInLogsTest extends PostgresIntegrationTest {
 
   @Test
   void requestDtosMaskThePasswordInToString() {
-    assertThat(new SignUpRequest("a@b.co", "secret-pw-123", "A").toString())
+    assertThat(new SignUpRequest("a@b.co", "secret-pw-123", "A", null).toString())
         .doesNotContain("secret-pw-123")
         .contains("a@b.co");
     assertThat(new SignInRequest("a@b.co", "secret-pw-123").toString())

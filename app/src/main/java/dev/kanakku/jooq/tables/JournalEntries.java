@@ -211,7 +211,7 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
     @Override
     public List<Check<JournalEntriesRecord>> getChecks() {
         return Arrays.asList(
-            Internal.createCheck(this, DSL.name("journal_entries_kind_check"), "((kind = ANY (ARRAY['EXPENSE'::text, 'SETTLEMENT'::text, 'WRITE_OFF'::text, 'REVERSAL'::text])))", true)
+            Internal.createCheck(this, DSL.name("journal_entries_kind_check"), "((kind = ANY (ARRAY['EXPENSE'::text, 'SETTLEMENT'::text, 'WRITE_OFF'::text, 'REVERSAL'::text, 'MERGE'::text])))", true)
         );
     }
 

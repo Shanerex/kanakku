@@ -175,6 +175,20 @@ public class GroupInvitesRecord extends UpdatableRecordImpl<GroupInvitesRecord> 
         return (Integer) get(10);
     }
 
+    /**
+     * Setter for <code>public.group_invites.invited_user_id</code>.
+     */
+    public void setInvitedUserId(UUID value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.group_invites.invited_user_id</code>.
+     */
+    public UUID getInvitedUserId() {
+        return (UUID) get(11);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -198,7 +212,7 @@ public class GroupInvitesRecord extends UpdatableRecordImpl<GroupInvitesRecord> 
     /**
      * Create a detached, initialised GroupInvitesRecord
      */
-    public GroupInvitesRecord(UUID id, UUID groupId, UUID memberId, byte[] tokenHash, OffsetDateTime expiresAt, OffsetDateTime revokedAt, OffsetDateTime usedAt, UUID usedBy, UUID createdBy, OffsetDateTime createdAt, Integer version) {
+    public GroupInvitesRecord(UUID id, UUID groupId, UUID memberId, byte[] tokenHash, OffsetDateTime expiresAt, OffsetDateTime revokedAt, OffsetDateTime usedAt, UUID usedBy, UUID createdBy, OffsetDateTime createdAt, Integer version, UUID invitedUserId) {
         super(GroupInvites.GROUP_INVITES);
 
         setId(id);
@@ -212,6 +226,7 @@ public class GroupInvitesRecord extends UpdatableRecordImpl<GroupInvitesRecord> 
         setCreatedBy(createdBy);
         setCreatedAt(createdAt);
         setVersion(version);
+        setInvitedUserId(invitedUserId);
         resetTouchedOnNotNull();
     }
 }

@@ -30,6 +30,13 @@ public class IdempotencyService {
   /** A response to replay: HTTP status and a JSON body. */
   public record StoredResponse(int status, String body) {}
 
+  /**
+   * A response decided inside the key's transaction, plus a step to run after it commits (a slow
+   * call such as an SMS provider). {@code finish} returns the response to send; when it differs
+   * from {@code stored} the stored response is replaced, so a replay matches what was sent.
+   */
+  public record Staged(StoredResponse stored, Supplier<StoredResponse> finish) {}
+
   /** The response, and whether it came from an earlier request with the same key. */
   public record Outcome(StoredResponse response, boolean replayed) {}
 
@@ -80,6 +87,37 @@ public class IdempotencyService {
   public Outcome execute(
       String scope, String key, byte[] requestHash, Supplier<StoredResponse> action) {
     return transaction.execute(status -> executeInTransaction(scope, key, requestHash, action));
+  }
+
+  /**
+   * As {@link #execute}, but {@code action} also returns a step that runs once the key's
+   * transaction has committed, so no connection or lock is held while it works. A replay runs
+   * neither the action nor the step. If the step fails, the stored response stays as decided.
+   */
+  public Outcome executeStaged(
+      String scope, String key, byte[] requestHash, Supplier<Staged> action) {
+    java.util.concurrent.atomic.AtomicReference<Supplier<StoredResponse>> finish =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    Outcome outcome =
+        execute(
+            scope,
+            key,
+            requestHash,
+            () -> {
+              Staged staged = action.get();
+              finish.set(staged.finish());
+              return staged.stored();
+            });
+    if (outcome.replayed() || finish.get() == null) {
+      return outcome;
+    }
+    StoredResponse sent = finish.get().get();
+    if (sent.equals(outcome.response())) {
+      return outcome;
+    }
+    transaction.executeWithoutResult(
+        status -> keys.storeResponse(scope, key, sent.status(), sent.body()));
+    return new Outcome(sent, false);
   }
 
   private Outcome executeInTransaction(

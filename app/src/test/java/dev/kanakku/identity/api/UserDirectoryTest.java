@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.kanakku.platform.problem.ProblemException;
 import dev.kanakku.support.PostgresIntegrationTest;
+import dev.kanakku.support.TestData;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,12 @@ class UserDirectoryTest extends PostgresIntegrationTest {
     assertThat(found).extracting(UserMatch::id).containsExactlyInAnyOrder(byName, byEmail);
     UserMatch hit = found.stream().filter(m -> m.id().equals(byEmail)).findFirst().orElseThrow();
     assertThat(hit.maskedEmail()).isEqualTo("x***@example.com");
+    assertThat(hit.maskedPhone()).isNull();
+    assertThat(hit.matchedBy()).isEqualTo(MatchedBy.EMAIL);
     assertThat(hit.displayName()).isEqualTo("Someone Else");
+    UserMatch byNameHit =
+        found.stream().filter(m -> m.id().equals(byName)).findFirst().orElseThrow();
+    assertThat(byNameHit.matchedBy()).isEqualTo(MatchedBy.NAME);
   }
 
   @Test
@@ -76,16 +82,114 @@ class UserDirectoryTest extends PostgresIntegrationTest {
   }
 
   @Test
-  void leavesOutInviteOnlyUsersAndExcludedIds() {
+  void includesInviteOnlyUsersFlaggedAndLeavesOutExcludedIds() {
     String tag = tag();
     UUID allowed = user("Allowed " + tag, tag + "-a@example.com", "ALLOW");
     UUID excluded = user("Excluded " + tag, tag + "-b@example.com", "ALLOW");
-    UUID inviteOnly = user("Hidden " + tag, tag + "-c@example.com", "INVITE_ONLY");
+    UUID inviteOnly = user("Invited " + tag, tag + "-c@example.com", "INVITE_ONLY");
 
     List<UserMatch> found = directory.search(tag, Set.of(excluded), 10);
 
-    assertThat(found).extracting(UserMatch::id).containsExactly(allowed);
-    assertThat(found).extracting(UserMatch::id).doesNotContain(inviteOnly, excluded);
+    assertThat(found).extracting(UserMatch::id).containsExactlyInAnyOrder(allowed, inviteOnly);
+    assertThat(found).extracting(UserMatch::id).doesNotContain(excluded);
+    assertThat(
+            found.stream()
+                .filter(m -> m.id().equals(allowed))
+                .findFirst()
+                .orElseThrow()
+                .directAdd())
+        .isTrue();
+    assertThat(
+            found.stream()
+                .filter(m -> m.id().equals(inviteOnly))
+                .findFirst()
+                .orElseThrow()
+                .directAdd())
+        .isFalse();
+  }
+
+  UUID userWithPhone(String name, String phone, boolean verified, String directAdd) {
+    UUID id = user(name, email(), directAdd);
+    dsl.update(USERS)
+        .set(USERS.PHONE_E164, phone)
+        .set(USERS.PHONE_VERIFIED_AT, verified ? java.time.OffsetDateTime.now() : null)
+        .where(USERS.ID.eq(id))
+        .execute();
+    return id;
+  }
+
+  @Test
+  void aPhoneQueryFindsPartialMatchesVerifiedOrNotAndShowsOnlyAMaskedNumber() {
+    String digits = TestData.phoneDigits();
+    UUID verified = userWithPhone("Verified " + tag(), "+91" + digits, true, "ALLOW");
+    UUID unverified = userWithPhone("Unverified " + tag(), "+91" + digits, false, "INVITE_ONLY");
+
+    for (String q :
+        new String[] {
+          digits.substring(2, 7),
+          digits.substring(0, 5) + " " + digits.substring(5),
+          "+91 " + digits,
+          "0" + digits
+        }) {
+      List<UserMatch> found = directory.search(q, Set.of(), 10);
+      assertThat(found).extracting(UserMatch::id).contains(verified, unverified);
+    }
+    UserMatch hit =
+        directory.search(digits, Set.of(), 10).stream()
+            .filter(m -> m.id().equals(unverified))
+            .findFirst()
+            .orElseThrow();
+    assertThat(hit.matchedBy()).isEqualTo(MatchedBy.PHONE);
+    assertThat(hit.maskedEmail()).isNull();
+    assertThat(hit.maskedPhone()).isEqualTo("+91 ••••• ••" + digits.substring(8));
+    assertThat(hit.directAdd()).isFalse();
+  }
+
+  @Test
+  void aPhoneQueryUnderFourDigitsIsAProblem() {
+    for (String q : new String[] {"123", "98", "+91", "0 12"}) {
+      assertThatThrownBy(() -> directory.search(q, Set.of(), 10))
+          .isInstanceOfSatisfying(
+              ProblemException.class,
+              e -> {
+                assertThat(e.problem().getStatus()).isEqualTo(400);
+                assertThat(e.problem().getType().toString()).endsWith("search-too-short");
+              });
+    }
+  }
+
+  @Test
+  void aPhoneQueryNeverMatchesNamesOrEmailsAndSkipsUsersWithNoNumber() {
+    String digits = TestData.phoneDigits();
+    UUID noPhone = user("Name " + digits, digits + "@example.com", "ALLOW");
+
+    assertThat(directory.search(digits, Set.of(), 10))
+        .extracting(UserMatch::id)
+        .doesNotContain(noPhone);
+  }
+
+  @Test
+  void aPhoneSearchExcludesGivenUsersAndCapsAtTen() {
+    String digits = TestData.phoneDigits();
+    UUID excluded = userWithPhone("E " + tag(), "+91" + digits, true, "ALLOW");
+    for (int i = 0; i < 12; i++) {
+      userWithPhone("P " + tag(), "+91" + digits, false, "ALLOW");
+    }
+
+    List<UserMatch> found = directory.search(digits, Set.of(excluded), 500);
+
+    assertThat(found).hasSize(10);
+    assertThat(found).extracting(UserMatch::id).doesNotContain(excluded);
+  }
+
+  @Test
+  void aSearchHitsToStringShowsNoContactData() {
+    String digits = TestData.phoneDigits();
+    userWithPhone("T " + tag(), "+91" + digits, false, "ALLOW");
+
+    UserMatch hit = directory.search(digits, Set.of(), 10).get(0);
+
+    assertThat(hit.toString()).doesNotContain(digits.substring(2)).doesNotContain("@");
   }
 
   @Test
@@ -117,5 +221,59 @@ class UserDirectoryTest extends PostgresIntegrationTest {
     assertThat(directory.allowsDirectAdd(allow)).isTrue();
     assertThat(directory.allowsDirectAdd(invite)).isFalse();
     assertThat(directory.allowsDirectAdd(UUID.randomUUID())).isFalse();
+  }
+
+  @Test
+  void aPhoneNumberNeverChangesWhetherAUserAllowsDirectAdd() {
+    UUID unverified = userWithPhone("Un " + tag(), TestData.phone(), false, "ALLOW");
+    UUID verified = userWithPhone("Ver " + tag(), TestData.phone(), true, "ALLOW");
+    UUID inviteOnlyUnverified =
+        userWithPhone("Both " + tag(), TestData.phone(), false, "INVITE_ONLY");
+
+    assertThat(directory.allowsDirectAdd(unverified)).isTrue();
+    assertThat(directory.allowsDirectAdd(verified)).isTrue();
+    assertThat(directory.allowsDirectAdd(inviteOnlyUnverified)).isFalse();
+  }
+
+  @Test
+  void aPhoneMatchSaysWhetherTheNumberIsVerifiedAndOtherMatchesSayNothing() {
+    String digits = TestData.phoneDigits();
+    String tag = tag();
+    UUID unverified = userWithPhone("U " + tag, "+91" + digits, false, "ALLOW");
+    UUID verified = userWithPhone("V " + tag, TestData.phone(), true, "ALLOW");
+
+    UserMatch byPhone = directory.search(digits, Set.of(), 10).get(0);
+    assertThat(byPhone.id()).isEqualTo(unverified);
+    assertThat(byPhone.phoneVerified()).isFalse();
+
+    String verifiedDigits = directory.verifiedPhone(verified).orElseThrow().substring(3);
+    assertThat(directory.search(verifiedDigits, Set.of(), 10).get(0).phoneVerified()).isTrue();
+
+    assertThat(directory.search("U " + tag, Set.of(), 10))
+        .singleElement()
+        .satisfies(m -> assertThat(m.phoneVerified()).isNull());
+  }
+
+  @Test
+  void verifiedPhoneHolderFindsOnlyTheAccountThatVerifiedIt() {
+    String shared = TestData.phone();
+    userWithPhone("Squat " + tag(), shared, false, "ALLOW");
+    UUID holder = userWithPhone("Hold " + tag(), shared, true, "ALLOW");
+
+    assertThat(directory.verifiedPhoneHolder(shared)).contains(holder);
+    assertThat(directory.verifiedPhoneHolder(TestData.phone())).isEmpty();
+  }
+
+  @Test
+  void verifiedPhoneIsGivenOnlyForAVerifiedNumber() {
+    String phone = TestData.phone();
+    UUID verified = userWithPhone("Ver " + tag(), phone, true, "ALLOW");
+    UUID unverified = userWithPhone("Un " + tag(), TestData.phone(), false, "ALLOW");
+    UUID none = user("None " + tag(), email(), "ALLOW");
+
+    assertThat(directory.verifiedPhone(verified)).contains(phone);
+    assertThat(directory.verifiedPhone(unverified)).isEmpty();
+    assertThat(directory.verifiedPhone(none)).isEmpty();
+    assertThat(directory.verifiedPhone(UUID.randomUUID())).isEmpty();
   }
 }

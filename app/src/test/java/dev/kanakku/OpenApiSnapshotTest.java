@@ -100,4 +100,32 @@ class OpenApiSnapshotTest extends PostgresIntegrationTest {
             "/api/v1/invites/preview",
             "/api/v1/invites/claim");
   }
+
+  @Test
+  void documentsThePhoneNumberEndpoints() throws Exception {
+    JsonNode paths =
+        JsonMapper.builder()
+            .build()
+            .readTree(
+                mvc.perform(get("/v3/api-docs"))
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString(StandardCharsets.UTF_8))
+            .get("paths");
+    assertThat(paths.propertyNames())
+        .contains(
+            "/api/v1/auth/sign-up-options",
+            "/api/v1/auth/sign-ups/{id}/verify",
+            "/api/v1/auth/sign-ups/{id}/resend",
+            "/api/v1/auth/sign-ups/{id}/finish-unverified",
+            "/api/v1/me/phone",
+            "/api/v1/me/phone/verification",
+            "/api/v1/me/phone/verification/confirm",
+            "/api/v1/groups/{groupId}/user-invites",
+            "/api/v1/claim-suggestions",
+            "/api/v1/claim-suggestions/{id}/confirm",
+            "/api/v1/claim-suggestions/{id}/decline");
+    assertThat(paths.get("/api/v1/groups/{groupId}/user-search").propertyNames())
+        .containsExactly("post");
+  }
 }

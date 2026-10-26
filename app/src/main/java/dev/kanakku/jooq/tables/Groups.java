@@ -6,6 +6,7 @@ package dev.kanakku.jooq.tables;
 
 import dev.kanakku.jooq.Keys;
 import dev.kanakku.jooq.Public;
+import dev.kanakku.jooq.tables.ClaimSuggestions.ClaimSuggestionsPath;
 import dev.kanakku.jooq.tables.GroupInvites.GroupInvitesPath;
 import dev.kanakku.jooq.tables.GroupMembers.GroupMembersPath;
 import dev.kanakku.jooq.tables.JournalEntries.JournalEntriesPath;
@@ -174,6 +175,19 @@ public class Groups extends TableImpl<GroupsRecord> {
     @Override
     public UniqueKey<GroupsRecord> getPrimaryKey() {
         return Keys.GROUPS_PKEY;
+    }
+
+    private transient ClaimSuggestionsPath _claimSuggestions;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.claim_suggestions</code> table
+     */
+    public ClaimSuggestionsPath claimSuggestions() {
+        if (_claimSuggestions == null)
+            _claimSuggestions = new ClaimSuggestionsPath(this, null, Keys.CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_GROUP_ID_FKEY.getInverseKey());
+
+        return _claimSuggestions;
     }
 
     private transient GroupInvitesPath _groupInvites;

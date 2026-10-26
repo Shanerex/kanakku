@@ -35,6 +35,22 @@ kanakku:
     # Server secret (at least 32 characters) that invite link tokens are derived from. Required, no
     # default; it is never logged or sent to the browser. Changing it kills every unclaimed link.
     token-secret: ${KANAKKU_INVITE_TOKEN_SECRET:}
+  sms:
+    # Optional SMS provider: a generic HTTP webhook that Kanakku POSTs {"to": "+91...", "text": "..."}
+    # to (Bearer token when one is set). The URL must be https unless its host is a loopback or
+    # private IP address or a single-word name such as localhost or a compose service name; startup
+    # fails otherwise (hosts are judged by spelling, never looked up). Unset, phone numbers stay unverified. When the URL is set the
+    # code secret (at least 32 characters, no default) is required; it keys the HMAC of the codes.
+    webhook-url: ${KANAKKU_SMS_WEBHOOK_URL:}
+    webhook-token: ${KANAKKU_SMS_WEBHOOK_TOKEN:}
+    code-secret: ${KANAKKU_SMS_CODE_SECRET:}
+    # Country calling codes this server will text, comma separated. Default is India only, so a
+    # bot cannot run up the SMS bill with premium-rate numbers elsewhere. Widen it on purpose, for
+    # example 91,1,44. A number from another country can still be saved but never verified.
+    allowed-calling-codes: ${KANAKKU_SMS_ALLOWED_CALLING_CODES:91}
+    # Most codes this whole instance sends in an hour, across all users; past it sending answers 429.
+    # Sign-up sends may use only the larger half of it, so profile verification keeps the rest.
+    max-sends-per-hour: ${KANAKKU_SMS_MAX_SENDS_PER_HOUR:200}
   cors:
     allowed-origins: ${KANAKKU_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   # kanakku.minio.endpoint (KANAKKU_MINIO_ENDPOINT) and kanakku.smtp.host/port
