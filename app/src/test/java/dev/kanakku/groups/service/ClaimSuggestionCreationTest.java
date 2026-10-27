@@ -155,6 +155,26 @@ class ClaimSuggestionCreationTest extends ApiTest {
   }
 
   @Test
+  void changingAGuestsNumberBackSuggestsItAgain() throws Exception {
+    Session asha = newUser("Asha");
+    Session bala = newUser("Bala");
+    String group = createGroup(asha, "Goa");
+    join(group, bala);
+    String phone = TestData.phone();
+    giveNumber(bala, phone, true);
+    String guest = addGuest(asha, group, "Bala (guest)");
+    String path = "/api/v1/groups/" + group + "/members/" + guest + "/guest-phone";
+
+    put(asha, path, map("phone", phone.substring(3), "version", 0)).andExpect(status().isOk());
+    put(asha, path, map("phone", TestData.phone().substring(3), "version", 1))
+        .andExpect(status().isOk());
+    assertThat(pendingFor(bala)).isEmpty();
+    put(asha, path, map("phone", phone.substring(3), "version", 2)).andExpect(status().isOk());
+
+    assertThat(pendingFor(bala)).containsExactly(guest);
+  }
+
+  @Test
   void aNumberThatIsNotVerifiedCreatesNoSuggestion() throws Exception {
     Session asha = newUser("Asha");
     Session bala = newUser("Bala");

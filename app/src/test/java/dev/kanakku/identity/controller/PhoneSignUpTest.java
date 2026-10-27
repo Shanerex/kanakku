@@ -360,7 +360,7 @@ class PhoneSignUpTest extends PostgresIntegrationTest {
   }
 
   @Test
-  void theLockIsKeyedToTheNumberSoAnotherSignUpForItIsLockedToo() throws Exception {
+  void theLockIsPerSignUpSoAnotherSignUpForTheSameNumberIsNotLocked() throws Exception {
     Started s = start();
     String right = codeFor(s);
     for (int i = 0; i < 5; i++) {
@@ -372,7 +372,7 @@ class PhoneSignUpTest extends PostgresIntegrationTest {
             .asString();
     Started other = new Started("x", s.phone(), idOther);
 
-    verify(other, codeFor(other)).andExpect(status().isTooManyRequests());
+    verify(other, codeFor(other)).andExpect(status().isCreated());
   }
 
   @Test

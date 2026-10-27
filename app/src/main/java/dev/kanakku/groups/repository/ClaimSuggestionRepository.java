@@ -27,10 +27,11 @@ public class ClaimSuggestionRepository {
 
   /**
    * Suggests to the user every current, unclaimed guest whose number equals {@code phoneE164}, but
-   * only in groups the user is a current member of. A suggestion that already exists, in any state,
-   * is left as it is.
+   * only in groups the user is a current member of. A {@code STALE} suggestion becomes {@code
+   * PENDING} again; one in any other state is left as it is, so a declined guest is not offered
+   * twice.
    *
-   * @return how many suggestions were created
+   * @return how many suggestions were created or revived
    */
   public int createForVerifiedPhone(UUID userId, String phoneE164) {
     var guests =
@@ -52,16 +53,21 @@ public class ClaimSuggestionRepository {
             CLAIM_SUGGESTIONS.USER_ID)
         .select(guests)
         .onConflict(CLAIM_SUGGESTIONS.MEMBER_ID, CLAIM_SUGGESTIONS.USER_ID)
-        .doNothing()
+        .doUpdate()
+        .set(CLAIM_SUGGESTIONS.STATUS, ClaimSuggestionStatus.PENDING.name())
+        .set(CLAIM_SUGGESTIONS.VERSION, CLAIM_SUGGESTIONS.VERSION.plus(1))
+        .set(CLAIM_SUGGESTIONS.CREATED_AT, DSL.currentOffsetDateTime())
+        .where(CLAIM_SUGGESTIONS.STATUS.eq(ClaimSuggestionStatus.STALE.name()))
         .execute();
   }
 
   /**
    * Suggests one guest to the user who verified its number, if the guest is still a current,
    * unclaimed guest carrying {@code phoneE164} and the user is a current member of its group. A
-   * suggestion that already exists, in any state, is left as it is.
+   * {@code STALE} suggestion becomes {@code PENDING} again; one in any other state is left as it
+   * is.
    *
-   * @return true when a suggestion was created
+   * @return true when a suggestion was created or revived
    */
   public boolean createForGuest(UUID groupId, UUID guestMemberId, UUID userId, String phoneE164) {
     var guest =
@@ -85,7 +91,11 @@ public class ClaimSuggestionRepository {
                 CLAIM_SUGGESTIONS.USER_ID)
             .select(guest)
             .onConflict(CLAIM_SUGGESTIONS.MEMBER_ID, CLAIM_SUGGESTIONS.USER_ID)
-            .doNothing()
+            .doUpdate()
+            .set(CLAIM_SUGGESTIONS.STATUS, ClaimSuggestionStatus.PENDING.name())
+            .set(CLAIM_SUGGESTIONS.VERSION, CLAIM_SUGGESTIONS.VERSION.plus(1))
+            .set(CLAIM_SUGGESTIONS.CREATED_AT, DSL.currentOffsetDateTime())
+            .where(CLAIM_SUGGESTIONS.STATUS.eq(ClaimSuggestionStatus.STALE.name()))
             .execute()
         > 0;
   }

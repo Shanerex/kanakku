@@ -55,6 +55,7 @@ Indian users find friends by mobile number, not email, and WhatsApp runs on it. 
 
 ## Deviations
 - R-7 departs from PRD F-27 (Requirements and Acceptance) and the backlog done-when ("search matches only verified numbers exactly"): partial and unverified numbers are searchable, so that done-when is not met by design.
+- Known risk, accepted: partial phone search lets an Owner rebuild a user's full number by extending a query one digit at a time (about 100 searches), and the result names the user. The 20 searches a minute limit only slows it.
 - R-9 departs from groups-members R-7, AC-6 and AC-8: invite-only users now appear in search with an Invite button; their direct-add refusal is unchanged.
 - Claim suggestions (R-11) stay verified-only; search is the only relaxed path. Confirming merges into the member's own row (ledger MERGE), unlike an F-03 invite claim, since suggestions only reach members.
 - R-9's user-bound invite departs from F-03 R-9 (any signed-in holder may claim); guest invites keep F-03 R-9.
