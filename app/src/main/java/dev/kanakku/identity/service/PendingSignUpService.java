@@ -26,10 +26,11 @@ import org.springframework.transaction.support.TransactionTemplate;
  * Sign-up when an SMS provider is set: the account row is written only once the code is confirmed,
  * so a wrong code, an abandoned code step or a number verified elsewhere leaves no user. Send
  * limits (country allow-list, per number, per client address, whole instance) live in {@link
- * SmsPolicy}; five wrong codes lock confirming that number for 15 minutes, a count shared with
- * profile verification. The provider call never runs inside a transaction: the code is stored
- * first, the text goes out in {@link Deferred#finish}, and a failed text is then recorded on the
- * pending row.
+ * SmsPolicy}; five wrong codes lock confirming that one sign-up for 15 minutes. The count is per
+ * sign-up and not shared with profile verification, so someone starting a sign-up with another
+ * person's number cannot lock that person out of verifying it. The provider call never runs inside
+ * a transaction: the code is stored first, the text goes out in {@link Deferred#finish}, and a
+ * failed text is then recorded on the pending row.
  */
 @Service
 public class PendingSignUpService {
@@ -43,7 +44,7 @@ public class PendingSignUpService {
   static final int MAX_PHONE_CHECKS_PER_IP = 30;
   static final Duration PHONE_CHECK_WINDOW = Duration.ofHours(1);
 
-  static final String WRONG_BUCKET = "number-wrong-code";
+  static final String WRONG_BUCKET = "sign-up-wrong-code";
   static final int MAX_WRONG = 5;
   static final Duration LOCK_WINDOW = Duration.ofMinutes(15);
 
@@ -194,7 +195,7 @@ public class PendingSignUpService {
     return transactions.execute(
         status -> {
           Pending p = live(id);
-          String key = codes.numberKey(p.phoneE164());
+          String key = "sign-up:" + id;
           OptionalLong locked = limiter.check(WRONG_BUCKET, key, MAX_WRONG, LOCK_WINDOW);
           if (locked.isPresent()) {
             return Verification.refused(PhoneProblems.codeLocked(locked.getAsLong()));
