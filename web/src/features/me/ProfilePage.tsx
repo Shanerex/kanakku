@@ -2,12 +2,14 @@ import { CaretLeft } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useSession } from "../../app/session";
+import { PhoneSection } from "./PhoneSection";
 import { ProfileForm } from "./ProfileForm";
 
 /** Edit the profile; the form carries the version it started from, so a stale save is a 409. */
 export default function ProfilePage() {
   const { state } = useSession();
   const [saved, setSaved] = useState(false);
+  const [saves, setSaves] = useState(0);
   if (state.status !== "signed-in") return null;
   return (
     <main className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 py-6">
@@ -27,15 +29,20 @@ export default function ProfilePage() {
           Saved.
         </p>
       )}
-      {/* key: after a save the form restarts from the server's profile and its new version */}
+      {/* key: after a save the form restarts from the server's profile and its new version. It
+          counts the form's own saves, so saving the phone number below keeps unsaved edits. */}
       <ProfileForm
-        key={state.profile.version}
+        key={saves}
         profile={state.profile}
         showEmail
         showDirectAdd
         submitLabel="Save"
-        onSaved={() => setSaved(true)}
+        onSaved={() => {
+          setSaved(true);
+          setSaves((n) => n + 1);
+        }}
       />
+      <PhoneSection />
     </main>
   );
 }

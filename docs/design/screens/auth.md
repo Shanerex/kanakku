@@ -47,6 +47,58 @@ account". Provider buttons above as on sign in (v1: none). On success → the ac
 the person is signed in, and they land on [/welcome](#first-run-profile--welcome--mobile-welcome)
 (v1: no Verify email step).
 
+### Mobile number at sign-up (F-27)
+
+Indians find friends by phone, so the form asks for one. `GET /api/v1/auth/sign-up-options`
+says whether the server can text codes (`phoneVerification`); the form waits for it before it
+draws the phone field.
+
+- **Field**: "Mobile number" under Email, `type="tel"`, `autocomplete="tel"`. Typed without a
+  country code it is an Indian (+91) number; the helper says so: "Starts with +91 unless you
+  type another country code."
+- **With codes on** (provider set): the field is required and the helper adds "We'll text you
+  a code to confirm it." "Create account" sends the form and swaps the card for the code step;
+  no account exists until the code is confirmed.
+- **With codes off** (no provider): the label reads "Mobile number (optional)" with the helper
+  "Friends can find you by it. It stays unverified on this server." "Create account" works as
+  before and may be sent with the field empty.
+- Field errors: empty ("Enter your mobile number.", codes on only), not a number ("Enter a
+  mobile number like 98765 43210."), verified on another account ("That number already
+  belongs to another account. Sign in, or use a different number.").
+
+### Code step (`PhoneCodeStep`, same route)
+
+The card keeps its place and changes its content; the wordmark stays, the form fields go.
+
+1. h1 "Enter your code". Body "We texted a 6-digit code to +91 ••••• ••10." (the masked number
+   from the response, never the typed one).
+2. One field "6-digit code": `inputmode="numeric"`, `autocomplete="one-time-code"`, Baloo 2
+   `h1` size, wide letter spacing, centred, tabular numerals; digits only, 6 max. Helper "It
+   works for 10 minutes."
+3. Primary lg "Create account" (disabled until 6 digits).
+4. Ghost "Resend code" with a 30 s cooldown shown as "Resend in 24 s". Ghost "Use a different
+   number" returns to the form with everything kept.
+
+States:
+- Wrong code: field error "That code isn't right. Check the text and try again." (focus stays
+  in the field, digits selected).
+- Locked (5 wrong codes): InlineProblem "Too many wrong codes. Try again in 12 minutes."; the
+  button disables.
+- Expired: "That code has expired. Send a new one." with "Resend code" focused.
+- Sent but not delivered, the provider failed (`smsSent` false): InlineProblem "We couldn't
+  send the text. Try again, or finish now and verify your number later." and a secondary
+  "Finish without verifying" button, shown only in this state. A later successful resend
+  removes it.
+- Sign-up gone (410 after an hour idle): "This sign-up timed out. Start again." and the form
+  returns.
+- Too many texts (429): "You asked for too many codes. Try again in 40 minutes."
+
+After success the person is signed in as before and lands on `/welcome`.
+
+API: `POST /auth/sign-up` (202 pending) → `POST /auth/sign-ups/{id}/verify` (a fresh
+Idempotency-Key for every try: a wrong answer is stored under its key), `/resend`,
+`/finish-unverified`.
+
 ## Verify email — `/verify-email`
 
 > v1: not built. Email verification is out of scope for accounts-password; this screen returns

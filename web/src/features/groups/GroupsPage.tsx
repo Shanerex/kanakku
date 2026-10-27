@@ -21,6 +21,7 @@ import { useSession } from "../../app/session";
 import { Button } from "../../ui/Button";
 import { CurrencySelect } from "../../ui/CurrencySelect";
 import { TextField } from "../../ui/TextField";
+import { ClaimSuggestionsBanner } from "./ClaimSuggestionsBanner";
 import {
   COVER_COLORS,
   COVER_EMOJIS,
@@ -75,6 +76,7 @@ export default function GroupsPage() {
           </Button>
         )}
       </div>
+      <ClaimSuggestionsBanner />
       {problem && <InlineProblem problem={problem} />}
       {creating && (
         <NewGroupForm

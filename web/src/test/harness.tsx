@@ -10,6 +10,8 @@ import { buildRoutes } from "../app/routes";
 export type Seen = {
   method: string;
   path: string;
+  /** The query string, with its leading "?", or "" for none. */
+  search: string;
   headers: Headers;
   body: unknown;
 };
@@ -35,6 +37,7 @@ export function renderApp(
     const seen: Seen = {
       method: request.method,
       path: url.pathname,
+      search: url.search,
       headers: request.headers,
       body,
     };

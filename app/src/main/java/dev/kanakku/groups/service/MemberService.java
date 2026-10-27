@@ -15,11 +15,15 @@ import dev.kanakku.ledger.api.Balances;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.ledger.api.MoneyBalance;
 import dev.kanakku.ledger.api.WriteOffs;
+import dev.kanakku.platform.phone.PhoneNumbers;
+import dev.kanakku.platform.ratelimit.RateLimiter;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,6 +35,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class MemberService {
 
+  static final String SEARCH_BUCKET = "user-search";
+  static final int SEARCHES_PER_MINUTE = 20;
+
   private final MemberRepository members;
   private final InviteRepository invites;
   private final GroupGuard guard;
@@ -38,6 +45,8 @@ public class MemberService {
   private final Balances balances;
   private final WriteOffs writeOffs;
   private final TransactionTemplate transactions;
+  private final RateLimiter limiter;
+  private final ClaimSuggestionService claims;
 
   MemberService(
       MemberRepository members,
@@ -46,7 +55,9 @@ public class MemberService {
       UserDirectory directory,
       Balances balances,
       WriteOffs writeOffs,
-      TransactionTemplate transactions) {
+      TransactionTemplate transactions,
+      RateLimiter limiter,
+      ClaimSuggestionService claims) {
     this.members = members;
     this.invites = invites;
     this.guard = guard;
@@ -54,6 +65,8 @@ public class MemberService {
     this.balances = balances;
     this.writeOffs = writeOffs;
     this.transactions = transactions;
+    this.limiter = limiter;
+    this.claims = claims;
   }
 
   /** The group's current members with their balances. A non-member gets a 404. */
@@ -65,28 +78,80 @@ public class MemberService {
     return view(groupId, callerId, rows);
   }
 
-  /** Adds a guest. Any member may; the group must not be archived. */
-  public Member addGuest(UUID groupId, UUID callerId, String name, String email) {
+  /**
+   * Adds a guest. Any member may; the group must not be archived. A number that a member of the
+   * group has verified becomes a claim suggestion for them.
+   */
+  public Member addGuest(UUID groupId, UUID callerId, String name, String email, String phone) {
     UUID id = UUID.randomUUID();
     String cleanEmail = email == null || email.isBlank() ? null : email.strip();
+    String e164 = phone == null || phone.isBlank() ? null : PhoneNumbers.parse(phone);
     return transactions.execute(
         status -> {
           Membership caller = guard.member(groupId, callerId, true);
-          if (!members.insertGuest(id, groupId, callerId, name.strip(), cleanEmail)) {
+          if (!members.insertGuest(id, groupId, callerId, name.strip(), cleanEmail, e164)) {
             throw GroupProblems.groupNotFound();
+          }
+          if (e164 != null) {
+            claims.suggestForGuest(groupId, id, e164);
           }
           return one(groupId, callerId, id, caller.role() == Role.OWNER);
         });
   }
 
-  /** Searches registered users the Owner may add directly (see {@code UserDirectory.search}). */
+  /**
+   * Sets, changes or clears a guest's number. Owner only, with the member's version. A changed
+   * number withdraws the guest's pending claim suggestions, and a new one may make another.
+   *
+   * @param phone blank clears the number
+   */
+  public Member setGuestPhone(
+      UUID groupId, UUID memberId, UUID callerId, String phone, int version) {
+    String e164 = phone == null || phone.isBlank() ? null : PhoneNumbers.parse(phone);
+    return transactions.execute(
+        status -> {
+          guard.owner(groupId, callerId, true);
+          MemberRow guest =
+              members
+                  .findActive(groupId, memberId, callerId, true)
+                  .orElseThrow(GroupProblems::memberNotFound);
+          if (guest.userId() != null) {
+            throw GroupProblems.notAGuest();
+          }
+          if (guest.version() != version
+              || !members.updateGuestPhone(groupId, memberId, callerId, e164, version)) {
+            throw GroupProblems.staleVersion();
+          }
+          if (!Objects.equals(e164, guest.guestPhoneE164())) {
+            claims.withdrawForGuest(groupId, memberId, callerId);
+            if (e164 != null) {
+              claims.suggestForGuest(groupId, memberId, e164);
+            }
+          }
+          return one(groupId, callerId, memberId, true);
+        });
+  }
+
+  /**
+   * Searches registered users by name, email or phone (see {@code UserDirectory.search}). Owner
+   * only, at most {@value #SEARCHES_PER_MINUTE} searches a minute per user.
+   */
   public List<UserMatch> search(UUID groupId, UUID callerId, String query) {
     guard.owner(groupId, callerId, false);
+    OptionalLong wait =
+        limiter.tryHit(
+            SEARCH_BUCKET, "user:" + callerId, SEARCHES_PER_MINUTE, Duration.ofMinutes(1));
+    if (wait.isPresent()) {
+      throw GroupProblems.searchRateLimited(wait.getAsLong());
+    }
     Set<UUID> inGroup = members.activeUserIds(groupId, callerId);
     return directory.search(query, inGroup, UserDirectory.MAX_RESULTS);
   }
 
-  /** Adds a registered user as a Member. Owner only; refused for an invite-only user. */
+  /**
+   * Adds a registered user as a Member. Owner only; refused for an invite-only user. A phone number
+   * on file, verified or not, plays no part.
+   */
   public Member addUser(UUID groupId, UUID callerId, UUID userId) {
     UUID id = UUID.randomUUID();
     return transactions.execute(
@@ -105,6 +170,7 @@ public class MemberService {
           } catch (DuplicateKeyException e) {
             throw GroupProblems.alreadyMember();
           }
+          claims.suggestForNewMember(userId);
           return one(groupId, callerId, id, true);
         });
   }
@@ -242,6 +308,9 @@ public class MemberService {
         row.role(),
         guest,
         callerIsOwner && guest ? row.guestEmail() : null,
+        callerIsOwner && guest && row.guestPhoneE164() != null
+            ? PhoneNumbers.mask(row.guestPhoneE164())
+            : null,
         row.joinedAt(),
         owed,
         row.version());

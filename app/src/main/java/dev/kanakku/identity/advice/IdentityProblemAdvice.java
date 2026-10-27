@@ -3,6 +3,7 @@ package dev.kanakku.identity.advice;
 import dev.kanakku.identity.exception.BusyException;
 import dev.kanakku.identity.exception.EmailTakenException;
 import dev.kanakku.identity.exception.InvalidCredentialsException;
+import dev.kanakku.identity.exception.PhoneTakenException;
 import dev.kanakku.identity.exception.TooManyAttemptsException;
 import dev.kanakku.identity.exception.VersionConflictException;
 import dev.kanakku.platform.problem.Problems;
@@ -79,5 +80,16 @@ public class IdentityProblemAdvice {
                 "email-taken",
                 "Email already registered",
                 "An account with this email already exists. Sign in instead."));
+  }
+
+  @ExceptionHandler(PhoneTakenException.class)
+  ResponseEntity<ProblemDetail> phoneTaken() {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(
+            Problems.of(
+                HttpStatus.CONFLICT,
+                "phone-taken",
+                "Number already in use",
+                "This number is already verified on another account."));
   }
 }

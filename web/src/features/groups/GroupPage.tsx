@@ -53,6 +53,7 @@ export default function GroupPage() {
     balances: MoneyBalance[];
   }>();
   const [writeOff, setWriteOff] = useState<Member>();
+  const [phoneFor, setPhoneFor] = useState<Member>();
   const [confirm, setConfirm] = useState<Confirm>();
   const [busy, setBusy] = useState(false);
 
@@ -279,6 +280,7 @@ export default function GroupPage() {
               canManage={isOwner && !archived}
               onRemove={() => setConfirm({ kind: "remove", member })}
               onWriteOff={() => setWriteOff(member)}
+              onPhone={() => setPhoneFor(member)}
             />
           ))}
         </ul>
@@ -417,6 +419,17 @@ export default function GroupPage() {
             </Button>
           </div>
         </Dialog>
+      )}
+      {phoneFor && (
+        <GuestPhoneDialog
+          groupId={groupId}
+          guest={phoneFor}
+          onClose={() => setPhoneFor(undefined)}
+          onSaved={() => {
+            setPhoneFor(undefined);
+            load();
+          }}
+        />
       )}
       {writeOff && (
         <WriteOffDialog
@@ -561,12 +574,14 @@ function MemberRow({
   canManage,
   onRemove,
   onWriteOff,
+  onPhone,
 }: {
   member: Member;
   isMe: boolean;
   canManage: boolean;
   onRemove: () => void;
   onWriteOff: () => void;
+  onPhone: () => void;
 }) {
   const hasBalance = member.balances.length > 0;
   return (
@@ -579,7 +594,12 @@ function MemberRow({
         </span>
         <span className="flex flex-wrap gap-x-2 text-body-sm text-text-muted">
           {member.role === "OWNER" && <span>Owner</span>}
-          {member.guest && <span>Guest</span>}
+          {member.guest && (
+            <span>
+              Guest
+              {member.guestPhoneMasked ? ` · ${member.guestPhoneMasked}` : ""}
+            </span>
+          )}
           {hasBalance ? (
             member.balances.map((b) => (
               <span
@@ -600,6 +620,16 @@ function MemberRow({
       </span>
       {canManage && member.role !== "OWNER" && (
         <span className="flex gap-1">
+          {member.guest && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Set ${member.displayName}'s number`}
+              onClick={onPhone}
+            >
+              Number
+            </Button>
+          )}
           {hasBalance && (
             <Button
               variant="ghost"
@@ -624,6 +654,113 @@ function MemberRow({
   );
 }
 
+/**
+ * Owner-only: set, change or clear a guest's number. The current number is shown masked only, so
+ * the field starts empty. A number a member has verified becomes a claim suggestion for them, and
+ * a changed number withdraws the old suggestions.
+ */
+function GuestPhoneDialog({
+  groupId,
+  guest,
+  onClose,
+  onSaved,
+}: {
+  groupId: string;
+  guest: Member;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const api = useApi();
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState<string>();
+  const [problem, setProblem] = useState<PlainProblem>();
+  const [busy, setBusy] = useState<"save" | "clear">();
+  const phoneRef = useRef<HTMLInputElement>(null);
+
+  async function put(action: "save" | "clear", value: string | undefined) {
+    if (busy) return;
+    setBusy(action);
+    setProblem(undefined);
+    setError(undefined);
+    try {
+      const { data, error: failed } = await api.PUT(
+        "/api/v1/groups/{groupId}/members/{memberId}/guest-phone",
+        {
+          params: { path: { groupId, memberId: guest.id } },
+          body: { phone: value, version: guest.version },
+        },
+      );
+      if (data) {
+        onSaved();
+        return;
+      }
+      const raw = asProblem(failed);
+      if (raw?.type?.endsWith(":invalid-phone")) {
+        setError(describeProblem(raw).body);
+        phoneRef.current?.focus();
+      } else setProblem(describeProblem(raw));
+    } catch {
+      setProblem(describeNetworkError());
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!phone.trim()) {
+      setError("Enter a mobile number.");
+      return phoneRef.current?.focus();
+    }
+    return put("save", phone.trim());
+  }
+
+  return (
+    <Dialog title={`${guest.displayName}'s number`} onClose={onClose}>
+      <form noValidate onSubmit={submit} className="flex flex-col gap-4">
+        {problem && <InlineProblem problem={problem} />}
+        {guest.guestPhoneMasked && (
+          <p className="text-text-muted">
+            Now:{" "}
+            <span className="font-semibold tabular-nums text-text">
+              {guest.guestPhoneMasked}
+            </span>
+          </p>
+        )}
+        <TextField
+          label="Mobile number"
+          name="guestPhoneEdit"
+          type="tel"
+          autoComplete="off"
+          inputMode="tel"
+          value={phone}
+          error={error}
+          helper="Starts with +91 unless you type another country code."
+          onChange={(e) => setPhone(e.target.value)}
+          inputRef={phoneRef}
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" loading={busy === "save"}>
+            Save number
+          </Button>
+          {guest.guestPhoneMasked && (
+            <Button
+              variant="secondary"
+              loading={busy === "clear"}
+              onClick={() => put("clear", undefined)}
+            >
+              Remove number
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
 function AddGuestForm({
   groupId,
   onAdded,
@@ -634,7 +771,12 @@ function AddGuestForm({
   const api = useApi();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [phone, setPhone] = useState("");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>({});
   const [problem, setProblem] = useState<PlainProblem>();
   const [submitting, setSubmitting] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -650,7 +792,7 @@ function AddGuestForm({
       return nameRef.current?.focus();
     }
     setErrors({});
-    const signature = `${trimmed}/${email.trim()}`;
+    const signature = `${trimmed}/${email.trim()}/${phone.trim()}`;
     if (attempt.current?.signature !== signature) {
       attempt.current = { key: newIdempotencyKey(), signature };
     }
@@ -663,17 +805,26 @@ function AddGuestForm({
             path: { groupId },
             header: { "Idempotency-Key": attempt.current.key },
           },
-          body: { name: trimmed, email: email.trim() || undefined },
+          body: {
+            name: trimmed,
+            email: email.trim() || undefined,
+            phone: phone.trim() || undefined,
+          },
         },
       );
       if (response.ok) {
         setName("");
         setEmail("");
+        setPhone("");
         attempt.current = undefined;
         onAdded();
         return;
       }
       const raw = asProblem(error);
+      if (raw?.type?.endsWith(":invalid-phone")) {
+        setErrors({ phone: describeProblem(raw).body });
+        return;
+      }
       setErrors(fieldMessages(raw));
       setProblem(describeProblem(raw));
     } catch {
@@ -715,6 +866,17 @@ function AddGuestForm({
         value={email}
         error={errors.email}
         onChange={(e) => setEmail(e.target.value)}
+      />
+      <TextField
+        label="Mobile number (optional)"
+        name="guestPhone"
+        type="tel"
+        autoComplete="off"
+        inputMode="tel"
+        value={phone}
+        error={errors.phone}
+        helper="If they sign up later and verify this number, we'll suggest their seat to them."
+        onChange={(e) => setPhone(e.target.value)}
       />
       <Button type="submit" variant="secondary" loading={submitting}>
         Add guest

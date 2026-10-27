@@ -4,6 +4,8 @@ import dev.kanakku.groups.domain.Member;
 import dev.kanakku.groups.domain.WriteOffResult;
 import dev.kanakku.groups.request.AddGuestRequest;
 import dev.kanakku.groups.request.AddMemberRequest;
+import dev.kanakku.groups.request.GuestPhoneRequest;
+import dev.kanakku.groups.request.UserSearchRequest;
 import dev.kanakku.groups.request.WriteOffRequest;
 import dev.kanakku.groups.service.MemberService;
 import dev.kanakku.identity.api.CurrentUser;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,7 +68,9 @@ public class MemberController {
     return members.list(groupId, currentUser.require().id());
   }
 
-  @Operation(operationId = "addGuest", summary = "Add a guest (a name, optionally an email)")
+  @Operation(
+      operationId = "addGuest",
+      summary = "Add a guest (a name, optionally an email and a phone number)")
   @ApiResponse(
       responseCode = "201",
       description = "The new guest member",
@@ -87,27 +92,62 @@ public class MemberController {
         "guest-add",
         caller,
         key,
-        () -> members.addGuest(groupId, caller, request.name(), request.email()),
+        () -> members.addGuest(groupId, caller, request.name(), request.email(), request.phone()),
         groupId.toString(),
         request.name().strip(),
-        String.valueOf(request.email()));
+        String.valueOf(request.email()),
+        String.valueOf(request.phone()));
   }
 
-  @Operation(operationId = "searchUsers", summary = "Search users to add directly (Owner only)")
+  @Operation(
+      operationId = "setGuestPhone",
+      summary = "Set, change or clear a guest's phone number (Owner only)")
   @ApiResponse(
       responseCode = "200",
-      description = "At most 10 matches with masked emails",
+      description = "The guest, with the number masked",
+      content = @Content(schema = @Schema(implementation = Member.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "Not a valid phone number",
+      content =
+          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
+  @ApiResponse(
+      responseCode = "409",
+      description = "Not a guest, stale version, or the group is archived",
+      content =
+          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
+  @PutMapping("/members/{memberId}/guest-phone")
+  Member setGuestPhone(
+      @PathVariable("groupId") UUID groupId,
+      @PathVariable("memberId") UUID memberId,
+      @Valid @RequestBody GuestPhoneRequest request) {
+    return members.setGuestPhone(
+        groupId, memberId, currentUser.require().id(), request.phone(), request.version());
+  }
+
+  /** A read in a POST body, so a phone number never sits in a URL, a log line or a history. */
+  @Operation(
+      operationId = "searchUsers",
+      summary = "Search users by name, email or phone to add or invite (Owner only)")
+  @ApiResponse(
+      responseCode = "200",
+      description =
+          "At most 10 matches, members left out; each shows the one masked field it matched",
       content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserMatch.class))))
   @ApiResponse(
       responseCode = "400",
-      description = "The query is under 3 characters",
+      description = "The query is under 3 characters, or under 4 digits for a phone search",
       content =
           @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
-  @GetMapping("/user-search")
+  @ApiResponse(
+      responseCode = "429",
+      description = "More than 20 searches in a minute; see Retry-After",
+      content =
+          @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
+  @PostMapping("/user-search")
   List<UserMatch> search(
-      @PathVariable("groupId") UUID groupId,
-      @RequestParam(name = "q", defaultValue = "") String q) {
-    return members.search(groupId, currentUser.require().id(), q);
+      @PathVariable("groupId") UUID groupId, @Valid @RequestBody UserSearchRequest request) {
+    return members.search(groupId, currentUser.require().id(), request.q());
   }
 
   @Operation(operationId = "addMember", summary = "Add a registered user directly (Owner only)")
@@ -117,7 +157,9 @@ public class MemberController {
       content = @Content(schema = @Schema(implementation = Member.class)))
   @ApiResponse(
       responseCode = "409",
-      description = "Already a member, invite-only, or the group is archived",
+      description =
+          "Already a member, invite-only, or the group is archived. A phone number,"
+              + " verified or not, never blocks an add",
       content =
           @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemResponse.class)))
   @PostMapping("/members")

@@ -5,5 +5,7 @@ public enum EntryKind {
   EXPENSE,
   SETTLEMENT,
   WRITE_OFF,
-  REVERSAL
+  REVERSAL,
+  /** A guest's balance moved onto the member row of the user who claimed them. */
+  MERGE
 }

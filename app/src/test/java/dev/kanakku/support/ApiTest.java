@@ -60,10 +60,22 @@ public abstract class ApiTest extends PostgresIntegrationTest {
     return post(s, path, body, UUID.randomUUID().toString());
   }
 
+  /** Posts from a fresh client address, so per-address limits never bleed between tests. */
   protected ResultActions post(Session s, String path, Object body, String key) throws Exception {
+    return postFrom(freshIp(), s, path, body, key);
+  }
+
+  /** Posts as the client at {@code ip}, for tests of per-address limits. */
+  protected ResultActions postFrom(String ip, Session s, String path, Object body, String key)
+      throws Exception {
     MockHttpServletRequestBuilder request =
         MockMvcRequestBuilders.post(path)
             .with(Csrf.token(mvc))
+            .with(
+                r -> {
+                  r.setRemoteAddr(ip);
+                  return r;
+                })
             .cookie(s.cookie())
             .contentType(MediaType.APPLICATION_JSON);
     if (key != null) {
@@ -75,6 +87,25 @@ public abstract class ApiTest extends PostgresIntegrationTest {
     return mvc.perform(request);
   }
 
+  /** A public-looking IPv4 address unlikely to repeat within a run. */
+  protected static String freshIp() {
+    UUID u = UUID.randomUUID();
+    return "10."
+        + (u.getMostSignificantBits() & 0x7f)
+        + "."
+        + (u.getLeastSignificantBits() & 0x7f)
+        + "."
+        + (1 + (u.getMostSignificantBits() >>> 8 & 0x7f));
+  }
+
+  /** A request post-processor that sends from a fresh client address (see {@link #freshIp}). */
+  protected static org.springframework.test.web.servlet.request.RequestPostProcessor freshClient() {
+    return r -> {
+      r.setRemoteAddr(freshIp());
+      return r;
+    };
+  }
+
   protected ResultActions get(Session s, String path) throws Exception {
     return mvc.perform(MockMvcRequestBuilders.get(path).cookie(s.cookie()));
   }
@@ -82,6 +113,15 @@ public abstract class ApiTest extends PostgresIntegrationTest {
   protected ResultActions patch(Session s, String path, Object body) throws Exception {
     return mvc.perform(
         MockMvcRequestBuilders.patch(path)
+            .with(Csrf.token(mvc))
+            .cookie(s.cookie())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(body)));
+  }
+
+  protected ResultActions put(Session s, String path, Object body) throws Exception {
+    return mvc.perform(
+        MockMvcRequestBuilders.put(path)
             .with(Csrf.token(mvc))
             .cookie(s.cookie())
             .contentType(MediaType.APPLICATION_JSON)

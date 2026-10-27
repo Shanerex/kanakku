@@ -7,6 +7,7 @@ package dev.kanakku.jooq.tables;
 import dev.kanakku.jooq.Indexes;
 import dev.kanakku.jooq.Keys;
 import dev.kanakku.jooq.Public;
+import dev.kanakku.jooq.tables.ClaimSuggestions.ClaimSuggestionsPath;
 import dev.kanakku.jooq.tables.GroupInvites.GroupInvitesPath;
 import dev.kanakku.jooq.tables.Groups.GroupsPath;
 import dev.kanakku.jooq.tables.JournalLines.JournalLinesPath;
@@ -111,6 +112,16 @@ public class GroupMembers extends TableImpl<GroupMembersRecord> {
      */
     public final TableField<GroupMembersRecord, Integer> VERSION = createField(DSL.name("version"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
 
+    /**
+     * The column <code>public.group_members.guest_phone_e164</code>.
+     */
+    public final TableField<GroupMembersRecord, String> GUEST_PHONE_E164 = createField(DSL.name("guest_phone_e164"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.group_members.merged_into_member_id</code>.
+     */
+    public final TableField<GroupMembersRecord, UUID> MERGED_INTO_MEMBER_ID = createField(DSL.name("merged_into_member_id"), SQLDataType.UUID, this, "");
+
     private GroupMembers(Name alias, Table<GroupMembersRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -180,7 +191,7 @@ public class GroupMembers extends TableImpl<GroupMembersRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.GROUP_MEMBERS_ACTIVE_USER_KEY, Indexes.GROUP_MEMBERS_GROUP_IDX, Indexes.GROUP_MEMBERS_USER_IDX);
+        return Arrays.asList(Indexes.GROUP_MEMBERS_ACTIVE_USER_KEY, Indexes.GROUP_MEMBERS_GROUP_IDX, Indexes.GROUP_MEMBERS_GUEST_PHONE_IDX, Indexes.GROUP_MEMBERS_USER_IDX);
     }
 
     @Override
@@ -195,7 +206,7 @@ public class GroupMembers extends TableImpl<GroupMembersRecord> {
 
     @Override
     public List<ForeignKey<GroupMembersRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.GROUP_MEMBERS__GROUP_MEMBERS_GROUP_ID_FKEY, Keys.GROUP_MEMBERS__GROUP_MEMBERS_USER_ID_FKEY);
+        return Arrays.asList(Keys.GROUP_MEMBERS__GROUP_MEMBERS_GROUP_ID_FKEY, Keys.GROUP_MEMBERS__GROUP_MEMBERS_MERGED_INTO_FK, Keys.GROUP_MEMBERS__GROUP_MEMBERS_USER_ID_FKEY);
     }
 
     private transient GroupsPath _groups;
@@ -210,6 +221,19 @@ public class GroupMembers extends TableImpl<GroupMembersRecord> {
         return _groups;
     }
 
+    private transient GroupMembersPath _groupMembers;
+
+    /**
+     * Get the implicit join path to the <code>public.group_members</code>
+     * table.
+     */
+    public GroupMembersPath groupMembers() {
+        if (_groupMembers == null)
+            _groupMembers = new GroupMembersPath(this, Keys.GROUP_MEMBERS__GROUP_MEMBERS_MERGED_INTO_FK, null);
+
+        return _groupMembers;
+    }
+
     private transient UsersPath _users;
 
     /**
@@ -220,6 +244,19 @@ public class GroupMembers extends TableImpl<GroupMembersRecord> {
             _users = new UsersPath(this, Keys.GROUP_MEMBERS__GROUP_MEMBERS_USER_ID_FKEY, null);
 
         return _users;
+    }
+
+    private transient ClaimSuggestionsPath _claimSuggestions;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.claim_suggestions</code> table
+     */
+    public ClaimSuggestionsPath claimSuggestions() {
+        if (_claimSuggestions == null)
+            _claimSuggestions = new ClaimSuggestionsPath(this, null, Keys.CLAIM_SUGGESTIONS__CLAIM_SUGGESTIONS_MEMBER_FK.getInverseKey());
+
+        return _claimSuggestions;
     }
 
     private transient GroupInvitesPath _groupInvites;

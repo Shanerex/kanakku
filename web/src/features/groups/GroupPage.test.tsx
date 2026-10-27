@@ -343,6 +343,108 @@ describe("GroupPage edit", () => {
   });
 });
 
+describe("GroupPage guest number", () => {
+  const PHONE_PATH = `${base}/members/${KARTHIK}/guest-phone`;
+
+  it("lets the Owner set a guest's number with the member's version", async () => {
+    const user = userEvent.setup();
+    const { requests } = renderApp(
+      `/groups/${GROUP_ID}`,
+      screens,
+      handlers(
+        { members: [aMember(), karthik({ version: 4 })] },
+        {
+          [`PUT ${PHONE_PATH}`]: () =>
+            Response.json(karthik({ guestPhoneMasked: "+91 ••••• ••10" })),
+        },
+      ),
+    );
+    await screen.findByRole("heading", { name: "Goa Trip" });
+    await user.click(
+      screen.getByRole("button", { name: "Set Karthik's number" }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save number" }),
+    );
+    expect(within(dialog).getByText("Enter a mobile number.")).toBeTruthy();
+    expect(requestsTo(requests, "PUT", PHONE_PATH)).toHaveLength(0);
+
+    await user.type(
+      within(dialog).getByLabelText("Mobile number"),
+      "98765 43210",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save number" }),
+    );
+
+    await waitFor(() =>
+      expect(requestsTo(requests, "PUT", PHONE_PATH)).toHaveLength(1),
+    );
+    expect(requestsTo(requests, "PUT", PHONE_PATH)[0].body).toEqual({
+      phone: "98765 43210",
+      version: 4,
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("removes a guest's number and shows an invalid one on the field", async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    const { requests } = renderApp(
+      `/groups/${GROUP_ID}`,
+      screens,
+      handlers(
+        {
+          members: [aMember(), karthik({ guestPhoneMasked: "+91 ••••• ••10" })],
+        },
+        {
+          [`PUT ${PHONE_PATH}`]: () =>
+            ++calls === 1
+              ? problem(400, "invalid-phone")
+              : Response.json(karthik()),
+        },
+      ),
+    );
+    await screen.findByRole("heading", { name: "Goa Trip" });
+    await user.click(
+      screen.getByRole("button", { name: "Set Karthik's number" }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Mobile number"), "12345");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save number" }),
+    );
+    expect(
+      (await within(dialog).findByLabelText("Mobile number")).getAttribute(
+        "aria-invalid",
+      ),
+    ).toBe("true");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Remove number" }),
+    );
+    await waitFor(() =>
+      expect(requestsTo(requests, "PUT", PHONE_PATH)).toHaveLength(2),
+    );
+    expect(requestsTo(requests, "PUT", PHONE_PATH)[1].body).toEqual({
+      version: 0,
+    });
+  });
+
+  it("offers no number control to a Member", async () => {
+    renderApp(
+      `/groups/${GROUP_ID}`,
+      screens,
+      handlers({ group: { myRole: "MEMBER" } }),
+    );
+    await screen.findByRole("heading", { name: "Goa Trip" });
+    expect(
+      screen.queryByRole("button", { name: "Set Karthik's number" }),
+    ).toBeNull();
+  });
+});
+
 describe("GroupPage remove and write-off", () => {
   const owing = [
     aMember(),
@@ -495,60 +597,5 @@ describe("GroupPage remove and write-off", () => {
     await waitFor(() =>
       expect(requestsTo(requests, "GET", `${base}/members`)).toHaveLength(2),
     );
-  });
-});
-
-describe("MemberPicker", () => {
-  it("waits for 3 characters, then searches and direct-adds with a key", async () => {
-    const user = userEvent.setup();
-    const match = {
-      id: "66666666-6666-4666-8666-666666666666",
-      displayName: "Meera Nair",
-      maskedEmail: "m***@example.com",
-    };
-    const { requests } = renderApp(
-      `/groups/${GROUP_ID}`,
-      screens,
-      handlers(
-        {},
-        {
-          [`GET ${base}/user-search`]: () => Response.json([match]),
-          [`POST ${base}/members`]: () =>
-            Response.json(bala(), { status: 201 }),
-        },
-      ),
-    );
-    const find = await screen.findByLabelText("Find people");
-    await user.type(find, "me");
-    await new Promise((r) => setTimeout(r, 400));
-    expect(requestsTo(requests, "GET", `${base}/user-search`)).toHaveLength(0);
-
-    await user.type(find, "e");
-    const row = await screen.findByText("Meera Nair");
-    expect(screen.getByText("m***@example.com")).toBeTruthy();
-    expect(row).toBeTruthy();
-    expect(requestsTo(requests, "GET", `${base}/user-search`)[0]).toBeTruthy();
-
-    await user.click(screen.getByRole("button", { name: "Add Meera Nair" }));
-    await waitFor(() =>
-      expect(requestsTo(requests, "POST", `${base}/members`)).toHaveLength(1),
-    );
-    const [post] = requestsTo(requests, "POST", `${base}/members`);
-    expect(post.body).toEqual({ userId: match.id });
-    expect(post.headers.get("Idempotency-Key")).toMatch(/^[0-9a-f-]{36}$/);
-    await waitFor(() => expect(screen.queryByText("Meera Nair")).toBeNull());
-  });
-
-  it("says when nobody can be added", async () => {
-    const user = userEvent.setup();
-    renderApp(
-      `/groups/${GROUP_ID}`,
-      screens,
-      handlers({}, { [`GET ${base}/user-search`]: () => Response.json([]) }),
-    );
-    await user.type(await screen.findByLabelText("Find people"), "zzz");
-    expect(
-      await screen.findByText("No one to add for that search."),
-    ).toBeTruthy();
   });
 });

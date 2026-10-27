@@ -30,6 +30,7 @@ public class MemberRepository {
       UUID userId,
       String guestName,
       String guestEmail,
+      String guestPhoneE164,
       Role role,
       OffsetDateTime joinedAt,
       int version) {}
@@ -67,13 +68,15 @@ public class MemberRepository {
    *
    * @return true when added
    */
-  public boolean insertGuest(UUID id, UUID groupId, UUID callerId, String name, String email) {
+  public boolean insertGuest(
+      UUID id, UUID groupId, UUID callerId, String name, String email, String phoneE164) {
     var row =
         DSL.select(
                 DSL.val(id),
                 DSL.val(groupId),
                 DSL.val(name),
                 DSL.val(email, GROUP_MEMBERS.GUEST_EMAIL),
+                DSL.val(phoneE164, GROUP_MEMBERS.GUEST_PHONE_E164),
                 DSL.val(Role.MEMBER.name()))
             .where(Scope.member(DSL.val(groupId), callerId));
     return dsl.insertInto(
@@ -82,8 +85,30 @@ public class MemberRepository {
                 GROUP_MEMBERS.GROUP_ID,
                 GROUP_MEMBERS.GUEST_NAME,
                 GROUP_MEMBERS.GUEST_EMAIL,
+                GROUP_MEMBERS.GUEST_PHONE_E164,
                 GROUP_MEMBERS.ROLE)
             .select(row)
+            .execute()
+        > 0;
+  }
+
+  /**
+   * Sets or clears a current guest's number if the caller is the group's Owner and the version is
+   * current.
+   *
+   * @return true when the row changed
+   */
+  public boolean updateGuestPhone(
+      UUID groupId, UUID memberId, UUID callerId, String phoneE164, int version) {
+    return dsl.update(GROUP_MEMBERS)
+            .set(GROUP_MEMBERS.GUEST_PHONE_E164, phoneE164)
+            .set(GROUP_MEMBERS.VERSION, GROUP_MEMBERS.VERSION.plus(1))
+            .where(GROUP_MEMBERS.GROUP_ID.eq(groupId))
+            .and(GROUP_MEMBERS.ID.eq(memberId))
+            .and(GROUP_MEMBERS.USER_ID.isNull())
+            .and(GROUP_MEMBERS.LEFT_AT.isNull())
+            .and(GROUP_MEMBERS.VERSION.eq(version))
+            .and(Scope.owner(GROUP_MEMBERS.GROUP_ID, callerId))
             .execute()
         > 0;
   }
@@ -185,6 +210,26 @@ public class MemberRepository {
         > 0;
   }
 
+  /**
+   * Retires a guest whose seat was claimed by a member: marks it left and points it at the member's
+   * own row, so the journal lines that name it still resolve. The guard is the caller's membership.
+   *
+   * @return true when the guest was a current, unclaimed guest of the group and was retired
+   */
+  public boolean retireMerged(UUID groupId, UUID guestId, UUID intoMemberId, UUID callerId) {
+    return dsl.update(GROUP_MEMBERS)
+            .set(GROUP_MEMBERS.LEFT_AT, DSL.currentOffsetDateTime())
+            .set(GROUP_MEMBERS.MERGED_INTO_MEMBER_ID, intoMemberId)
+            .set(GROUP_MEMBERS.VERSION, GROUP_MEMBERS.VERSION.plus(1))
+            .where(GROUP_MEMBERS.GROUP_ID.eq(groupId))
+            .and(GROUP_MEMBERS.ID.eq(guestId))
+            .and(GROUP_MEMBERS.USER_ID.isNull())
+            .and(GROUP_MEMBERS.LEFT_AT.isNull())
+            .and(Scope.member(GROUP_MEMBERS.GROUP_ID, callerId))
+            .execute()
+        > 0;
+  }
+
   private SelectConditionStep<Record> activeQuery(UUID groupId, UUID callerId) {
     return dsl.select(GROUP_MEMBERS.fields())
         .from(GROUP_MEMBERS)
@@ -199,6 +244,7 @@ public class MemberRepository {
         r.get(GROUP_MEMBERS.USER_ID),
         r.get(GROUP_MEMBERS.GUEST_NAME),
         r.get(GROUP_MEMBERS.GUEST_EMAIL),
+        r.get(GROUP_MEMBERS.GUEST_PHONE_E164),
         Role.valueOf(r.get(GROUP_MEMBERS.ROLE)),
         r.get(GROUP_MEMBERS.JOINED_AT),
         r.get(GROUP_MEMBERS.VERSION));

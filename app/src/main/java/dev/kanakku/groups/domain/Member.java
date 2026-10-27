@@ -1,5 +1,6 @@
 package dev.kanakku.groups.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.kanakku.ledger.api.MoneyBalance;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -27,6 +28,13 @@ public record Member(
             nullable = true,
             description = "A guest's email, shown to the Owner only")
         String guestEmail,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(
+            requiredMode = RequiredMode.NOT_REQUIRED,
+            nullable = true,
+            example = "+91 ••••• ••10",
+            description = "A guest's phone number, masked, shown to the Owner only")
+        String guestPhoneMasked,
     @Schema(requiredMode = RequiredMode.REQUIRED) OffsetDateTime joinedAt,
     @Schema(
             requiredMode = RequiredMode.REQUIRED,

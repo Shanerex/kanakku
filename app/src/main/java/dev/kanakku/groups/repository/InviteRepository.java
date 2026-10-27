@@ -34,7 +34,8 @@ public class InviteRepository {
       OffsetDateTime revokedAt,
       OffsetDateTime usedAt,
       OffsetDateTime createdAt,
-      int version) {}
+      int version,
+      UUID invitedUserId) {}
 
   private final DSLContext dsl;
 
@@ -45,6 +46,7 @@ public class InviteRepository {
   /**
    * Stores a new invite if the caller is the group's Owner and the member is a current guest.
    *
+   * @param invitedUserId the only account that may claim it, or null for any signed-in holder
    * @return true when stored
    */
   public boolean insert(
@@ -53,7 +55,8 @@ public class InviteRepository {
       UUID memberId,
       byte[] tokenHash,
       OffsetDateTime expiresAt,
-      UUID callerId) {
+      UUID callerId,
+      UUID invitedUserId) {
     var row =
         DSL.select(
                 DSL.val(id),
@@ -61,7 +64,8 @@ public class InviteRepository {
                 DSL.val(memberId),
                 DSL.val(tokenHash),
                 DSL.val(expiresAt),
-                DSL.val(callerId))
+                DSL.val(callerId),
+                DSL.val(invitedUserId, GROUP_INVITES.INVITED_USER_ID))
             .where(Scope.owner(DSL.val(groupId), callerId))
             .and(
                 DSL.exists(
@@ -78,7 +82,8 @@ public class InviteRepository {
                 GROUP_INVITES.MEMBER_ID,
                 GROUP_INVITES.TOKEN_HASH,
                 GROUP_INVITES.EXPIRES_AT,
-                GROUP_INVITES.CREATED_BY)
+                GROUP_INVITES.CREATED_BY,
+                GROUP_INVITES.INVITED_USER_ID)
             .select(row)
             .execute()
         > 0;
@@ -174,7 +179,8 @@ public class InviteRepository {
             GROUP_INVITES.REVOKED_AT,
             GROUP_INVITES.USED_AT,
             GROUP_INVITES.CREATED_AT,
-            GROUP_INVITES.VERSION)
+            GROUP_INVITES.VERSION,
+            GROUP_INVITES.INVITED_USER_ID)
         .from(GROUP_INVITES)
         .join(GROUPS)
         .on(GROUPS.ID.eq(GROUP_INVITES.GROUP_ID))
@@ -196,6 +202,7 @@ public class InviteRepository {
         r.get(GROUP_INVITES.REVOKED_AT),
         r.get(GROUP_INVITES.USED_AT),
         r.get(GROUP_INVITES.CREATED_AT),
-        r.get(GROUP_INVITES.VERSION));
+        r.get(GROUP_INVITES.VERSION),
+        r.get(GROUP_INVITES.INVITED_USER_ID));
   }
 }
