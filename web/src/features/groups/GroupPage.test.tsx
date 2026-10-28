@@ -40,6 +40,55 @@ function handlers(
   };
 }
 
+describe("GroupPage shell", () => {
+  it("names the group as the one h1 in its tinted band, with chips and a back link in the bar", async () => {
+    renderApp(`/groups/${GROUP_ID}`, screens, handlers());
+    const title = await screen.findByRole("heading", {
+      level: 1,
+      name: "Goa Trip",
+    });
+    await waitFor(() =>
+      expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1),
+    );
+    const header = screen
+      .getByRole("main")
+      .querySelector("[data-identity-header]") as HTMLElement;
+    expect(title.closest("header")).toBe(header);
+    expect(header.style.background).toContain("--id-mango-tint");
+    expect(within(header).getByText("2 people")).toBeTruthy();
+    expect(within(header).getByText("INR")).toBeTruthy();
+    expect(header.querySelector("svg[aria-hidden='true']")).toBeTruthy();
+    // The bar keeps a back link for narrow screens only; the page has none of its own.
+    const bar = screen.getAllByRole("banner")[0];
+    const back = within(bar).getByRole("link", { name: "Groups" });
+    expect(back.getAttribute("href")).toBe("/groups");
+    expect(back.className).toContain("md:hidden");
+    expect(
+      within(screen.getByRole("main")).queryByRole("link", { name: "Groups" }),
+    ).toBeNull();
+  });
+
+  it("puts the members left and the add forms right, as compact buttons", async () => {
+    renderApp(`/groups/${GROUP_ID}`, screens, handlers());
+    await screen.findByRole("heading", { name: "Goa Trip" });
+    const members = screen.getByRole("region", { name: "Members" });
+    expect(members.parentElement?.className).toContain("lg:grid-cols-");
+    const add = screen.getByRole("button", { name: "Add guest" });
+    expect(add.className).toContain("bg-primary");
+    expect(add.className).not.toContain("w-full");
+    const archive = screen.getByRole("button", { name: "Archive group" });
+    expect(archive.className).toContain("bg-danger");
+    expect(screen.getByRole("button", { name: "Edit group" })).toBeTruthy();
+  });
+
+  it("draws the members as a bordered Card", async () => {
+    renderApp(`/groups/${GROUP_ID}`, screens, handlers());
+    const members = await screen.findByRole("region", { name: "Members" });
+    expect(members.className).toContain("border-border");
+    expect(members.className).toContain("shadow-sm");
+  });
+});
+
 describe("GroupPage members", () => {
   it("lists members with balances in words and a Settled marker", async () => {
     renderApp(
@@ -54,7 +103,7 @@ describe("GroupPage members", () => {
       }),
     );
     await screen.findByRole("heading", { name: "Goa Trip" });
-    expect(screen.getByText("INR · 3 people")).toBeTruthy();
+    expect(screen.getByText("3 people")).toBeTruthy();
     expect(screen.getByText(/Asha Rao \(you\)/)).toBeTruthy();
     expect(screen.getByText("is owed ₹45.00")).toBeTruthy();
     expect(screen.getByText("owes ₹45.00")).toBeTruthy();

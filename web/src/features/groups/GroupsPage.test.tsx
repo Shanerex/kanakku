@@ -1,8 +1,8 @@
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { groupRoutes } from "../../app/routes";
-import { aGroup, GROUP_ID, Here, requestsTo } from "../../test/groups";
+import { aGroup, GROUP_ID, Here } from "../../test/groups";
 import { aProfile, problem, renderApp } from "../../test/harness";
 
 afterEach(cleanup);
@@ -15,36 +15,140 @@ const screens = [
 const signedIn = { "GET /api/v1/me": () => Response.json(aProfile) };
 
 describe("GroupsPage list", () => {
-  it("lists my groups with my role and a link to each", async () => {
-    renderApp("/groups", screens, {
-      ...signedIn,
-      "GET /api/v1/groups": () =>
-        Response.json([
-          aGroup(),
-          aGroup({
-            id: "55555555-5555-4555-8555-555555555555",
-            name: "Flat 4B",
-            myRole: "MEMBER",
-            archivedAt: "2026-10-01T00:00:00Z",
-          }),
-        ]),
-    });
+  const two = {
+    ...signedIn,
+    "GET /api/v1/groups": () =>
+      Response.json([
+        aGroup(),
+        aGroup({
+          id: "55555555-5555-4555-8555-555555555555",
+          name: "Flat 4B",
+          myRole: "MEMBER",
+          archivedAt: "2026-10-01T00:00:00Z",
+        }),
+      ]),
+  };
 
+  it("titles the page, lists active groups with my role and links to each", async () => {
+    renderApp("/groups", screens, two);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Groups" }),
+    ).toBeTruthy();
     const list = await screen.findByRole("list", { name: "Your groups" });
     const goa = within(list).getByRole("link", { name: /Goa Trip/ });
     expect(goa.getAttribute("href")).toBe(`/groups/${GROUP_ID}`);
     expect(goa.textContent).toMatch(/INR · You're the Owner/);
+    expect(goa.className).toContain("min-h-16");
+    expect(within(list).queryByRole("link", { name: /Flat 4B/ })).toBeNull();
+  });
+
+  it("switches between Active and Archived", async () => {
+    const user = userEvent.setup();
+    renderApp("/groups", screens, two);
+    await screen.findByRole("list", { name: "Your groups" });
+    await user.click(screen.getByRole("radio", { name: "Archived" }));
+    const list = screen.getByRole("list", { name: "Your groups" });
     const flat = within(list).getByRole("link", { name: /Flat 4B/ });
     expect(flat.textContent).toMatch(/Archived/);
     expect(flat.textContent).not.toMatch(/Owner/);
+    expect(within(list).queryByRole("link", { name: /Goa Trip/ })).toBeNull();
   });
 
-  it("says so when there are no groups", async () => {
+  it("filters by name as you type and says when nothing matches", async () => {
+    const user = userEvent.setup();
+    renderApp("/groups", screens, two);
+    await screen.findByRole("list", { name: "Your groups" });
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search groups" }),
+      "xyz",
+    );
+    expect(screen.queryByRole("list", { name: "Your groups" })).toBeNull();
+    expect(screen.getByText("No groups match that search.")).toBeTruthy();
+    await user.clear(screen.getByRole("searchbox", { name: "Search groups" }));
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search groups" }),
+      "goa",
+    );
+    expect(
+      within(screen.getByRole("list", { name: "Your groups" })).getByRole(
+        "link",
+        {
+          name: /Goa Trip/,
+        },
+      ),
+    ).toBeTruthy();
+  });
+
+  it("puts New group in the top bar as a link to the form", async () => {
+    renderApp("/groups", screens, two);
+    await screen.findByRole("list", { name: "Your groups" });
+    const header = screen.getByRole("heading", { level: 1 }).closest("header");
+    const link = within(header as HTMLElement).getByRole("link", {
+      name: "New group",
+    });
+    expect(link.getAttribute("href")).toBe("/groups/new");
+    // The primary action: a filled pill, not an outline button.
+    expect(link.className).toContain("bg-primary");
+    expect(link.className).toContain("rounded-pill");
+  });
+
+  it("shows the empty state with one action when there are no groups", async () => {
     renderApp("/groups", screens, {
       ...signedIn,
       "GET /api/v1/groups": () => Response.json([]),
     });
-    expect(await screen.findByText("No groups yet")).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: "Start your first group" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "A trip, a flat, a dinner. Add people and split as you go.",
+      ),
+    ).toBeTruthy();
+    const main = screen.getByRole("main");
+    expect(
+      within(main).getAllByRole("link", { name: "New group" }).length,
+    ).toBeGreaterThan(0);
+    expect(main.querySelector("svg[aria-hidden='true']")).toBeTruthy();
+  });
+
+  it("shows identity cards in three columns from 1024 px, ending with a New group card", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("1024"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    try {
+      renderApp("/groups", screens, two);
+      const list = await screen.findByRole("list", { name: "Your groups" });
+      expect(list.className).toContain("grid-cols-3");
+      const cards = within(list).getAllByRole("listitem");
+      expect(cards).toHaveLength(2);
+      expect(
+        within(cards[0]).getByRole("link", { name: /Goa Trip/ }),
+      ).toBeTruthy();
+      expect(
+        within(cards[1])
+          .getByRole("link", { name: "New group" })
+          .getAttribute("href"),
+      ).toBe("/groups/new");
+      expect(cards[0].querySelector("[data-identity-bar]")).toBeTruthy();
+      // A tinted header band over a white body with my role and the currency.
+      const band = cards[0].querySelector(
+        "[data-identity-band]",
+      ) as HTMLElement;
+      expect(band.style.background).toContain("-tint");
+      const body = cards[0].querySelector(
+        "[data-identity-body]",
+      ) as HTMLElement;
+      expect(body.className).not.toContain("tint");
+      expect(body.textContent).toContain("Owner");
+      expect(body.textContent).toContain("INR");
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it("sends a signed-out visitor to sign-in with a way back", async () => {
@@ -62,136 +166,5 @@ describe("GroupsPage list", () => {
       "GET /api/v1/groups": () => problem(500, "internal"),
     });
     expect((await screen.findByRole("alert")).textContent).toMatch(/our side/);
-  });
-});
-
-describe("GroupsPage create", () => {
-  const empty = { ...signedIn, "GET /api/v1/groups": () => Response.json([]) };
-
-  async function openForm(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(await screen.findByRole("button", { name: "New group" }));
-    return screen.findByRole("form", { name: "New group" });
-  }
-
-  it("checks the name before sending anything", async () => {
-    const user = userEvent.setup();
-    const { requests } = renderApp("/groups", screens, empty);
-    await openForm(user);
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-
-    expect(screen.getByText("Enter a name for the group.")).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByLabelText("Name"));
-    expect(requestsTo(requests, "POST", "/api/v1/groups")).toHaveLength(0);
-  });
-
-  it("creates the group with an Idempotency-Key and opens it", async () => {
-    const user = userEvent.setup();
-    const { requests } = renderApp(
-      "/groups",
-      [{ path: "/groups/:id", element: <Here /> }, ...screens],
-      {
-        ...empty,
-        "POST /api/v1/groups": () => Response.json(aGroup(), { status: 201 }),
-      },
-    );
-    await openForm(user);
-    await user.click(screen.getByLabelText("Home"));
-    await user.type(screen.getByLabelText("Name"), "  Goa Trip  ");
-    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
-    await user.click(screen.getByLabelText("Colour mango"));
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-
-    expect(await screen.findByText(`now at /groups/${GROUP_ID}`)).toBeTruthy();
-    const [post] = requestsTo(requests, "POST", "/api/v1/groups");
-    expect(post.body).toEqual({
-      name: "Goa Trip",
-      type: "HOME",
-      currency: "USD",
-      cover: "color:mango",
-    });
-    expect(post.headers.get("Idempotency-Key")).toMatch(/^[0-9a-f-]{36}$/);
-    expect(post.headers.get("X-XSRF-TOKEN")).toBe("tok-1");
-  });
-
-  it("leaves the cover out when none is picked and offers the user's default currency", async () => {
-    const user = userEvent.setup();
-    const { requests } = renderApp(
-      "/groups",
-      [{ path: "/groups/:id", element: <Here /> }, ...screens],
-      {
-        "GET /api/v1/me": () =>
-          Response.json({ ...aProfile, defaultCurrency: "EUR" }),
-        "GET /api/v1/groups": () => Response.json([]),
-        "POST /api/v1/groups": () => Response.json(aGroup(), { status: 201 }),
-      },
-    );
-    await openForm(user);
-    expect((screen.getByLabelText("Currency") as HTMLSelectElement).value).toBe(
-      "EUR",
-    );
-    await user.type(screen.getByLabelText("Name"), "Flat");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-    await screen.findByText(/now at \/groups\//);
-
-    expect(requestsTo(requests, "POST", "/api/v1/groups")[0].body).toEqual({
-      name: "Flat",
-      type: "TRIP",
-      currency: "EUR",
-    });
-  });
-
-  it("reuses the key when the same form is retried, and uses a new one after an edit", async () => {
-    const user = userEvent.setup();
-    let calls = 0;
-    const { requests } = renderApp("/groups", screens, {
-      ...empty,
-      "POST /api/v1/groups": () => {
-        calls += 1;
-        return calls <= 2
-          ? problem(500, "internal")
-          : Response.json(aGroup(), { status: 201 });
-      },
-    });
-    await openForm(user);
-    await user.type(screen.getByLabelText("Name"), "Goa");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-    await screen.findByRole("alert");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-    await waitFor(() => expect(calls).toBe(2));
-    await user.type(screen.getByLabelText("Name"), " 2026");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-    await waitFor(() => expect(calls).toBe(3));
-
-    const keys = requestsTo(requests, "POST", "/api/v1/groups").map((r) =>
-      r.headers.get("Idempotency-Key"),
-    );
-    expect(keys[0]).toBe(keys[1]);
-    expect(keys[2]).not.toBe(keys[0]);
-  });
-
-  it("shows a server field error next to the field", async () => {
-    const user = userEvent.setup();
-    renderApp("/groups", screens, {
-      ...empty,
-      "POST /api/v1/groups": () =>
-        problem(400, "validation", {
-          errors: [
-            {
-              field: "currency",
-              message: "Use a three-letter currency code such as INR.",
-            },
-          ],
-        }),
-    });
-    await openForm(user);
-    await user.type(screen.getByLabelText("Name"), "Goa");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-
-    expect(
-      await screen.findByText("Use a three-letter currency code such as INR."),
-    ).toBeTruthy();
-    expect((await screen.findByRole("alert")).textContent).toMatch(
-      /highlighted fields/,
-    );
   });
 });

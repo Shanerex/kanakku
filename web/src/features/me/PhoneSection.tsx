@@ -11,6 +11,7 @@ import {
 } from "../../app/problems";
 import { useSession } from "../../app/session";
 import { Button } from "../../ui/Button";
+import { Card } from "../../ui/Card";
 import { CodeField } from "../../ui/CodeField";
 import { TextField } from "../../ui/TextField";
 import { useCooldown } from "../../ui/useCooldown";
@@ -198,9 +199,10 @@ export function PhoneSection() {
   );
 
   return (
-    <section
+    <Card
+      as="section"
       aria-labelledby="phone-title"
-      className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-sm"
+      className="flex flex-col gap-3"
     >
       <h2 id="phone-title" className="font-display text-h2 font-bold text-text">
         Mobile number
@@ -335,6 +337,6 @@ export function PhoneSection() {
           </div>
         </>
       )}
-    </section>
+    </Card>
   );
 }

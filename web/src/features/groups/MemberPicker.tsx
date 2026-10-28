@@ -179,7 +179,7 @@ export function MemberPicker({
   return (
     <section
       aria-labelledby="picker-title"
-      className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm"
     >
       <h2
         id="picker-title"

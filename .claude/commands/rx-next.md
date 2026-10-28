@@ -13,12 +13,12 @@ Pick the row from the `phase:` line (never from `next:`, which is only a hint) a
 | full intake | Ask why / who / done-when in one AskUserQuestion batch, log the answers in state.md, set `phase: requirements`. |
 | full requirements | Protocol A with `rx-pm`, file `requirements.md`, gate `g1`; on yes `phase: plan`. |
 | full plan | Protocol A with `rx-architect`, files `plan.md` + `tasks.md`, gate `g2`; on yes `phase: build`. List plan.md "Architecture changes" for the human. |
-| full build | Spawn `rx-dev` for `tasks.md`, `plan.md`, `requirements.md`, with `model: opus` when the feature id ends in `ledger-core`, `expenses-splits`, `settle-up-upi` or `multi-currency` (money maths). Afterwards: `status: blocked` means show `next` and ask the human; all tasks ticked means `phase: verify`. |
+| full build | Spawn `rx-dev` for `tasks.md`, `plan.md`, `requirements.md`, with `model: opus` when the feature id ends in `ledger-core`, `expenses-splits`, `settle-up-upi` or `multi-currency` (money maths). When plan.md touches web/src, also pass the docs/design spec and mock paths it names plus docs/design/components.md and docs/design/patterns.md. Afterwards: `status: blocked` means show `next` and ask the human; all tasks ticked means `phase: verify`. |
 | full verify | Protocol V with `rx-qa` and `rx-security`. Pass: ask for g3 and the bump; `phase: close`. |
 | full close | Protocol C. |
 | full done | Report the feature is done; the human opens the PR. |
 | quick plan | Show `quick.md`; explicit yes writes `g2`, sets `quick.md` to `status: final`, `phase: build`. |
-| quick build | Spawn `rx-dev` for `quick.md`, same outcome as full build. |
+| quick build | Spawn `rx-dev` for `quick.md` (with the same docs/design paths when it touches web/src), same outcome as full build. |
 | quick verify | Protocol V with `rx-qa` only (Security section: "not run, quick lane"). Pass: ask the bump only (no g3); `phase: close`. |
 | quick close | Protocol C. |
 | quick done | As full done. |

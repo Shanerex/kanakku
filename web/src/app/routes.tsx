@@ -12,10 +12,12 @@ import SignUpPage from "../features/auth/SignUpPage";
 import ClaimInvitePage from "../features/groups/ClaimInvitePage";
 import GroupPage from "../features/groups/GroupPage";
 import GroupsPage from "../features/groups/GroupsPage";
+import NewGroupPage from "../features/groups/NewGroupPage";
 import MePage from "../features/me/MePage";
 import ProfilePage from "../features/me/ProfilePage";
 import WelcomePage from "../features/me/WelcomePage";
 import { ToastProvider } from "../ui/Toast";
+import { AppShell } from "./AppShell";
 import { ApiProvider } from "./api-context";
 import { InlineProblem } from "./InlineProblem";
 import { SessionProvider, useSession } from "./session";
@@ -126,9 +128,15 @@ export const profileRoutes: RouteObject[] = [
   {
     element: <RequireSession />,
     children: [
+      // First-run onboarding keeps the signed-out card; everything else sits in the app shell.
       { path: "/welcome", element: <WelcomePage /> },
-      { path: "/me", element: <MePage /> },
-      { path: "/me/profile", element: <ProfilePage /> },
+      {
+        element: <AppShell />,
+        children: [
+          { path: "/me", element: <MePage /> },
+          { path: "/me/profile", element: <ProfilePage /> },
+        ],
+      },
     ],
   },
 ];
@@ -137,9 +145,15 @@ export const groupRoutes: RouteObject[] = [
   {
     element: <RequireSession />,
     children: [
-      { path: "/groups", element: <GroupsPage /> },
-      { path: "/groups/:groupId", element: <GroupPage /> },
-      { path: "/invite", element: <ClaimInvitePage /> },
+      {
+        element: <AppShell />,
+        children: [
+          { path: "/groups", element: <GroupsPage /> },
+          { path: "/groups/new", element: <NewGroupPage /> },
+          { path: "/groups/:groupId", element: <GroupPage /> },
+          { path: "/invite", element: <ClaimInvitePage /> },
+        ],
+      },
     ],
   },
 ];

@@ -118,7 +118,7 @@ export function InvitesPanel({
   return (
     <section
       aria-labelledby="invites-title"
-      className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm"
     >
       <h2
         id="invites-title"
@@ -173,7 +173,7 @@ export function InvitesPanel({
               ))}
             </select>
           </div>
-          <Button variant="secondary" loading={busy} onClick={create}>
+          <Button className="self-start" loading={busy} onClick={create}>
             Create invite link
           </Button>
         </div>
@@ -194,6 +194,7 @@ export function InvitesPanel({
           <Button
             variant="secondary"
             size="sm"
+            className="self-start"
             onClick={() => copy(fresh.link)}
           >
             Copy link

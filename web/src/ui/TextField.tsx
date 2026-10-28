@@ -42,16 +42,13 @@ export function TextField({
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       <div className="flex items-center justify-between gap-2">
-        <Label.Root
-          htmlFor={id}
-          className="text-body-sm font-semibold text-text"
-        >
+        <Label.Root htmlFor={id} className="text-body-sm font-bold text-text">
           {label}
         </Label.Root>
         {labelAside}
       </div>
       <div
-        className={`flex min-h-11 items-center rounded-md border bg-surface-sunken focus-within:border-primary ${
+        className={`flex min-h-11 items-center rounded-md border bg-surface-sunken focus-within:border-primary focus-within:shadow-[0_0_0_3px_var(--color-primary-soft)] ${
           error ? "border-danger" : "border-border"
         }`}
       >
