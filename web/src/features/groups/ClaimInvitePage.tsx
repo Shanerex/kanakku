@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
+import { usePageTitle } from "../../app/AppShell";
 import { useApi } from "../../app/api-context";
 import { InlineProblem } from "../../app/InlineProblem";
 import {
@@ -26,6 +27,13 @@ export default function ClaimInvitePage() {
   const [dead, setDead] = useState(false);
   const [busy, setBusy] = useState(false);
   const loaded = useRef<string>(undefined);
+  usePageTitle(
+    !token
+      ? "No invite here"
+      : preview
+        ? `Join ${preview.groupName}`
+        : "Invite",
+  );
 
   useEffect(() => {
     if (!token || loaded.current === token) return;
@@ -67,16 +75,11 @@ export default function ClaimInvitePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[400px] flex-col justify-center gap-4 p-4">
+    <div className="mx-auto flex w-full max-w-[400px] flex-col gap-4 pt-6">
       {!token && (
-        <>
-          <h1 className="font-display text-h1 font-bold text-text">
-            No invite here
-          </h1>
-          <p className="text-text-muted">
-            Open the full invite link you were sent.
-          </p>
-        </>
+        <p className="text-text-muted">
+          Open the full invite link you were sent.
+        </p>
       )}
       {token && !preview && !problem && (
         <p role="status" className="text-text-muted">
@@ -86,9 +89,6 @@ export default function ClaimInvitePage() {
       {problem && <InlineProblem problem={problem} />}
       {preview && (
         <>
-          <h1 className="font-display text-h1 font-bold text-text">
-            Join {preview.groupName}
-          </h1>
           <p className="text-text-muted">
             You'll take over {preview.guestName}'s place: their expenses and
             balance become yours.
@@ -103,6 +103,6 @@ export default function ClaimInvitePage() {
           Go to your groups
         </Link>
       )}
-    </main>
+    </div>
   );
 }

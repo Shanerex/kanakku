@@ -32,6 +32,40 @@ async function signInWith(
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
+describe("SignInPage layout", () => {
+  it("follows the mock for v1: heading, fields, one primary button, no providers, divider or reset link", async () => {
+    renderApp("/sign-in", screens, signedOut);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Welcome back" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Email")).toBeTruthy();
+    expect(screen.getByLabelText("Password")).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "Show password" })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
+    expect(screen.queryByText(/Continue with/)).toBeNull();
+    expect(screen.queryByText("or")).toBeNull();
+    expect(screen.queryByText(/Forgot password/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Sign in" }).className).toContain(
+      "min-h-[52px]",
+    );
+    expect(
+      screen.getByRole("link", { name: "Create an account" }),
+    ).toBeTruthy();
+  });
+
+  it("labels fields in bold and rings the focused field in primary-soft", async () => {
+    renderApp("/sign-in", screens, signedOut);
+    const email = await screen.findByLabelText("Email");
+    expect(
+      document.querySelector(`label[for="${email.id}"]`)?.className,
+    ).toContain("font-bold");
+    expect(email.parentElement?.className).toContain("--color-primary-soft");
+  });
+});
+
 describe("safeReturnTo", () => {
   it("accepts same-site paths and rejects the rest", () => {
     expect(safeReturnTo("/groups/1?x=2")).toBe("/groups/1?x=2");

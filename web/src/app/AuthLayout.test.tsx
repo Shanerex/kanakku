@@ -22,4 +22,29 @@ describe("AuthLayout", () => {
       "true",
     );
   });
+
+  it("draws a 400 px bordered card with the mock's padding, large shadow and mango wordmark dot", () => {
+    const { container } = render(<AuthLayout>x</AuthLayout>);
+    const card = container.querySelector("main > div");
+    for (const cls of [
+      "max-w-[400px]",
+      "w-full",
+      "px-7",
+      "py-8",
+      "border",
+      "border-border",
+      "shadow-lg",
+      "bg-surface",
+      "rounded-lg",
+    ])
+      expect(card?.className, cls).toContain(cls);
+    const dot = container.querySelector("header span span");
+    expect(dot?.textContent).toBe(".");
+    expect(dot?.className).toContain("--id-mango-solid");
+  });
+
+  it("is a single-column card with 16 px gutters on a phone", () => {
+    const { container } = render(<AuthLayout>x</AuthLayout>);
+    expect(container.querySelector("main")?.className).toContain("px-4");
+  });
 });

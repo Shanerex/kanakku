@@ -37,23 +37,28 @@ export function initials(name: string): string {
     .join("");
 }
 
-const SIZES = { md: 36, lg: 48, xl: 72 } as const;
+const SIZES = { xs: 20, sm: 28, md: 36, lg: 48, xl: 72 } as const;
 
 export function Avatar({
   id,
   name,
   size = "md",
+  decorative = false,
 }: {
   id: string;
   name: string;
   size?: keyof typeof SIZES;
+  /** True when the name is already written beside it. */
+  decorative?: boolean;
 }) {
   const color = identityColor(id);
   const px = SIZES[size];
+  const a11y = decorative
+    ? ({ "aria-hidden": true } as const)
+    : ({ role: "img", "aria-label": name } as const);
   return (
     <span
-      role="img"
-      aria-label={name}
+      {...a11y}
       style={{
         width: px,
         height: px,

@@ -31,6 +31,27 @@ describe("signed out", () => {
   });
 });
 
+describe("ProfilePage layout", () => {
+  it("is a sub-page of Me: back link, h1 in the top bar, form and phone in Cards", async () => {
+    renderApp("/me/profile", screens, signedIn);
+    const h1 = await screen.findByRole("heading", {
+      level: 1,
+      name: "Profile",
+    });
+    // The back link lives in the top bar and shows below 768 px only.
+    const back = within(h1.closest("header") as HTMLElement).getByRole("link", {
+      name: "Me",
+    });
+    expect(back.getAttribute("href")).toBe("/me");
+    expect(back.className).toContain("md:hidden");
+    const form = screen.getByLabelText("Display name").closest("section");
+    expect(form?.className).toContain("bg-surface");
+    expect(
+      screen.getByRole("region", { name: "Mobile number" }).className,
+    ).toContain("border-border");
+  });
+});
+
 describe("MePage", () => {
   it("shows who you are, the Profile row and Sign out, and nothing unbuilt", async () => {
     renderApp("/me", screens, signedIn);
@@ -42,13 +63,45 @@ describe("MePage", () => {
       screen.getByRole("link", { name: "Edit profile" }).getAttribute("href"),
     ).toBe("/me/profile");
     expect(screen.getByRole("link", { name: /Profile/ })).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Asha Rao" }).textContent).toBe(
-      "AR",
-    );
+    expect(
+      within(screen.getByRole("main")).getByRole("img", { name: "Asha Rao" })
+        .textContent,
+    ).toBe("AR");
     expect(
       screen.queryByText(/Appearance|Notifications|Security|Locale|Test link/),
     ).toBeNull();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
+  });
+
+  it("draws the header as a Card with a 72 px avatar and the list as one flush Card of 64 px rows", async () => {
+    renderApp("/me", screens, signedIn);
+    const name = await screen.findByRole("heading", { name: "Asha Rao" });
+    const main = screen.getByRole("main");
+    expect(name.closest("header")?.className).toContain("bg-surface");
+    expect(
+      within(main).getByRole("img", { name: "Asha Rao" }).style.width,
+    ).toBe("72px");
+    const list = screen.getByRole("region", { name: "Settings" });
+    expect(list.className).toContain("overflow-hidden");
+    const row = within(list).getByRole("link", { name: /Profile/ });
+    expect(row.className).toContain("min-h-16");
+    expect(within(list).getAllByRole("link")).toHaveLength(1);
+  });
+
+  it("makes Sign out a full-width row with a negative icon tile, like the Profile row", async () => {
+    renderApp("/me", screens, signedIn);
+    const button = await screen.findByRole("button", { name: "Sign out" });
+    expect(button.className).toContain("w-full");
+    expect(button.className).toContain("min-h-16");
+    expect(button.querySelector(".bg-negative-soft")).toBeTruthy();
+  });
+
+  it("uses the full content width, not a narrow column", async () => {
+    renderApp("/me", screens, signedIn);
+    const name = await screen.findByRole("heading", { name: "Asha Rao" });
+    expect(name.closest("header")?.parentElement?.className).not.toMatch(
+      /max-w-/,
+    );
   });
 
   it("signs out and returns to sign-in", async () => {
@@ -228,9 +281,10 @@ describe("WelcomePage", () => {
       ((await screen.findByLabelText("Default currency")) as HTMLSelectElement)
         .value,
     ).toBe("INR");
-    expect(screen.getByRole("img", { name: "Asha Rao" }).textContent).toBe(
-      "AR",
-    );
+    expect(
+      within(screen.getByRole("main")).getByRole("img", { name: "Asha Rao" })
+        .textContent,
+    ).toBe("AR");
     const name = screen.getByLabelText("Display name");
     await user.clear(name);
     await user.type(name, "Priya Raman");

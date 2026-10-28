@@ -1,6 +1,12 @@
-import { CaretRight } from "@phosphor-icons/react";
+import {
+  CaretRight,
+  CircleNotch,
+  SignOut,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { Link } from "react-router";
+import { usePageTitle } from "../../app/AppShell";
 import { useApi } from "../../app/api-context";
 import { InlineProblem } from "../../app/InlineProblem";
 import {
@@ -11,7 +17,7 @@ import {
 } from "../../app/problems";
 import { useSession } from "../../app/session";
 import { Avatar } from "../../ui/Avatar";
-import { Button } from "../../ui/Button";
+import { Card } from "../../ui/Card";
 
 /** Me: who you are, a Profile row and Sign out. Other rows arrive with their features. */
 export default function MePage() {
@@ -19,6 +25,7 @@ export default function MePage() {
   const { state, clear } = useSession();
   const [problem, setProblem] = useState<PlainProblem>();
   const [busy, setBusy] = useState(false);
+  usePageTitle("Me");
   if (state.status !== "signed-in") return null;
   const { profile } = state;
 
@@ -40,13 +47,13 @@ export default function MePage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-6 px-4 py-6">
-      <header className="flex items-center gap-4">
+    <div className="flex w-full flex-col gap-4">
+      <Card as="header" className="flex items-center gap-4">
         <Avatar id={profile.id} name={profile.displayName} size="xl" />
         <div className="min-w-0">
-          <h1 className="truncate font-display text-h1 font-bold text-text">
+          <h2 className="truncate font-display text-h2 font-bold text-text">
             {profile.displayName}
-          </h1>
+          </h2>
           <p className="truncate text-text-muted">{profile.email}</p>
           <Link
             to="/me/profile"
@@ -55,17 +62,20 @@ export default function MePage() {
             Edit profile
           </Link>
         </div>
-      </header>
-      <section
-        aria-label="Settings"
-        className="rounded-lg bg-surface shadow-sm"
-      >
+      </Card>
+      <Card as="section" flush aria-label="Settings">
         <Link
           to="/me/profile"
-          className="flex min-h-16 items-center justify-between gap-3 rounded-lg px-4"
+          className="flex min-h-16 items-center gap-3 px-4 py-2 hover:bg-surface-sunken"
         >
-          <span>
-            <span className="block font-semibold text-text">Profile</span>
+          <span
+            aria-hidden="true"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary-text"
+          >
+            <UserCircle size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-bold text-text">Profile</span>
             <span className="block text-body-sm text-text-muted">
               Name, default currency, UPI ID, who can add you
             </span>
@@ -76,33 +86,28 @@ export default function MePage() {
             className="text-text-muted"
           />
         </Link>
-        <Link
-          to="/groups"
-          className="flex min-h-16 items-center justify-between gap-3 rounded-lg px-4"
-        >
-          <span>
-            <span className="block font-semibold text-text">Groups</span>
-            <span className="block text-body-sm text-text-muted">
-              Trips, flats and couples you share costs with
-            </span>
-          </span>
-          <CaretRight
-            size={20}
-            aria-hidden="true"
-            className="text-text-muted"
-          />
-        </Link>
-      </section>
+      </Card>
       {problem && <InlineProblem problem={problem} />}
-      <Button
-        variant="secondary"
-        size="lg"
-        fullWidth
-        loading={busy}
-        onClick={signOut}
-      >
-        Sign out
-      </Button>
-    </main>
+      <Card as="section" flush aria-label="Account">
+        <button
+          type="button"
+          aria-busy={busy || undefined}
+          onClick={busy ? undefined : signOut}
+          className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-sunken"
+        >
+          <span
+            aria-hidden="true"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-negative-soft text-negative-text"
+          >
+            {busy ? (
+              <CircleNotch size={22} className="animate-spin" />
+            ) : (
+              <SignOut size={22} />
+            )}
+          </span>
+          <span className="font-semibold text-text">Sign out</span>
+        </button>
+      </Card>
+    </div>
   );
 }

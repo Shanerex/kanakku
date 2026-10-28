@@ -1,7 +1,7 @@
-import { CaretLeft } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { usePageTitle } from "../../app/AppShell";
 import { useSession } from "../../app/session";
+import { Card } from "../../ui/Card";
 import { PhoneSection } from "./PhoneSection";
 import { ProfileForm } from "./ProfileForm";
 
@@ -10,17 +10,10 @@ export default function ProfilePage() {
   const { state } = useSession();
   const [saved, setSaved] = useState(false);
   const [saves, setSaves] = useState(0);
+  usePageTitle("Profile", { backTo: "/me", backLabel: "Me" });
   if (state.status !== "signed-in") return null;
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 py-6">
-      <Link
-        to="/me"
-        className="inline-flex items-center gap-1 text-primary-text"
-      >
-        <CaretLeft size={16} aria-hidden="true" />
-        Me
-      </Link>
-      <h1 className="font-display text-h1 font-bold text-text">Profile</h1>
+    <div className="flex w-full max-w-[560px] flex-col gap-4">
       {saved && (
         <p
           role="status"
@@ -31,18 +24,20 @@ export default function ProfilePage() {
       )}
       {/* key: after a save the form restarts from the server's profile and its new version. It
           counts the form's own saves, so saving the phone number below keeps unsaved edits. */}
-      <ProfileForm
-        key={saves}
-        profile={state.profile}
-        showEmail
-        showDirectAdd
-        submitLabel="Save"
-        onSaved={() => {
-          setSaved(true);
-          setSaves((n) => n + 1);
-        }}
-      />
+      <Card as="section" aria-label="Profile details">
+        <ProfileForm
+          key={saves}
+          profile={state.profile}
+          showEmail
+          showDirectAdd
+          submitLabel="Save"
+          onSaved={() => {
+            setSaved(true);
+            setSaves((n) => n + 1);
+          }}
+        />
+      </Card>
       <PhoneSection />
-    </main>
+    </div>
   );
 }

@@ -1,335 +1,212 @@
-import { CaretLeft, CaretRight, Plus } from "@phosphor-icons/react";
-import {
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { Link, useNavigate } from "react-router";
-import { newIdempotencyKey } from "../../api/client";
-import { useApi } from "../../app/api-context";
+import { CaretRight, Plus } from "@phosphor-icons/react";
+import { useState } from "react";
+import { Link } from "react-router";
+import { TopBarActions, usePageTitle } from "../../app/AppShell";
 import { InlineProblem } from "../../app/InlineProblem";
-import {
-  asProblem,
-  describeNetworkError,
-  describeProblem,
-  fieldMessages,
-  type PlainProblem,
-} from "../../app/problems";
 import { useSession } from "../../app/session";
-import { Button } from "../../ui/Button";
-import { CurrencySelect } from "../../ui/CurrencySelect";
-import { TextField } from "../../ui/TextField";
+import { useMediaQuery } from "../../app/useMediaQuery";
+import { ButtonLink } from "../../ui/Button";
+import { Card } from "../../ui/Card";
+import { EmptyState } from "../../ui/EmptyState";
+import { SearchField } from "../../ui/SearchField";
+import { SegmentedControl } from "../../ui/SegmentedControl";
 import { ClaimSuggestionsBanner } from "./ClaimSuggestionsBanner";
-import {
-  COVER_COLORS,
-  COVER_EMOJIS,
-  type Cover,
-  coverValue,
-  GROUP_TYPES,
-} from "./cover";
 import { GroupBadge } from "./GroupBadge";
+import { GroupCardFace } from "./GroupCardFace";
 import type { Group } from "./types";
+import { useGroups } from "./useGroups";
 
-type Errors = { name?: string; currency?: string; cover?: string };
+type View = "active" | "archived";
 
-/** The groups I belong to, and a form to start a new one. */
+function subtitle(group: Group) {
+  return `${group.currency}${group.myRole === "OWNER" ? " · You're the Owner" : ""}${group.archivedAt ? " · Archived" : ""}`;
+}
+
+/** The groups I belong to: search, Active or Archived, a row list and (from 1024 px) a card grid. */
 export default function GroupsPage() {
-  const api = useApi();
   const { state } = useSession();
-  const [groups, setGroups] = useState<Group[]>();
-  const [problem, setProblem] = useState<PlainProblem>();
-  const [creating, setCreating] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const { data, error } = await api.GET("/api/v1/groups");
-      if (data) setGroups(data);
-      else setProblem(describeProblem(asProblem(error)));
-    } catch {
-      setProblem(describeNetworkError());
-    }
-  }, [api]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { groups, problem } = useGroups();
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<View>("active");
+  const wide = useMediaQuery("(min-width: 1024px)");
+  usePageTitle("Groups");
 
   if (state.status !== "signed-in") return null;
 
+  const needle = query.trim().toLowerCase();
+  const shown = (groups ?? []).filter(
+    (g) =>
+      Boolean(g.archivedAt) === (view === "archived") &&
+      g.name.toLowerCase().includes(needle),
+  );
+  const newGroup = (
+    <ButtonLink to="/groups/new" pill>
+      <Plus size={16} weight="bold" aria-hidden="true" />
+      New group
+    </ButtonLink>
+  );
+
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 py-6">
-      <Link
-        to="/me"
-        className="inline-flex items-center gap-1 text-primary-text"
-      >
-        <CaretLeft size={16} aria-hidden="true" />
-        Me
-      </Link>
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-h1 font-bold text-text">Groups</h1>
-        {!creating && (
-          <Button variant="secondary" onClick={() => setCreating(true)}>
-            <Plus size={16} aria-hidden="true" />
-            New group
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-col gap-4">
+      <TopBarActions>{newGroup}</TopBarActions>
       <ClaimSuggestionsBanner />
       {problem && <InlineProblem problem={problem} />}
-      {creating && (
-        <NewGroupForm
-          defaultCurrency={state.profile.defaultCurrency}
-          onCancel={() => setCreating(false)}
+      {groups && groups.length === 0 && (
+        <EmptyState
+          illustration={<SuitcaseBlobs />}
+          title="Start your first group"
+          body="A trip, a flat, a dinner. Add people and split as you go."
+          action={
+            <ButtonLink to="/groups/new" size="lg" pill>
+              <Plus size={16} weight="bold" aria-hidden="true" />
+              New group
+            </ButtonLink>
+          }
         />
       )}
-      {groups?.length === 0 && !creating && (
-        <section className="rounded-lg bg-surface p-6 text-center shadow-sm">
-          <h2 className="font-display text-h2 font-bold text-text">
-            No groups yet
-          </h2>
-          <p className="text-text-muted">
-            Start one for a trip, a flat or a couple, then add people.
-          </p>
-        </section>
-      )}
       {groups && groups.length > 0 && (
-        <ul
-          aria-label="Your groups"
-          className="flex flex-col rounded-lg bg-surface shadow-sm"
-        >
-          {groups.map((group) => (
-            <li key={group.id}>
-              <Link
-                to={`/groups/${group.id}`}
-                className="flex min-h-16 items-center gap-3 rounded-lg px-4 py-2"
-              >
-                <GroupBadge
-                  id={group.id}
-                  name={group.name}
-                  cover={group.cover}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold text-text">
-                    {group.name}
-                  </span>
-                  <span className="block text-body-sm text-text-muted">
-                    {group.currency}
-                    {group.myRole === "OWNER" ? " · You're the Owner" : ""}
-                    {group.archivedAt ? " · Archived" : ""}
-                  </span>
-                </span>
-                <CaretRight
-                  size={20}
-                  aria-hidden="true"
-                  className="text-text-muted"
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="sm:max-w-[360px] sm:flex-1">
+              <SearchField
+                label="Search groups"
+                placeholder="Search groups"
+                value={query}
+                onChange={setQuery}
+              />
+            </div>
+            <SegmentedControl
+              label="Show"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: "active", label: "Active" },
+                { value: "archived", label: "Archived" },
+              ]}
+            />
+          </div>
+          {shown.length === 0 ? (
+            <p className="rounded-lg border border-border bg-surface p-6 text-center text-text-muted">
+              {needle
+                ? "No groups match that search."
+                : view === "archived"
+                  ? "No archived groups."
+                  : "No active groups."}
+            </p>
+          ) : wide ? (
+            <ul
+              aria-label="Your groups"
+              className="grid grid-cols-3 items-stretch gap-5"
+            >
+              {shown.map((group) => (
+                <li key={group.id} className="flex">
+                  <IdentityCard group={group} />
+                </li>
+              ))}
+              <li className="flex">
+                <Link
+                  to="/groups/new"
+                  className="flex min-h-36 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border-strong p-5 font-bold text-primary-text hover:bg-primary-soft"
+                >
+                  <Plus size={24} aria-hidden="true" />
+                  New group
+                </Link>
+              </li>
+            </ul>
+          ) : (
+            <Card
+              as="ul"
+              flush
+              aria-label="Your groups"
+              className="flex flex-col divide-y divide-border"
+            >
+              {shown.map((group) => (
+                <li key={group.id}>
+                  <GroupRow group={group} />
+                </li>
+              ))}
+            </Card>
+          )}
+        </>
       )}
-    </main>
+    </div>
   );
 }
 
-function NewGroupForm({
-  defaultCurrency,
-  onCancel,
-}: {
-  defaultCurrency: string;
-  onCancel: () => void;
-}) {
-  const api = useApi();
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [type, setType] =
-    useState<(typeof GROUP_TYPES)[number]["value"]>("TRIP");
-  const [currency, setCurrency] = useState(defaultCurrency);
-  const [cover, setCover] = useState<Cover>({ kind: "none" });
-  const [errors, setErrors] = useState<Errors>({});
-  const [problem, setProblem] = useState<PlainProblem>();
-  const [submitting, setSubmitting] = useState(false);
-  const nameRef = useRef<HTMLInputElement>(null);
-  // One key per submit attempt: a retry after a failure reuses it, an edit does not.
-  const attempt = useRef<{ key: string; signature: string }>(undefined);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (submitting) return;
-    setProblem(undefined);
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setErrors({ name: "Enter a name for the group." });
-      return nameRef.current?.focus();
-    }
-    if (Array.from(trimmed).length > 60) {
-      setErrors({ name: "Use 60 characters or fewer." });
-      return nameRef.current?.focus();
-    }
-    setErrors({});
-    const body = {
-      name: trimmed,
-      type,
-      currency,
-      cover: coverValue(cover),
-    };
-    const signature = JSON.stringify(body);
-    if (attempt.current?.signature !== signature) {
-      attempt.current = { key: newIdempotencyKey(), signature };
-    }
-    setSubmitting(true);
-    try {
-      const { data, error } = await api.POST("/api/v1/groups", {
-        params: { header: { "Idempotency-Key": attempt.current.key } },
-        body,
-      });
-      if (data) {
-        navigate(`/groups/${data.id}`);
-        return;
-      }
-      const raw = asProblem(error);
-      setErrors(fieldMessages(raw) as Errors);
-      setProblem(describeProblem(raw));
-    } catch {
-      setProblem(describeNetworkError());
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
+function GroupRow({ group }: { group: Group }) {
   return (
-    <form
-      noValidate
-      onSubmit={submit}
-      aria-label="New group"
-      className="flex flex-col gap-4 rounded-lg bg-surface p-4 shadow-sm"
+    <Link
+      to={`/groups/${group.id}`}
+      className="flex min-h-16 items-center gap-3 px-4 py-2 hover:bg-surface-sunken"
     >
-      <h2 className="font-display text-h2 font-bold text-text">New group</h2>
-      {problem && <InlineProblem problem={problem} />}
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-body-sm font-semibold text-text">Type</legend>
-        <div className="flex flex-wrap gap-2">
-          {GROUP_TYPES.map((option) => (
-            <label
-              key={option.value}
-              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-pill border px-4 text-body-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus-ring ${
-                type === option.value
-                  ? "border-primary bg-primary-soft text-primary-text"
-                  : "border-border-strong bg-surface text-text"
-              }`}
-            >
-              <input
-                type="radio"
-                name="type"
-                value={option.value}
-                checked={type === option.value}
-                onChange={() => setType(option.value)}
-                className="sr-only"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <TextField
-        label="Name"
-        name="name"
-        autoComplete="off"
-        placeholder="Goa, Dec 2026"
-        value={name}
-        error={errors.name}
-        onChange={(e) => setName(e.target.value)}
-        inputRef={nameRef}
-      />
-      <CurrencySelect
-        label="Currency"
-        value={currency}
-        onChange={setCurrency}
-        error={errors.currency}
-      />
-      <CoverPicker value={cover} onChange={setCover} error={errors.cover} />
-      <div className="flex gap-2">
-        <Button type="submit" size="lg" loading={submitting}>
-          Create group
-        </Button>
-        <Button variant="ghost" size="lg" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
-    </form>
+      <GroupBadge id={group.id} name={group.name} cover={group.cover} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-semibold text-text">
+          {group.name}
+        </span>
+        <span className="block text-body-sm text-text-muted">
+          {subtitle(group)}
+        </span>
+      </span>
+      <CaretRight size={20} aria-hidden="true" className="text-text-muted" />
+    </Link>
   );
 }
 
-export function CoverPicker({
-  value,
-  onChange,
-  error,
-  allowClear = true,
-}: {
-  value: Cover;
-  onChange: (cover: Cover) => void;
-  error?: string;
-  allowClear?: boolean;
-}) {
+/** A groups-grid Card around the shared card face. */
+function IdentityCard({ group }: { group: Group }) {
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-body-sm font-semibold text-text">
-        Cover (optional)
-      </legend>
-      <div className="flex flex-wrap gap-2">
-        {COVER_COLORS.map((color) => {
-          const selected = value.kind === "color" && value.color === color;
-          return (
-            <label
-              key={color}
-              style={{ background: `var(--id-${color}-tint)` }}
-              className={`size-11 cursor-pointer rounded-pill border-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus-ring ${selected ? "border-primary" : "border-border"}`}
-            >
-              <input
-                type="radio"
-                name="cover"
-                checked={selected}
-                aria-label={`Colour ${color}`}
-                onChange={() => onChange({ kind: "color", color })}
-                className="sr-only"
-              />
-            </label>
-          );
-        })}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {COVER_EMOJIS.map((emoji) => {
-          const selected = value.kind === "emoji" && value.emoji === emoji;
-          return (
-            <label
-              key={emoji}
-              className={`inline-flex size-11 cursor-pointer items-center justify-center rounded-md border text-xl has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus-ring ${selected ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
-            >
-              <input
-                type="radio"
-                name="cover"
-                checked={selected}
-                aria-label={`Emoji ${emoji}`}
-                onChange={() => onChange({ kind: "emoji", emoji })}
-                className="sr-only"
-              />
-              <span aria-hidden="true">{emoji}</span>
-            </label>
-          );
-        })}
-      </div>
-      {allowClear && value.kind !== "none" && (
-        <button
-          type="button"
-          onClick={() => onChange({ kind: "none" })}
-          className="self-start text-body-sm font-semibold text-primary-text underline"
-        >
-          Clear cover
-        </button>
-      )}
-      {error && <p className="text-body-sm text-danger-text">{error}</p>}
-    </fieldset>
+    <Link
+      to={`/groups/${group.id}`}
+      className="flex w-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-shadow hover:shadow-md"
+    >
+      <GroupCardFace
+        id={group.id}
+        name={group.name}
+        cover={group.cover}
+        type={group.type}
+        currency={group.currency}
+        owner={group.myRole === "OWNER"}
+        archived={Boolean(group.archivedAt)}
+      />
+    </Link>
+  );
+}
+
+/** Three overlapping blobs (violet, mango, mint) with a suitcase, from tokens only. */
+function SuitcaseBlobs() {
+  return (
+    <svg
+      viewBox="0 0 144 144"
+      className="size-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="52" cy="58" r="40" fill="var(--id-violet-tint)" />
+      <circle cx="94" cy="54" r="34" fill="var(--id-mango-tint)" />
+      <circle cx="74" cy="96" r="38" fill="var(--id-mint-tint)" />
+      <rect
+        x="48"
+        y="62"
+        width="48"
+        height="38"
+        rx="8"
+        fill="var(--color-surface)"
+        stroke="var(--id-violet-solid)"
+        strokeWidth="3"
+      />
+      <path
+        d="M62 62v-8a6 6 0 0 1 6-6h8a6 6 0 0 1 6 6v8"
+        fill="none"
+        stroke="var(--id-violet-solid)"
+        strokeWidth="3"
+      />
+      <path
+        d="M48 78h48"
+        stroke="var(--id-violet-solid)"
+        strokeWidth="3"
+        opacity=".5"
+      />
+    </svg>
   );
 }
