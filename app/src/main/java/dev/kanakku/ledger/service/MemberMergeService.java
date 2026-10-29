@@ -40,6 +40,8 @@ class MemberMergeService implements MemberMerges {
 
   private List<MoneyBalance> mergeInTransaction(
       UUID groupId, UUID fromMemberId, UUID intoMemberId, UUID actorUserId) {
+    // The group's ledger lock first, before any balance row, as every post takes it.
+    repository.lockGroupShared(groupId);
     // Both members' balance rows stay locked until commit, taken in sorted order like a post and a
     // write-off do, so none of them can wait on another.
     List<MoneyBalance> fromBalances = List.of();

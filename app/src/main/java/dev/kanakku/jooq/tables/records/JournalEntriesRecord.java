@@ -91,6 +91,76 @@ public class JournalEntriesRecord extends UpdatableRecordImpl<JournalEntriesReco
         return (OffsetDateTime) get(4);
     }
 
+    /**
+     * Setter for <code>public.journal_entries.seq</code>.
+     */
+    public void setSeq(Long value) {
+        set(5, value);
+    }
+
+    /**
+     * Getter for <code>public.journal_entries.seq</code>.
+     */
+    public Long getSeq() {
+        return (Long) get(5);
+    }
+
+    /**
+     * Setter for <code>public.journal_entries.reverses_entry_id</code>.
+     */
+    public void setReversesEntryId(UUID value) {
+        set(6, value);
+    }
+
+    /**
+     * Getter for <code>public.journal_entries.reverses_entry_id</code>.
+     */
+    public UUID getReversesEntryId() {
+        return (UUID) get(6);
+    }
+
+    /**
+     * Setter for <code>public.journal_entries.replaces_entry_id</code>.
+     */
+    public void setReplacesEntryId(UUID value) {
+        set(7, value);
+    }
+
+    /**
+     * Getter for <code>public.journal_entries.replaces_entry_id</code>.
+     */
+    public UUID getReplacesEntryId() {
+        return (UUID) get(7);
+    }
+
+    /**
+     * Setter for <code>public.journal_entries.idempotency_key</code>.
+     */
+    public void setIdempotencyKey(String value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.journal_entries.idempotency_key</code>.
+     */
+    public String getIdempotencyKey() {
+        return (String) get(8);
+    }
+
+    /**
+     * Setter for <code>public.journal_entries.request_hash</code>.
+     */
+    public void setRequestHash(byte[] value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.journal_entries.request_hash</code>.
+     */
+    public byte[] getRequestHash() {
+        return (byte[]) get(9);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -114,7 +184,7 @@ public class JournalEntriesRecord extends UpdatableRecordImpl<JournalEntriesReco
     /**
      * Create a detached, initialised JournalEntriesRecord
      */
-    public JournalEntriesRecord(UUID id, UUID groupId, String kind, UUID actorUserId, OffsetDateTime createdAt) {
+    public JournalEntriesRecord(UUID id, UUID groupId, String kind, UUID actorUserId, OffsetDateTime createdAt, Long seq, UUID reversesEntryId, UUID replacesEntryId, String idempotencyKey, byte[] requestHash) {
         super(JournalEntries.JOURNAL_ENTRIES);
 
         setId(id);
@@ -122,6 +192,11 @@ public class JournalEntriesRecord extends UpdatableRecordImpl<JournalEntriesReco
         setKind(kind);
         setActorUserId(actorUserId);
         setCreatedAt(createdAt);
+        setSeq(seq);
+        setReversesEntryId(reversesEntryId);
+        setReplacesEntryId(replacesEntryId);
+        setIdempotencyKey(idempotencyKey);
+        setRequestHash(requestHash);
         resetTouchedOnNotNull();
     }
 }

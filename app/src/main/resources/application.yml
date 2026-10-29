@@ -53,6 +53,13 @@ kanakku:
     max-sends-per-hour: ${KANAKKU_SMS_MAX_SENDS_PER_HOUR:200}
   cors:
     allowed-origins: ${KANAKKU_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  ledger:
+    balance-check:
+      # Nightly rebuild of balances from the journal, as a db-scheduler cron in UTC (with seconds).
+      cron: ${KANAKKU_LEDGER_BALANCE_CHECK_CRON:0 30 2 * * *}
+      # Each mismatch is logged at ERROR and counted (kanakku.ledger.balance.mismatches); when true,
+      # the mismatched balance rows are then overwritten with their journal sums.
+      repair: ${KANAKKU_LEDGER_BALANCE_CHECK_REPAIR:true}
   # kanakku.minio.endpoint (KANAKKU_MINIO_ENDPOINT) and kanakku.smtp.host/port
   # (KANAKKU_SMTP_HOST/PORT) are set per environment; each enables its health indicator.
 

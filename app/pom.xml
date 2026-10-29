@@ -14,6 +14,12 @@
   <name>kanakku-app</name>
   <version>${revision}</version>
 
+  <properties>
+    <!-- The ledger property runs 1,000 tries locally; the ci profile swaps in the 10,000-try run. -->
+    <ledger.excludedGroups>ledger-full</ledger.excludedGroups>
+    <kanakku.ci>false</kanakku.ci>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -151,6 +157,23 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/Test*.java</include>
+            <include>**/*Test.java</include>
+            <include>**/*Tests.java</include>
+            <include>**/*TestCase.java</include>
+            <include>**/LedgerProperties.java</include>
+          </includes>
+          <excludedGroups>${ledger.excludedGroups}</excludedGroups>
+          <systemPropertyVariables>
+            <kanakku.ci>${kanakku.ci}</kanakku.ci>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <executions>
@@ -163,4 +186,20 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- CI (any CI env var, or -Pci) runs the 10,000-try ledger property instead of 1,000. -->
+    <profile>
+      <id>ci</id>
+      <activation>
+        <property>
+          <name>env.CI</name>
+        </property>
+      </activation>
+      <properties>
+        <ledger.excludedGroups>ledger-quick</ledger.excludedGroups>
+        <kanakku.ci>true</kanakku.ci>
+      </properties>
+    </profile>
+  </profiles>
 </project>
