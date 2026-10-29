@@ -10,6 +10,8 @@ import dev.kanakku.ledger.api.EntryKind;
 import dev.kanakku.ledger.api.Journal;
 import dev.kanakku.ledger.api.JournalEntry;
 import dev.kanakku.ledger.api.JournalLine;
+import dev.kanakku.ledger.api.LedgerConflict;
+import dev.kanakku.ledger.api.LedgerConflict.Reason;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.ledger.api.MoneyBalance;
 import dev.kanakku.support.PostgresIntegrationTest;
@@ -33,6 +35,11 @@ class JournalServiceTest extends PostgresIntegrationTest {
 
   JournalEntry entry(UUID group, JournalLine... lines) {
     return new JournalEntry(group, EntryKind.EXPENSE, Seed.caller(dsl, group), List.of(lines));
+  }
+
+  /** A kind posted without a key, which reaches the tables with no member check in front. */
+  JournalEntry unkeyed(UUID group, JournalLine... lines) {
+    return new JournalEntry(group, EntryKind.WRITE_OFF, null, List.of(lines));
   }
 
   @Test
@@ -132,9 +139,8 @@ class JournalServiceTest extends PostgresIntegrationTest {
     assertThatThrownBy(
             () ->
                 journal.post(
-                    entry(
-                        g, new JournalLine(a, "INR", 100), new JournalLine(stranger, "INR", -100)),
-                    UUID.randomUUID().toString()))
+                    unkeyed(
+                        g, new JournalLine(a, "INR", 100), new JournalLine(stranger, "INR", -100))))
         .isInstanceOf(DataAccessException.class);
 
     assertThat(dsl.fetchCount(JOURNAL_ENTRIES, JOURNAL_ENTRIES.GROUP_ID.eq(g))).isZero();
@@ -149,12 +155,21 @@ class JournalServiceTest extends PostgresIntegrationTest {
     assertThatThrownBy(
             () ->
                 journal.post(
+                    unkeyed(
+                        one.get(0),
+                        new JournalLine(one.get(1), "INR", 5),
+                        new JournalLine(two.get(1), "INR", -5))))
+        .isInstanceOf(DataAccessException.class);
+    assertThatThrownBy(
+            () ->
+                journal.post(
                     entry(
                         one.get(0),
                         new JournalLine(one.get(1), "INR", 5),
                         new JournalLine(two.get(1), "INR", -5)),
                     UUID.randomUUID().toString()))
-        .isInstanceOf(DataAccessException.class);
+        .isInstanceOfSatisfying(
+            LedgerConflict.class, e -> assertThat(e.reason()).isEqualTo(Reason.MEMBER_NOT_CURRENT));
   }
 
   @Test

@@ -7,6 +7,10 @@ alter table journal_entries
 alter table journal_entries
     add constraint journal_entries_seq_key unique (seq);
 
+-- History pages read one group's entries after a seq cursor.
+create index journal_entries_group_seq_idx
+    on journal_entries (group_id, seq);
+
 -- A REVERSAL names the entry it undoes; a replacement names the entry it supersedes.
 alter table journal_entries
     add column reverses_entry_id uuid references journal_entries (id),

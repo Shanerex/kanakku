@@ -12,6 +12,7 @@ import dev.kanakku.ledger.api.JournalLine;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.ledger.api.MoneyBalance;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,17 +119,49 @@ public class JournalRepository {
         .fetch(r -> new JournalLine(r.value1(), r.value2(), r.value3()));
   }
 
-  /** Whether some entry already reverses this one. */
-  public boolean hasReversal(UUID entryId) {
-    return dsl.fetchExists(JOURNAL_ENTRIES, JOURNAL_ENTRIES.REVERSES_ENTRY_ID.eq(entryId));
+  /** Whether some entry already reverses this one, if the caller is a current group member. */
+  public boolean hasReversal(UUID groupId, UUID entryId, UUID callerId) {
+    return dsl.fetchExists(
+        JOURNAL_ENTRIES,
+        JOURNAL_ENTRIES
+            .GROUP_ID
+            .eq(groupId)
+            .and(JOURNAL_ENTRIES.REVERSES_ENTRY_ID.eq(entryId))
+            .and(callerIsMember(groupId, callerId)));
   }
 
   /**
-   * Takes the group's ledger lock in shared mode until the transaction ends. Every post takes it
-   * first, before any balance row lock, so posts run in parallel but never alongside a repair.
+   * Share-locks the member rows among {@code memberIds} that are still current, until the
+   * transaction ends, so a concurrent leave waits for the post (and a post that meets an in-flight
+   * leave waits, then sees it). Rows are taken in id order.
+   *
+   * @return how many of the ids are current members of the group
+   */
+  public int lockCurrentMembers(UUID groupId, Collection<UUID> memberIds) {
+    return dsl.select(GROUP_MEMBERS.ID)
+        .from(GROUP_MEMBERS)
+        .where(GROUP_MEMBERS.GROUP_ID.eq(groupId))
+        .and(GROUP_MEMBERS.ID.in(memberIds))
+        .and(GROUP_MEMBERS.LEFT_AT.isNull())
+        .orderBy(GROUP_MEMBERS.ID)
+        .forShare()
+        .fetch()
+        .size();
+  }
+
+  /**
+   * Takes the group's ledger lock in shared mode until the transaction ends, then its ordering lock
+   * exclusively. Every post takes both first, before any balance row lock, so no post runs
+   * alongside a repair, and posts to one group run one at a time: an entry's {@code seq} is
+   * assigned at insert, so seq order is commit order and a history cursor never skips a late
+   * commit.
+   *
+   * <p>A repair takes only the shared-mode lock's exclusive form and never the ordering lock, so no
+   * wait cycle can form.
    */
   public void lockGroupShared(UUID groupId) {
     dsl.fetch("select pg_advisory_xact_lock_shared(hashtextextended(?, 0))", lockName(groupId));
+    dsl.fetch("select pg_advisory_xact_lock(hashtextextended(?, 0))", "ledger-order:" + groupId);
   }
 
   /** Takes the group's ledger lock exclusively until the transaction ends: no post can run. */

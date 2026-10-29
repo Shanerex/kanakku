@@ -20,9 +20,10 @@ public interface Journal {
    * content returns the stored entry and changes nothing; the key never expires.
    *
    * @throws LedgerConflict KEY_REUSED when the key already posted different content (or another
-   *     member posted under it), NOT_A_MEMBER when the actor is not a current member of the group
-   * @throws IllegalArgumentException as {@link #post(JournalEntry)}, for a REVERSAL entry, a null
-   *     actor, or a blank key or one longer than 255 characters
+   *     member posted under it), NOT_A_MEMBER when the actor is not a current member of the group,
+   *     MEMBER_NOT_CURRENT when a line names a member who is not current
+   * @throws IllegalArgumentException as {@link #post(JournalEntry)}, for any kind but EXPENSE and
+   *     SETTLEMENT, a null actor, or a blank key or one longer than 255 characters
    */
   Posted post(JournalEntry entry, String idempotencyKey);
 
@@ -30,8 +31,8 @@ public interface Journal {
    * Appends a REVERSAL of an EXPENSE or SETTLEMENT entry: the same lines negated, linked to it.
    * Every member's balance returns to what it was without the original.
    *
-   * @throws LedgerConflict NOT_A_MEMBER, NOT_IN_GROUP, NOT_REVERSIBLE, ALREADY_REVERSED or
-   *     KEY_REUSED
+   * @throws LedgerConflict NOT_A_MEMBER, NOT_IN_GROUP, NOT_REVERSIBLE, ALREADY_REVERSED, KEY_REUSED
+   *     or MEMBER_NOT_CURRENT when a line names a member who has left or was merged away
    */
   Posted reverse(UUID groupId, UUID entryId, UUID actorUserId, String idempotencyKey);
 

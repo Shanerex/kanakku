@@ -14,7 +14,9 @@ public class LedgerConflict extends RuntimeException {
     /** No such entry in the given group. */
     NOT_IN_GROUP,
     /** The acting user is not a current member of the group. */
-    NOT_A_MEMBER
+    NOT_A_MEMBER,
+    /** A line names a member who has left, was merged away, or is not in the group. */
+    MEMBER_NOT_CURRENT
   }
 
   private final Reason reason;

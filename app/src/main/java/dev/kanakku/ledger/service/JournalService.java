@@ -75,9 +75,13 @@ class JournalService implements Journal, Balances, History {
     if (entry.kind() == EntryKind.REVERSAL) {
       throw new IllegalArgumentException("a reversal is posted with reverse()");
     }
+    if (!KEYED.contains(entry.kind())) {
+      throw new IllegalArgumentException(entry.kind() + " entries are posted without a key");
+    }
     return transactions.execute(
         status -> {
           requireMember(entry.groupId(), entry.actorUserId());
+          requireCurrentLineMembers(entry.groupId(), entry.lines());
           return postKeyed(entry, null, null, idempotencyKey, () -> {});
         });
   }
@@ -107,6 +111,7 @@ class JournalService implements Journal, Balances, History {
     return transactions.execute(
         status -> {
           requireMember(groupId, next.actorUserId());
+          requireCurrentLineMembers(groupId, next.lines());
           reverseInTransaction(groupId, entryId, next.actorUserId(), idempotencyKey + ":rev");
           return postKeyed(next, null, entryId, idempotencyKey, () -> {});
         });
@@ -126,6 +131,8 @@ class JournalService implements Journal, Balances, History {
             .map(
                 l -> new JournalLine(l.memberId(), l.currency(), Math.negateExact(l.amountMinor())))
             .toList();
+    // A member who left, or a guest merged away, no longer takes a balance back.
+    requireCurrentLineMembers(groupId, negated);
     JournalEntry reversal = new JournalEntry(groupId, EntryKind.REVERSAL, actorUserId, negated);
     return postKeyed(
         reversal,
@@ -133,7 +140,7 @@ class JournalService implements Journal, Balances, History {
         null,
         idempotencyKey,
         () -> {
-          if (journal.hasReversal(entryId)) {
+          if (journal.hasReversal(groupId, entryId, actorUserId)) {
             throw new LedgerConflict(Reason.ALREADY_REVERSED);
           }
         });
@@ -262,6 +269,17 @@ class JournalService implements Journal, Balances, History {
   private void requireMember(UUID groupId, UUID actorUserId) {
     if (!journal.isCurrentMember(groupId, actorUserId)) {
       throw new LedgerConflict(Reason.NOT_A_MEMBER);
+    }
+  }
+
+  /**
+   * Every member a line names must be a current member of the group; checked in SQL inside the
+   * transaction with a share lock on each member row, so a leave cannot slip past the post.
+   */
+  private void requireCurrentLineMembers(UUID groupId, List<JournalLine> lines) {
+    Set<UUID> members = lines.stream().map(JournalLine::memberId).collect(Collectors.toSet());
+    if (journal.lockCurrentMembers(groupId, members) != members.size()) {
+      throw new LedgerConflict(Reason.MEMBER_NOT_CURRENT);
     }
   }
 

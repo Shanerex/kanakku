@@ -184,7 +184,7 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.JOURNAL_ENTRIES_GROUP_IDX, Indexes.JOURNAL_ENTRIES_IDEMPOTENCY_KEY, Indexes.JOURNAL_ENTRIES_REVERSES_KEY);
+        return Arrays.asList(Indexes.JOURNAL_ENTRIES_GROUP_IDX, Indexes.JOURNAL_ENTRIES_GROUP_SEQ_IDX, Indexes.JOURNAL_ENTRIES_IDEMPOTENCY_KEY, Indexes.JOURNAL_ENTRIES_REVERSES_KEY);
     }
 
     @Override

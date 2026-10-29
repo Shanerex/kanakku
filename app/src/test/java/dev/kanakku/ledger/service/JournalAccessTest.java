@@ -12,6 +12,7 @@ import dev.kanakku.ledger.api.LedgerConflict;
 import dev.kanakku.ledger.api.LedgerConflict.Reason;
 import dev.kanakku.ledger.api.MemberBalance;
 import dev.kanakku.ledger.api.Posted;
+import dev.kanakku.ledger.repository.JournalRepository;
 import dev.kanakku.support.PostgresIntegrationTest;
 import dev.kanakku.support.Seed;
 import java.time.OffsetDateTime;
@@ -34,6 +35,7 @@ class JournalAccessTest extends PostgresIntegrationTest {
   @Autowired Journal journal;
   @Autowired Balances balances;
   @Autowired DSLContext dsl;
+  @Autowired JournalRepository repository;
   @Autowired TransactionTemplate transactions;
 
   static void assertConflict(ThrowingCallable call, Reason reason) {
@@ -236,5 +238,22 @@ class JournalAccessTest extends PostgresIntegrationTest {
     assertThatThrownBy(() -> post.get(20, TimeUnit.SECONDS))
         .hasCauseInstanceOf(LedgerConflict.class);
     assertThat(entries(g)).isZero();
+  }
+
+  @Test
+  void theReversalLookupIsScopedToTheCallersGroup() {
+    List<UUID> one = Seed.groupWithGuests(dsl, 2);
+    List<UUID> two = Seed.groupWithGuests(dsl, 2);
+    UUID g = one.get(0);
+    UUID caller = Seed.caller(dsl, g);
+    UUID s =
+        journal
+            .post(JournalEntry.settlement(g, caller, "INR", one.get(1), one.get(2), 9L), "s")
+            .entryId();
+    journal.reverse(g, s, caller, "del");
+
+    assertThat(repository.hasReversal(g, s, caller)).isTrue();
+    assertThat(repository.hasReversal(g, s, Seed.user(dsl, "Outsider"))).isFalse();
+    assertThat(repository.hasReversal(g, s, Seed.caller(dsl, two.get(0)))).isFalse();
   }
 }
