@@ -50,10 +50,11 @@ class MemberMergePropertiesTest {
             new JournalEntry(
                 group,
                 EntryKind.EXPENSE,
-                null,
+                Seed.caller(AppContext.bean(DSLContext.class), group),
                 List.of(
                     new JournalLine(member, currency, amount),
-                    new JournalLine(counterparty, currency, -amount))));
+                    new JournalLine(counterparty, currency, -amount))),
+            UUID.randomUUID().toString());
   }
 
   static Setup setUp(long[] guestAmounts, long[] intoAmounts) {

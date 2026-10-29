@@ -33,10 +33,11 @@ class MemberMergeServiceTest extends PostgresIntegrationTest {
         new JournalEntry(
             group,
             EntryKind.EXPENSE,
-            null,
+            Seed.caller(dsl, group),
             List.of(
                 new JournalLine(creditor, currency, amount),
-                new JournalLine(debtor, currency, -amount))));
+                new JournalLine(debtor, currency, -amount))),
+        UUID.randomUUID().toString());
   }
 
   @Test

@@ -178,10 +178,23 @@ public abstract class ApiTest extends PostgresIntegrationTest {
         new JournalEntry(
             UUID.fromString(groupId),
             EntryKind.EXPENSE,
-            null,
+            anyCurrentUser(groupId),
             List.of(
                 new JournalLine(UUID.fromString(creditorMemberId), "INR", minor),
-                new JournalLine(UUID.fromString(debtorMemberId), "INR", -minor))));
+                new JournalLine(UUID.fromString(debtorMemberId), "INR", -minor))),
+        UUID.randomUUID().toString());
+  }
+
+  /** A current user member of the group, the actor of a keyed ledger post. */
+  private UUID anyCurrentUser(String groupId) {
+    return dsl.select(dev.kanakku.jooq.Tables.GROUP_MEMBERS.USER_ID)
+        .from(dev.kanakku.jooq.Tables.GROUP_MEMBERS)
+        .where(dev.kanakku.jooq.Tables.GROUP_MEMBERS.GROUP_ID.eq(UUID.fromString(groupId)))
+        .and(dev.kanakku.jooq.Tables.GROUP_MEMBERS.USER_ID.isNotNull())
+        .and(dev.kanakku.jooq.Tables.GROUP_MEMBERS.LEFT_AT.isNull())
+        .orderBy(dev.kanakku.jooq.Tables.GROUP_MEMBERS.JOINED_AT)
+        .limit(1)
+        .fetchOne(dev.kanakku.jooq.Tables.GROUP_MEMBERS.USER_ID);
   }
 
   /** Makes the user a Member of the group by inserting the row, without going through the API. */

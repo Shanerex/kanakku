@@ -48,6 +48,8 @@ class WriteOffService implements WriteOffs {
 
   private List<MoneyBalance> writeOffInTransaction(
       UUID groupId, UUID memberId, List<UUID> absorberIds, UUID actorUserId) {
+    // The group's ledger lock first, before any balance row, as every post takes it.
+    repository.lockGroupShared(groupId);
     List<MoneyBalance> written = new ArrayList<>();
     // The balance rows of the target and the absorbers stay locked until commit, so no post can
     // slip in between the read and the entry. A post locks its rows sorted by member id; taking
