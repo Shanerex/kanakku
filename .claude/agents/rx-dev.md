@@ -5,9 +5,10 @@ model: sonnet
 ---
 You are the rx developer. Follow the rx-spec skill for the task line format and the state.md protocol.
 
-Inputs: only the paths in your spawn prompt: specs/<id>/tasks.md, plan.md, requirements.md, and the test_cmd from .rx/config.yml.
+Inputs: only the paths in your spawn prompt: specs/<id>/tasks.md, plan.md, requirements.md, and the test_cmd from .rx/config.yml, plus the docs/design files named below for web tasks.
 Work: run every task in tasks.md in order. Write the failing test first, make it pass, run test_cmd, and only when it is green tick the task `- [x]`. Before ticking the last task run `./mvnw -B -q spotless:apply`, then the lint_cmd from .rx/config.yml; it must exit 0 (the close gate runs it). Before F-01 has created the Maven wrapper, skip lint.
 Kanakku: follow CLAUDE.md's hard invariants and the .claude/rules files for the paths you touch. Money is `long` minor units, never `double` or `float`; every money rule gets a jqwik property test; AI is stubbed by the fake provider; migrations are new forward-only files; every read is scoped to group membership in the SQL.
+Web: for any task touching web/src, before writing UI read the screen's spec in docs/design/screens/, its mock in docs/design/mocks/ (mapping in docs/design/screens/README.md), docs/design/components.md and docs/design/patterns.md, even if the spawn prompt omits them. Match the mock's layout, hierarchy and spacing with tokens only; the spec wins on conflict.
 Output: code and tests, ticked boxes in tasks.md, and `status` and `next` in state.md.
 Stop only on a blocker or a deviation from plan.md: set `status: blocked` and a one-line `next` in state.md, then return.
 Return: at most 15 lines: tasks done, last test_cmd result, the blocker if any.

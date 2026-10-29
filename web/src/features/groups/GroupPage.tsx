@@ -1,13 +1,15 @@
-import { CaretLeft, Info } from "@phosphor-icons/react";
+import { Info } from "@phosphor-icons/react";
 import {
   type FormEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { newIdempotencyKey } from "../../api/client";
+import { usePageTitle } from "../../app/AppShell";
 import { useApi } from "../../app/api-context";
 import { InlineProblem } from "../../app/InlineProblem";
 import {
@@ -20,11 +22,12 @@ import {
 import { useSession } from "../../app/session";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { Chip } from "../../ui/Chip";
 import { TextField } from "../../ui/TextField";
+import { CoverPicker } from "./CoverPicker";
 import { type Cover, coverValue, GROUP_TYPES, parseCover } from "./cover";
 import { Dialog } from "./Dialog";
-import { GroupBadge } from "./GroupBadge";
-import { CoverPicker } from "./GroupsPage";
+import { GroupBadge, groupColor } from "./GroupBadge";
 import { InvitesPanel } from "./InvitesPanel";
 import { MemberPicker } from "./MemberPicker";
 import { balanceWords, formatMoney } from "./money";
@@ -56,6 +59,13 @@ export default function GroupPage() {
   const [phoneFor, setPhoneFor] = useState<Member>();
   const [confirm, setConfirm] = useState<Confirm>();
   const [busy, setBusy] = useState(false);
+  // Once loaded, the header band carries the group's name as the page's h1; the bar keeps a back
+  // link below 768 px, where the sidebar's group list is not there.
+  usePageTitle(group?.name ?? "Group", {
+    hidden: Boolean(group),
+    backTo: "/groups",
+    backLabel: "Groups",
+  });
 
   const load = useCallback(async () => {
     try {
@@ -168,14 +178,7 @@ export default function GroupPage() {
 
   if (!group || !members) {
     return (
-      <main className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 py-6">
-        <Link
-          to="/groups"
-          className="inline-flex items-center gap-1 text-primary-text"
-        >
-          <CaretLeft size={16} aria-hidden="true" />
-          Groups
-        </Link>
+      <div className="flex flex-col gap-4">
         {problem ? (
           <InlineProblem problem={problem} />
         ) : (
@@ -183,7 +186,7 @@ export default function GroupPage() {
             Loading...
           </p>
         )}
-      </main>
+      </div>
     );
   }
 
@@ -192,31 +195,36 @@ export default function GroupPage() {
   const guests = members.filter((m) => m.guest);
 
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 px-4 py-6">
-      <Link
-        to="/groups"
-        className="inline-flex items-center gap-1 text-primary-text"
-      >
-        <CaretLeft size={16} aria-hidden="true" />
-        Groups
-      </Link>
-      <header className="flex items-center gap-3">
-        <GroupBadge
-          id={group.id}
-          name={group.name}
-          cover={group.cover}
-          size="lg"
-        />
-        <div className="min-w-0">
-          <h1 className="truncate font-display text-h1 font-bold text-text">
-            {group.name}
-          </h1>
-          <p className="text-body-sm text-text-muted">
-            {group.currency} · {members.length}{" "}
-            {members.length === 1 ? "person" : "people"}
-          </p>
-        </div>
-      </header>
+    <div className="flex flex-col gap-4">
+      <GroupHeader group={group} count={members.length}>
+        {isOwner && !archived && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setConfirm({ kind: "edit" })}
+          >
+            Edit group
+          </Button>
+        )}
+        {isOwner && archived && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setConfirm({ kind: "unarchive" })}
+          >
+            Unarchive group
+          </Button>
+        )}
+        {!isOwner && !archived && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setConfirm({ kind: "leave" })}
+          >
+            Leave group
+          </Button>
+        )}
+      </GroupHeader>
 
       {archived && (
         <p
@@ -261,78 +269,59 @@ export default function GroupPage() {
         </div>
       )}
 
-      <section
-        aria-labelledby="members-title"
-        className="flex flex-col rounded-lg bg-surface shadow-sm"
-      >
-        <h2
-          id="members-title"
-          className="px-4 pt-4 font-display text-h2 font-bold text-text"
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        <section
+          aria-labelledby="members-title"
+          className="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
         >
-          Members
-        </h2>
-        <ul className="flex flex-col">
-          {members.map((member) => (
-            <MemberRow
-              key={member.id}
-              member={member}
-              isMe={member.userId === me}
-              canManage={isOwner && !archived}
-              onRemove={() => setConfirm({ kind: "remove", member })}
-              onWriteOff={() => setWriteOff(member)}
-              onPhone={() => setPhoneFor(member)}
-            />
-          ))}
-        </ul>
-      </section>
-
-      {!archived && <AddGuestForm groupId={groupId} onAdded={load} />}
-      {isOwner && !archived && (
-        <MemberPicker groupId={groupId} onAdded={load} />
-      )}
-      {isOwner && !archived && (
-        <InvitesPanel
-          groupId={groupId}
-          guests={guests}
-          invites={invites}
-          onChanged={load}
-        />
-      )}
-
-      <section className="flex flex-col gap-2">
-        {isOwner && !archived && (
-          <Button
-            variant="secondary"
-            onClick={() => setConfirm({ kind: "edit" })}
+          <h2
+            id="members-title"
+            className="px-4 pt-4 pb-1 font-display text-h2 font-bold text-text"
           >
-            Edit group
-          </Button>
+            Members
+          </h2>
+          <ul className="flex flex-col">
+            {members.map((member) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                isMe={member.userId === me}
+                canManage={isOwner && !archived}
+                onRemove={() => setConfirm({ kind: "remove", member })}
+                onWriteOff={() => setWriteOff(member)}
+                onPhone={() => setPhoneFor(member)}
+              />
+            ))}
+          </ul>
+        </section>
+
+        {!archived && (
+          <div className="flex flex-col gap-4">
+            <AddGuestForm groupId={groupId} onAdded={load} />
+            {isOwner && <MemberPicker groupId={groupId} onAdded={load} />}
+            {isOwner && (
+              <InvitesPanel
+                groupId={groupId}
+                guests={guests}
+                invites={invites}
+                onChanged={load}
+              />
+            )}
+          </div>
         )}
-        {isOwner && !archived && (
+      </div>
+
+      {isOwner && !archived && (
+        <div className="flex justify-end">
           <Button
-            variant="secondary"
+            variant="danger"
+            size="sm"
             onClick={() => setConfirm({ kind: "archive" })}
           >
             Archive group
           </Button>
-        )}
-        {isOwner && archived && (
-          <Button
-            variant="secondary"
-            onClick={() => setConfirm({ kind: "unarchive" })}
-          >
-            Unarchive group
-          </Button>
-        )}
-        {!isOwner && !archived && (
-          <Button
-            variant="secondary"
-            onClick={() => setConfirm({ kind: "leave" })}
-          >
-            Leave group
-          </Button>
-        )}
-      </section>
+        </div>
+      )}
 
       {confirm?.kind === "edit" && (
         <EditGroupDialog
@@ -443,7 +432,85 @@ export default function GroupPage() {
           }}
         />
       )}
-    </main>
+    </div>
+  );
+}
+
+/**
+ * The group's tinted band (web-group.html .ghead): a 72 px badge, the name as the page's h1, chips
+ * for the people count and the currency, decorative blobs at the right, actions on the right.
+ */
+function GroupHeader({
+  group,
+  count,
+  children,
+}: {
+  group: Group;
+  count: number;
+  children?: ReactNode;
+}) {
+  const color = groupColor(group.id, group.cover);
+  return (
+    <header
+      data-identity-header
+      style={{
+        background: `var(--id-${color}-tint)`,
+        color: `var(--id-${color}-ink)`,
+      }}
+      className="relative overflow-hidden rounded-xl px-5 py-6 md:px-6"
+    >
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        width="300"
+        height="200"
+        className="pointer-events-none absolute -top-10 -right-8"
+      >
+        <circle
+          cx="200"
+          cy="90"
+          r="80"
+          fill={`var(--id-${color}-solid)`}
+          opacity=".18"
+        />
+        <circle
+          cx="90"
+          cy="150"
+          r="36"
+          fill="var(--id-mango-solid)"
+          opacity=".25"
+        />
+        <circle
+          cx="260"
+          cy="170"
+          r="20"
+          fill="var(--id-mint-solid)"
+          opacity=".3"
+        />
+      </svg>
+      <div className="relative flex flex-wrap items-center gap-4">
+        <GroupBadge
+          id={group.id}
+          name={group.name}
+          cover={group.cover}
+          size="xl"
+          onTint
+        />
+        <div className="min-w-0 flex-1 basis-48">
+          <h1 className="font-display text-h1 font-extrabold break-words">
+            {group.name}
+          </h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <Chip tone="onTint">
+              {count} {count === 1 ? "person" : "people"}
+            </Chip>
+            <Chip tone="onTint">{group.currency}</Chip>
+            {group.archivedAt && <Chip tone="onTint">Archived</Chip>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">{children}</div>
+      </div>
+    </header>
   );
 }
 
@@ -585,41 +652,45 @@ function MemberRow({
 }) {
   const hasBalance = member.balances.length > 0;
   return (
-    <li className="flex min-h-16 flex-wrap items-center gap-3 border-t border-border px-4 py-2 first:border-t-0">
+    <li className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 border-t border-border px-4 py-2 first:border-t-0">
       <Avatar id={member.userId ?? member.id} name={member.displayName} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-semibold text-text">
-          {member.displayName}
-          {isMe ? " (you)" : ""}
-        </span>
-        <span className="flex flex-wrap gap-x-2 text-body-sm text-text-muted">
-          {member.role === "OWNER" && <span>Owner</span>}
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="break-words font-semibold text-text">
+            {member.displayName}
+            {isMe ? " (you)" : ""}
+          </span>
+          {member.role === "OWNER" && (
+            <Chip tone="primary" small>
+              Owner
+            </Chip>
+          )}
           {member.guest && (
-            <span>
+            <Chip small>
               Guest
               {member.guestPhoneMasked ? ` · ${member.guestPhoneMasked}` : ""}
-            </span>
-          )}
-          {hasBalance ? (
-            member.balances.map((b) => (
-              <span
-                key={b.currency}
-                className={
-                  b.amountMinor < 0
-                    ? "text-negative-text"
-                    : "text-positive-text"
-                }
-              >
-                {balanceWords(b.amountMinor, b.currency)}
-              </span>
-            ))
-          ) : (
-            <span>Settled</span>
+            </Chip>
           )}
         </span>
       </span>
+      <span className="flex shrink-0 flex-col text-right font-bold tabular-nums">
+        {hasBalance ? (
+          member.balances.map((b) => (
+            <span
+              key={b.currency}
+              className={
+                b.amountMinor < 0 ? "text-negative-text" : "text-positive-text"
+              }
+            >
+              {balanceWords(b.amountMinor, b.currency)}
+            </span>
+          ))
+        ) : (
+          <span className="font-semibold text-text-muted">Settled</span>
+        )}
+      </span>
       {canManage && member.role !== "OWNER" && (
-        <span className="flex gap-1">
+        <span className="flex w-full justify-end gap-1 sm:w-auto">
           {member.guest && (
             <Button
               variant="ghost"
@@ -643,6 +714,7 @@ function MemberRow({
           <Button
             variant="ghost"
             size="sm"
+            className="text-negative-text hover:bg-negative-soft"
             aria-label={`Remove ${member.displayName}`}
             onClick={onRemove}
           >
@@ -839,7 +911,7 @@ function AddGuestForm({
       noValidate
       onSubmit={submit}
       aria-labelledby="guest-title"
-      className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm"
     >
       <h2 id="guest-title" className="font-display text-h2 font-bold text-text">
         Add a guest
@@ -878,7 +950,7 @@ function AddGuestForm({
         helper="If they sign up later and verify this number, we'll suggest their seat to them."
         onChange={(e) => setPhone(e.target.value)}
       />
-      <Button type="submit" variant="secondary" loading={submitting}>
+      <Button type="submit" className="self-start" loading={submitting}>
         Add guest
       </Button>
     </form>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Wordmark } from "../ui/Wordmark";
 
 /** Shared frame for signed-out screens: a centred 400 px card over soft identity-colour blobs. */
 export function AuthLayout({ children }: { children: ReactNode }) {
@@ -30,10 +31,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           opacity=".5"
         />
       </svg>
-      <div className="relative flex w-full max-w-[400px] flex-col gap-4 rounded-lg bg-surface p-8 shadow-lg">
+      <div className="relative flex w-full max-w-[400px] flex-col gap-4 rounded-lg border border-border bg-surface px-7 py-8 shadow-lg">
         <header>
-          <p className="font-display text-[34px] font-extrabold leading-tight text-primary">
-            kanakku<span className="text-primary-text">.</span>
+          <p className="text-[34px]">
+            <Wordmark />
           </p>
           <p className="text-body-sm text-text-muted">
             Split trips, flats and dinners. Settle over UPI.

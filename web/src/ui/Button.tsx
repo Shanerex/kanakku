@@ -1,11 +1,14 @@
 import { CircleNotch } from "@phosphor-icons/react";
 import type { ButtonHTMLAttributes } from "react";
+import { Link, type LinkProps } from "react-router";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
+  /** Pill radius, for the one hero action on a screen. */
+  pill?: boolean;
 };
 
 const VARIANTS = {
@@ -29,6 +32,7 @@ export function Button({
   size = "md",
   loading = false,
   fullWidth = false,
+  pill = false,
   className = "",
   type = "button",
   onClick,
@@ -41,12 +45,29 @@ export function Button({
       type={type}
       aria-busy={loading || undefined}
       onClick={loading ? (event) => event.preventDefault() : onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-body font-semibold transition-transform duration-[var(--duration-fast)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${VARIANTS[variant]} ${SIZES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 ${pill ? "rounded-pill" : "rounded-md"} font-body font-bold transition-transform duration-[var(--duration-fast)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${VARIANTS[variant]} ${SIZES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
     >
       {loading && (
         <CircleNotch className="animate-spin" size={20} aria-hidden="true" />
       )}
       {children}
     </button>
+  );
+}
+
+/** A link that looks like a Button, for navigation that is not a form action. */
+export function ButtonLink({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  pill = false,
+  className = "",
+  ...rest
+}: LinkProps & Pick<Props, "variant" | "size" | "fullWidth" | "pill">) {
+  return (
+    <Link
+      {...rest}
+      className={`inline-flex items-center justify-center gap-2 ${pill ? "rounded-pill" : "rounded-md"} font-body font-bold transition-transform duration-[var(--duration-fast)] active:scale-[0.97] ${VARIANTS[variant]} ${SIZES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+    />
   );
 }

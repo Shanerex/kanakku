@@ -22,6 +22,7 @@ import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
@@ -88,6 +89,31 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
      * The column <code>public.journal_entries.created_at</code>.
      */
     public final TableField<JournalEntriesRecord, OffsetDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "");
+
+    /**
+     * The column <code>public.journal_entries.seq</code>.
+     */
+    public final TableField<JournalEntriesRecord, Long> SEQ = createField(DSL.name("seq"), SQLDataType.BIGINT.nullable(false).generatedAlwaysAsIdentity(), this, "");
+
+    /**
+     * The column <code>public.journal_entries.reverses_entry_id</code>.
+     */
+    public final TableField<JournalEntriesRecord, UUID> REVERSES_ENTRY_ID = createField(DSL.name("reverses_entry_id"), SQLDataType.UUID, this, "");
+
+    /**
+     * The column <code>public.journal_entries.replaces_entry_id</code>.
+     */
+    public final TableField<JournalEntriesRecord, UUID> REPLACES_ENTRY_ID = createField(DSL.name("replaces_entry_id"), SQLDataType.UUID, this, "");
+
+    /**
+     * The column <code>public.journal_entries.idempotency_key</code>.
+     */
+    public final TableField<JournalEntriesRecord, String> IDEMPOTENCY_KEY = createField(DSL.name("idempotency_key"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.journal_entries.request_hash</code>.
+     */
+    public final TableField<JournalEntriesRecord, byte[]> REQUEST_HASH = createField(DSL.name("request_hash"), SQLDataType.BLOB, this, "");
 
     private JournalEntries(Name alias, Table<JournalEntriesRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -158,7 +184,12 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.JOURNAL_ENTRIES_GROUP_IDX);
+        return Arrays.asList(Indexes.JOURNAL_ENTRIES_GROUP_IDX, Indexes.JOURNAL_ENTRIES_GROUP_SEQ_IDX, Indexes.JOURNAL_ENTRIES_IDEMPOTENCY_KEY, Indexes.JOURNAL_ENTRIES_REVERSES_KEY);
+    }
+
+    @Override
+    public Identity<JournalEntriesRecord, Long> getIdentity() {
+        return (Identity<JournalEntriesRecord, Long>) super.getIdentity();
     }
 
     @Override
@@ -167,8 +198,13 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
     }
 
     @Override
+    public List<UniqueKey<JournalEntriesRecord>> getUniqueKeys() {
+        return Arrays.asList(Keys.JOURNAL_ENTRIES_SEQ_KEY);
+    }
+
+    @Override
     public List<ForeignKey<JournalEntriesRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_ACTOR_USER_ID_FKEY, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_GROUP_ID_FKEY);
+        return Arrays.asList(Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_ACTOR_USER_ID_FKEY, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_GROUP_ID_FKEY, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_REPLACES_ENTRY_ID_FKEY, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_REVERSES_ENTRY_ID_FKEY);
     }
 
     private transient UsersPath _users;
@@ -195,6 +231,32 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
         return _groups;
     }
 
+    private transient JournalEntriesPath _journalEntriesReplacesEntryIdFkey;
+
+    /**
+     * Get the implicit join path to the <code>public.journal_entries</code>
+     * table, via the <code>journal_entries_replaces_entry_id_fkey</code> key.
+     */
+    public JournalEntriesPath journalEntriesReplacesEntryIdFkey() {
+        if (_journalEntriesReplacesEntryIdFkey == null)
+            _journalEntriesReplacesEntryIdFkey = new JournalEntriesPath(this, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_REPLACES_ENTRY_ID_FKEY, null);
+
+        return _journalEntriesReplacesEntryIdFkey;
+    }
+
+    private transient JournalEntriesPath _journalEntriesReversesEntryIdFkey;
+
+    /**
+     * Get the implicit join path to the <code>public.journal_entries</code>
+     * table, via the <code>journal_entries_reverses_entry_id_fkey</code> key.
+     */
+    public JournalEntriesPath journalEntriesReversesEntryIdFkey() {
+        if (_journalEntriesReversesEntryIdFkey == null)
+            _journalEntriesReversesEntryIdFkey = new JournalEntriesPath(this, Keys.JOURNAL_ENTRIES__JOURNAL_ENTRIES_REVERSES_ENTRY_ID_FKEY, null);
+
+        return _journalEntriesReversesEntryIdFkey;
+    }
+
     private transient JournalLinesPath _journalLines;
 
     /**
@@ -211,7 +273,9 @@ public class JournalEntries extends TableImpl<JournalEntriesRecord> {
     @Override
     public List<Check<JournalEntriesRecord>> getChecks() {
         return Arrays.asList(
-            Internal.createCheck(this, DSL.name("journal_entries_kind_check"), "((kind = ANY (ARRAY['EXPENSE'::text, 'SETTLEMENT'::text, 'WRITE_OFF'::text, 'REVERSAL'::text, 'MERGE'::text])))", true)
+            Internal.createCheck(this, DSL.name("journal_entries_key_hash_check"), "(((idempotency_key IS NULL) = (request_hash IS NULL)))", true),
+            Internal.createCheck(this, DSL.name("journal_entries_kind_check"), "((kind = ANY (ARRAY['EXPENSE'::text, 'SETTLEMENT'::text, 'WRITE_OFF'::text, 'REVERSAL'::text, 'MERGE'::text])))", true),
+            Internal.createCheck(this, DSL.name("journal_entries_reversal_link_check"), "(((kind = 'REVERSAL'::text) = (reverses_entry_id IS NOT NULL)))", true)
         );
     }
 

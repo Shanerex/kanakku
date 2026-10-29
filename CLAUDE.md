@@ -28,7 +28,7 @@ or a WhatsApp bot.
 - Layers inside a module: controller holds routes and request validation only; service holds business rules and transactions; repository holds all SQL (jOOQ) and external sources, so a service never touches `DSLContext`; domain holds the records and types they share. Each role is its own subpackage directly under the module (`controller`, `request`, `validation`, `advice`, `service`, `repository`, `domain`, `exception`, `config`, `util`); Modulith hides all of them from other modules, and only `api/` (the named interface) is visible.
 - Helpers used by one module live in its `util` package; helpers shared across modules live in `platform` behind a named interface, never in a global `utils`.
 - Each feature ships its own web screen in the same change.
-- UI design lives in `docs/design/`: read its `screens/` spec before building a screen; tokens only.
+- UI design lives in `docs/design/`: before building a screen read its `screens/` spec and its `mocks/` HTML (mapped in `screens/README.md`), plus `components.md` and `patterns.md`; every signed-in screen renders inside the app shell from `patterns.md`; match the mock's layout, tokens only; the spec wins on conflict.
 - License Apache-2.0; dependencies must be Apache, MIT, BSD or LGPL (font files may be OFL).
 
 ## Hard invariants

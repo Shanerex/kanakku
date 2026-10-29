@@ -45,7 +45,7 @@ test("sign up, sign out, sign in, edit the profile, reload and see the values", 
   await page.getByLabel("Display name").fill("Asha K Rao");
   await page.getByLabel("Default currency").selectOption("USD");
   await page.getByLabel("UPI ID (optional)").fill("asha.rao@okbank");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved.");
 
   // Reload: the values come back from the server.

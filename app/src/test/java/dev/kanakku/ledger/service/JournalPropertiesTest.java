@@ -66,10 +66,11 @@ class JournalPropertiesTest {
           new JournalEntry(
               group,
               EntryKind.EXPENSE,
-              null,
+              Seed.caller(dsl, group),
               List.of(
                   new JournalLine(ids.get(1 + t.from()), CURRENCIES[t.currency()], t.amount()),
-                  new JournalLine(ids.get(1 + t.to()), CURRENCIES[t.currency()], -t.amount()))));
+                  new JournalLine(ids.get(1 + t.to()), CURRENCIES[t.currency()], -t.amount()))),
+          UUID.randomUUID().toString());
     }
 
     Map<String, Long> sums = new HashMap<>();

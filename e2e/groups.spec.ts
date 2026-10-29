@@ -34,8 +34,14 @@ test("an Owner creates a group, adds a user and a guest, shares an invite and to
 
   // Create a group.
   await page.goto("/groups");
-  await expect(page.getByText("No groups yet")).toBeVisible();
-  await page.getByRole("button", { name: "New group" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Start your first group" }),
+  ).toBeVisible();
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "New group" })
+    .click();
+  await expect(page).toHaveURL(/\/groups\/new$/);
   await page.getByLabel("Name").fill("Goa Trip");
   await page.getByRole("button", { name: "Create group" }).click();
   await expect(page).toHaveURL(/\/groups\/[0-9a-f-]{36}$/);
@@ -75,7 +81,7 @@ test("an Owner creates a group, adds a user and a guest, shares an invite and to
   const toggle = page.getByLabel("Let group Owners add me directly");
   await expect(toggle).toBeChecked();
   await toggle.uncheck();
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved.");
   await page.reload();
   await expect(page.getByLabel("Let group Owners add me directly")).not.toBeChecked();

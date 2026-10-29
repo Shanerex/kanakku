@@ -36,15 +36,19 @@ class WriteOffPropertiesTest {
     DSLContext dsl = AppContext.bean(DSLContext.class);
     List<UUID> ids = Seed.groupWithGuests(dsl, 2 + absorberCount);
     UUID group = ids.get(0), target = ids.get(1), counterparty = ids.get(2);
+    if (balance == 0L) {
+      return new Setup(group, target, ids.subList(3, ids.size()));
+    }
     AppContext.bean(Journal.class)
         .post(
             new JournalEntry(
                 group,
                 EntryKind.EXPENSE,
-                null,
+                Seed.caller(dsl, group),
                 List.of(
                     new JournalLine(target, "INR", balance),
-                    new JournalLine(counterparty, "INR", -balance))));
+                    new JournalLine(counterparty, "INR", -balance))),
+            UUID.randomUUID().toString());
     return new Setup(group, target, ids.subList(3, ids.size()));
   }
 

@@ -8,7 +8,7 @@
 ## Modules (app/src/main/java/dev/kanakku/...)
 - identity: users, password + OIDC sign-in (Google, Microsoft, Apple), sessions, mobile and API tokens.
 - groups: groups, members, guests, invites, share links, roles.
-- ledger: journal entries, balances, invariants, nightly rebuild check. Owns all money maths.
+- ledger: journal entries, balances, invariants, nightly rebuild check: detects (ERROR log + metric per group and currency), then repairs balances from the journal (`kanakku.ledger.balance-check.repair`, default on) under a per-group advisory lock that every post also takes. Owns all money maths.
 - expenses: expenses, splits, payers, receipts, recurring rules. Posts to ledger via its API.
 - settlement: payments, debt simplification, UPI links, statement matching.
 - fx: currency metadata, rate provider (Frankfurter/ECB), locked rates.
@@ -32,6 +32,7 @@
 - The journal is append-only; edits post reversals. Group balances sum to zero per currency.
 - Journal post and balance update share one transaction.
 - Every create is idempotent by Idempotency-Key; edits use optimistic version checks.
+- Ledger postings are idempotent by a durable key stored on the journal entry; an entry is reversed at most once.
 - AI output is a draft; only a member's confirm posts to the ledger.
 - MCP writes are always drafts; there is no direct-post scope.
 - Every read is scoped to the caller's group membership inside the SQL query.
